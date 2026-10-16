@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24" fill="none" role="img" aria-label="RM-CRC">
+<title>RM-CRC</title>
+<mask id="ci-rm-crc-n" maskUnits="userSpaceOnUse" x="0" y="0" width="24" height="24"><rect width="24" height="24" fill="#fff"/><circle cx="19.1" cy="19.1" r="4.35" fill="#000"/></mask><g class="ci-accent ci-breathe" fill="currentColor" opacity=".16"><g mask="url(#ci-rm-crc-n)" transform="translate(.56 .56) scale(.87)"><ellipse cx="7.6" cy="12" rx="3.3" ry="6.1"/></g></g>
+<g class="ci-stroke" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><g mask="url(#ci-rm-crc-n)" transform="translate(.56 .56) scale(.87)"><ellipse cx="7.6" cy="12" rx="3.3" ry="6.1"/><path d="M7.6 5.9h6.2a3.3 6.1 0 0 1 0 12.2H7.6"/><ellipse cx="7.6" cy="12" rx="1.35" ry="2.5"/><circle cx="18.3" cy="6.4" r="1.9"/><path d="M15.4 3.3h5.8M15.4 9.5h5.8"/></g></g>
+<g class="ci-badge"><g fill="currentColor" opacity=".8"></g><g stroke="currentColor" stroke-width="1.25" fill="none" stroke-linejoin="round"><circle cx="19.1" cy="19.1" r="2.9"/></g></g></svg>

@@ -1,0 +1,14 @@
+# Template for android/key.properties — local release signing only.
+#
+#   cp android/key.properties.example android/key.properties
+#
+# android/key.properties is git-ignored. This template IS committed: never put a
+# real value in it. Full setup: docs/release/android-release.md §2.
+#
+# storeFile is resolved relative to android/app/, so an absolute path outside
+# the repository is the safest choice.
+
+storeFile=/absolute/path/outside/the/repo/steelforce-upload.jks
+storePassword=CHANGE_ME
+keyAlias=upload
+keyPassword=CHANGE_ME

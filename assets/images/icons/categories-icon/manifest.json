@@ -1,0 +1,386 @@
+[
+ {
+  "key": "galvanized-coil-semi",
+  "label": "Galvanized Coil (Semi-Finished)",
+  "fam": "semi",
+  "stage": "semi",
+  "anim": "sparkle",
+  "concept": "Steel coil with a zinc-spangle star on the outer wrap"
+ },
+ {
+  "key": "pipe",
+  "label": "Pipe",
+  "fam": "product",
+  "stage": "none",
+  "anim": "breathe",
+  "concept": "Round tube seen end-on: thin wall, open bore"
+ },
+ {
+  "key": "pre-painted-coil-raw",
+  "label": "Pre-Painted Coil (Raw)",
+  "fam": "raw",
+  "stage": "raw",
+  "anim": "breathe",
+  "concept": "Coil with a paint droplet for the colour-coated layer"
+ },
+ {
+  "key": "reinforcement-bar-traded",
+  "label": "Reinforcement Bar (Traded)",
+  "fam": "product",
+  "stage": "traded",
+  "anim": "breathe",
+  "concept": "Deformed bar drawn on the diagonal with three ribs"
+ },
+ {
+  "key": "pre-painted-coil-semi",
+  "label": "Pre-Painted Coil (Semi-Finished)",
+  "fam": "semi",
+  "stage": "semi",
+  "anim": "breathe",
+  "concept": "Paint-droplet coil, half-stage badge"
+ },
+ {
+  "key": "cold-formed-sections",
+  "label": "Cold Formed Sections",
+  "fam": "product",
+  "stage": "none",
+  "anim": "breathe",
+  "concept": "C-section profile: the shape roll-forming produces"
+ },
+ {
+  "key": "galvanized-steel",
+  "label": "Galvanized Steel",
+  "fam": "product",
+  "stage": "none",
+  "anim": "sparkle",
+  "concept": "Plate stack carrying the zinc spangle on its face"
+ },
+ {
+  "key": "profile-roofing",
+  "label": "Profile Roofing",
+  "fam": "product",
+  "stage": "none",
+  "anim": "float",
+  "concept": "Ribbed roofing panel seen along the slope"
+ },
+ {
+  "key": "i-beam-traded",
+  "label": "I-Beam (Traded)",
+  "fam": "product",
+  "stage": "traded",
+  "anim": "breathe",
+  "concept": "I-section cross-section, flange and web true to profile"
+ },
+ {
+  "key": "roofing-accessories",
+  "label": "Roofing Accessories",
+  "fam": "product",
+  "stage": "none",
+  "anim": "float",
+  "concept": "Ridge cap closed profile, fixed down with two screws"
+ },
+ {
+  "key": "h-beam-traded",
+  "label": "H-Beam (Traded)",
+  "fam": "product",
+  "stage": "traded",
+  "anim": "breathe",
+  "concept": "H-section, the I-beam rotated - reads as a pair"
+ },
+ {
+  "key": "steel-sheet",
+  "label": "Steel Sheet",
+  "fam": "product",
+  "stage": "none",
+  "anim": "float",
+  "concept": "Three flat plates stacked in isometric"
+ },
+ {
+  "key": "galvalume-steel-coil",
+  "label": "Galvalume Steel Coil",
+  "fam": "product",
+  "stage": "none",
+  "anim": "breathe",
+  "concept": "Coil with a shield mark for the Al-Zn coating"
+ },
+ {
+  "key": "sp-mech",
+  "label": "SP-MECH",
+  "fam": "part",
+  "stage": "none",
+  "anim": "tick",
+  "concept": "Single gear - mechanical spare part"
+ },
+ {
+  "key": "mp-mech",
+  "label": "MP-MECH",
+  "fam": "part",
+  "stage": "none",
+  "anim": "tick",
+  "concept": "Two meshed gears - mechanical maintenance parts"
+ },
+ {
+  "key": "sp-elec",
+  "label": "SP-ELEC",
+  "fam": "part",
+  "stage": "none",
+  "anim": "pulse",
+  "concept": "Bolt glyph - electrical spare part"
+ },
+ {
+  "key": "ep-elec",
+  "label": "EP-ELEC",
+  "fam": "part",
+  "stage": "none",
+  "anim": "pulse",
+  "concept": "Plug body and pins - electrical equipment part"
+ },
+ {
+  "key": "ft-scheider",
+  "label": "FT-SCHEIDER",
+  "fam": "fitting",
+  "stage": "none",
+  "anim": "pulse",
+  "concept": "DIN-rail breaker module with its toggle"
+ },
+ {
+  "key": "ft-board",
+  "label": "FT-BOARD",
+  "fam": "fitting",
+  "stage": "none",
+  "anim": "pulse",
+  "concept": "Distribution board with three breaker ways"
+ },
+ {
+  "key": "ft-cable",
+  "label": "FT-CABLE",
+  "fam": "fitting",
+  "stage": "none",
+  "anim": "pulse",
+  "concept": "Cable spiralled onto itself, connector on the free end"
+ },
+ {
+  "key": "ft-rf-screw",
+  "label": "FT-RF-SCREW",
+  "fam": "fitting",
+  "stage": "none",
+  "anim": "breathe",
+  "concept": "Hex-head roofing screw with washer and thread"
+ },
+ {
+  "key": "ft-tran-sheet",
+  "label": "FT-TRAN-SHEET",
+  "fam": "fitting",
+  "stage": "none",
+  "anim": "float",
+  "concept": "See-through panel: hollow face, hatched like glazing"
+ },
+ {
+  "key": "ft-oth",
+  "label": "FT-OTH",
+  "fam": "fitting",
+  "stage": "none",
+  "anim": "breathe",
+  "concept": "Hex nut - the generic fixing"
+ },
+ {
+  "key": "rm-gi",
+  "label": "RM-GI",
+  "fam": "raw",
+  "stage": "raw",
+  "anim": "sparkle",
+  "concept": "Galvanized-iron coil, spangle mark"
+ },
+ {
+  "key": "rm-gl",
+  "label": "RM-GL",
+  "fam": "raw",
+  "stage": "raw",
+  "anim": "breathe",
+  "concept": "Galvalume coil, Al-Zn shield mark"
+ },
+ {
+  "key": "rm-crc",
+  "label": "RM-CRC",
+  "fam": "raw",
+  "stage": "raw",
+  "anim": "breathe",
+  "concept": "Cold-rolled coil: roller squeezed between two passes"
+ },
+ {
+  "key": "rm-ss",
+  "label": "RM-SS",
+  "fam": "raw",
+  "stage": "raw",
+  "anim": "sparkle",
+  "concept": "Stainless plate with a mirror-polish band"
+ },
+ {
+  "key": "rm-mh",
+  "label": "RM-MH",
+  "fam": "raw",
+  "stage": "raw",
+  "anim": "breathe",
+  "concept": "Mild hollow section: square tube in isometric"
+ },
+ {
+  "key": "rm-tile-adhesiv",
+  "label": "RM-Tile Adhesive",
+  "fam": "raw",
+  "stage": "raw",
+  "anim": "float",
+  "concept": "Bagged tile adhesive, tile emblem on the sack"
+ },
+ {
+  "key": "rm-starcode",
+  "label": "RM-STARCODE",
+  "fam": "raw",
+  "stage": "raw",
+  "anim": "sparkle",
+  "concept": "Branded grade: star above a code strip"
+ },
+ {
+  "key": "sfg-gs",
+  "label": "SFG-GS",
+  "fam": "semi",
+  "stage": "semi",
+  "anim": "sparkle",
+  "concept": "Galvanized plate: spangle sitting on the face"
+ },
+ {
+  "key": "sfg-gl",
+  "label": "SFG-GL",
+  "fam": "semi",
+  "stage": "semi",
+  "anim": "breathe",
+  "concept": "Galvalume coil at half stage"
+ },
+ {
+  "key": "sfg-crc",
+  "label": "SFG-CRC",
+  "fam": "semi",
+  "stage": "semi",
+  "anim": "breathe",
+  "concept": "Cold-rolled coil at half stage"
+ },
+ {
+  "key": "sfg-ss",
+  "label": "SFG-SS",
+  "fam": "semi",
+  "stage": "semi",
+  "anim": "sparkle",
+  "concept": "Stainless plate at half stage"
+ },
+ {
+  "key": "sfg-mh",
+  "label": "SFG-MH",
+  "fam": "semi",
+  "stage": "semi",
+  "anim": "breathe",
+  "concept": "Mild hollow section at half stage"
+ },
+ {
+  "key": "sfg-oth",
+  "label": "SFG-OTH",
+  "fam": "semi",
+  "stage": "semi",
+  "anim": "breathe",
+  "concept": "Unspecified semi-finished stock: plate plus continuation dots"
+ },
+ {
+  "key": "fg-sc",
+  "label": "FG-SC",
+  "fam": "finished",
+  "stage": "finished",
+  "anim": "breathe",
+  "concept": "Finished steel coil, ready to ship"
+ },
+ {
+  "key": "fg-mh",
+  "label": "FG-MH",
+  "fam": "finished",
+  "stage": "finished",
+  "anim": "breathe",
+  "concept": "Mild hollow section, finished"
+ },
+ {
+  "key": "fg-gh",
+  "label": "FG-GH",
+  "fam": "finished",
+  "stage": "finished",
+  "anim": "sparkle",
+  "concept": "Galvanized hollow section: same tube, spangle mark"
+ },
+ {
+  "key": "fg-pt",
+  "label": "FG-PT",
+  "fam": "finished",
+  "stage": "finished",
+  "anim": "breathe",
+  "concept": "Pipe and tube, finished"
+ },
+ {
+  "key": "fg-cfp-light-gauge-steel",
+  "label": "FG-CFP Light Gauge Steel",
+  "fam": "finished",
+  "stage": "finished",
+  "anim": "breathe",
+  "concept": "Light-gauge stud: C-section with service holes"
+ },
+ {
+  "key": "gen-supp-oper",
+  "label": "GEN-SUPP-OPER",
+  "fam": "supply",
+  "stage": "none",
+  "anim": "breathe",
+  "concept": "Stock shelf - operational supplies held on site"
+ },
+ {
+  "key": "gen-supp-hr-adm",
+  "label": "GEN-SUPP-HR-ADM",
+  "fam": "supply",
+  "stage": "none",
+  "anim": "breathe",
+  "concept": "Personnel record: document behind a person"
+ },
+ {
+  "key": "gen-supp-mrk",
+  "label": "GEN-SUPP-MRK",
+  "fam": "supply",
+  "stage": "none",
+  "anim": "pulse",
+  "concept": "Megaphone - marketing and promotional supply"
+ },
+ {
+  "key": "cm-com",
+  "label": "CM-COM",
+  "fam": "misc",
+  "stage": "none",
+  "anim": "float",
+  "concept": "Sealed carton in isometric - common consumables"
+ },
+ {
+  "key": "scrap",
+  "label": "SCRAP",
+  "fam": "misc",
+  "stage": "none",
+  "anim": "tick",
+  "concept": "Offcut inside a return loop - material going back to melt"
+ },
+ {
+  "key": "services",
+  "label": "SERVICES",
+  "fam": "misc",
+  "stage": "none",
+  "anim": "breathe",
+  "concept": "Signed-off work order - a service, not a stocked item"
+ },
+ {
+  "key": "others",
+  "label": "OTHERS",
+  "fam": "misc",
+  "stage": "none",
+  "anim": "breathe",
+  "concept": "Four-dot grid - the catch-all bucket"
+ }
+]

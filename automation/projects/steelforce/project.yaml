@@ -1,0 +1,89 @@
+# SteelForce mobile app — project profile.
+#
+# Everything the engine needs to know about this app. Paths are relative to
+# `app_root`, which is relative to this file.
+name: steelforce
+display_name: SteelForce Mobile
+app_root: ../../..
+default_environment: uat
+
+workbook:
+  path: QA-engineering/SteelForce_Test_Cases.xlsx
+  # Framework sheet role → sheet name in this workbook.
+  sheets:
+    test_cases: Test_Cases
+    test_data: Test_Data
+    automation_mapping: Automation_Mapping
+    execution_results: Execution_Results
+    dropdowns: Dropdowns
+  # Framework field → column header in this workbook. Another project with
+  # different headers changes only this map; the parser adapts to it.
+  columns:
+    test_cases:
+      id: TC ID
+      module: Module
+      feature: Feature
+      scenario: Title
+      priority: Priority
+      test_type: Test Type
+      preconditions: Preconditions
+      test_data_ids: Test Data
+      steps: Steps
+      expected_result: Expected Result
+      api_endpoint: API Endpoint
+      layers: Layers Exercised
+      triage_hint: If It Fails — Check First
+      evidence: Evidence to Capture
+      code_reference: Code Reference
+      automation_status: Automation Status
+      suites: Suites
+      environments: Environments
+    automation_mapping:
+      id: TC ID
+      automation_level: Automation Level
+      automation_id: Automation ID
+    test_data:
+      id: Data ID
+      description: Description
+      category: Category
+      value: Value / Where to Get It
+      environment: Environment
+  # Field → list header in the Dropdowns sheet. The validator reads allowed
+  # values from the workbook, so QA changes a list in one place.
+  allowed_values:
+    priority: Priority
+    test_type: Test Type
+    automation_status: Automation Status
+    automation_level: Automation Level
+    suites: Suite
+  id_pattern: "^TC-[A-Z]+-[A-Z0-9-]+$"
+  # Environment column for results that ran only on this machine.
+  local_environment_label: Local (unit/widget)
+
+flutter:
+  project_dir: .
+  integration_driver: test_driver/integration_test.dart
+  # Device tests receive these as --dart-define, resolved from the secrets
+  # below at run time (never written to a file).
+  dart_defines:
+    API_BASE_URL: STEELFORCE_API_BASE_URL
+    QA_PHONE: STEELFORCE_QA_REP_PRIMARY_PHONE
+    QA_PASSWORD: STEELFORCE_QA_REP_PRIMARY_PASSWORD
+
+# Secret NAMES this project uses (never values). Values come from
+# projects/steelforce/.env.<environment> (gitignored) or the process
+# environment; only names listed here are read from the process.
+secrets:
+  STEELFORCE_API_BASE_URL: Gateway host without /api/v1
+  STEELFORCE_QA_REP_PRIMARY_PHONE: TD-001 active field rep — phone
+  STEELFORCE_QA_REP_PRIMARY_PASSWORD: TD-001 active field rep — password
+  STEELFORCE_QA_REP_TEMP_PHONE: TD-002 temporary-password rep — phone
+  STEELFORCE_QA_REP_TEMP_PASSWORD: TD-002 temporary-password rep — password
+  STEELFORCE_QA_REP_SECONDARY_PHONE: TD-005 second rep — phone
+  STEELFORCE_QA_REP_SECONDARY_PASSWORD: TD-005 second rep — password
+  STEELFORCE_QA_LOCKOUT_PHONE: Throwaway account for wrong-password tests — phone (never TD-001)
+  STEELFORCE_QA_LOCKOUT_PASSWORD: Throwaway account for wrong-password tests — password
+
+masking:
+  # Fields this app's API carries that hold personal data (login body, profile).
+  extra_keys: [phoneNumber, phone, email, employeeId]

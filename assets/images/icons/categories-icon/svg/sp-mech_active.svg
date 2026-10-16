@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24" fill="none" role="img" aria-label="SP-MECH">
+<title>SP-MECH</title>
+<g class="ci-accent ci-tick" fill="currentColor" opacity=".30"><circle cx="12" cy="12" r="2.1"/></g>
+<g class="ci-stroke" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5.1"/><circle cx="12" cy="12" r="2.1"/><path d="M12 3.3v2.1M12 18.6v2.1M20.7 12h-2.1M5.4 12H3.3M18.15 5.85 16.7 7.3M7.3 16.7l-1.45 1.45M18.15 18.15 16.7 16.7M7.3 7.3 5.85 5.85"/></g>
+</svg>

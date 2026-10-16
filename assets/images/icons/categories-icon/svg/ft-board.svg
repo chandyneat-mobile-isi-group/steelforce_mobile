@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24" fill="none" role="img" aria-label="FT-BOARD">
+<title>FT-BOARD</title>
+<g class="ci-accent ci-pulse" fill="currentColor" opacity=".16"><rect x="6.2" y="11.4" width="2.8" height="5.4" rx="1"/><rect x="10.6" y="11.4" width="2.8" height="5.4" rx="1"/><rect x="15" y="11.4" width="2.8" height="5.4" rx="1"/></g>
+<g class="ci-stroke" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="3.4" y="4.6" width="17.2" height="14.8" rx="2.6"/><path d="M3.4 9h17.2"/><rect x="6.2" y="11.4" width="2.8" height="5.4" rx="1"/><rect x="10.6" y="11.4" width="2.8" height="5.4" rx="1"/><rect x="15" y="11.4" width="2.8" height="5.4" rx="1"/></g>
+</svg>

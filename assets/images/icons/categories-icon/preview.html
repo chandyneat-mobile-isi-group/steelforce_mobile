@@ -1,0 +1,439 @@
+<!doctype html>
+<html lang="en" data-theme="light">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Category icons — material catalogue</title>
+<style>/* Soft Enterprise — category icon tokens
+   One hue per family. Icons are duotone on a single currentColor:
+   strokes at full colour, accent shapes at 16% (30% when active). */
+
+:root {
+  --cat-product:  #5B7089;
+  --cat-raw:      #4E7FB6;
+  --cat-semi:     #3E8B82;
+  --cat-finished: #6470B4;
+  --cat-fitting:  #4E8A62;
+  --cat-part:     #96794A;
+  --cat-supply:   #7A6AA6;
+  --cat-misc:     #6B7482;
+
+  --icon-idle:    color-mix(in srgb, currentColor 62%, transparent);
+  --chip-bg:      #F1F3F7;
+  --chip-bg-active: color-mix(in srgb, currentColor 12%, #FFFFFF);
+
+  --surface-page: #F4F6FA;
+  --surface-card: #FFFFFF;
+  --line:         #E7EBF1;
+  --text:         #1B2430;
+  --text-muted:   #6B7482;
+
+  --ease-out:     cubic-bezier(.22,.61,.36,1);
+  --ease-soft:    cubic-bezier(.4,0,.2,1);
+  --dur-press:    140ms;
+  --dur-state:    220ms;
+  --dur-appear:   300ms;
+}
+
+[data-theme="dark"] {
+  --cat-product:  #A9BACD;
+  --cat-raw:      #8CB8E6;
+  --cat-semi:     #6FC3B9;
+  --cat-finished: #A3ABEE;
+  --cat-fitting:  #86C89C;
+  --cat-part:     #D6B47A;
+  --cat-supply:   #B4A7DD;
+  --cat-misc:     #A7B0BE;
+
+  --chip-bg:      #1E2731;
+  --chip-bg-active: color-mix(in srgb, currentColor 16%, #161C24);
+
+  --surface-page: #0E1319;
+  --surface-card: #161C24;
+  --line:         #232C37;
+  --text:         #E6EBF2;
+  --text-muted:   #8A95A3;
+}
+ 
+* { box-sizing: border-box; }
+body {
+  margin: 0; background: var(--surface-page); color: var(--text);
+  font-family: var(--sans); -webkit-font-smoothing: antialiased;
+}
+:root {
+  --sans: -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  --mono: ui-monospace, SFMono-Regular, "Roboto Mono", Menlo, monospace;
+}
+.wrap { max-width: 1080px; margin: 0 auto; padding: 40px 24px 96px; }
+
+header.top { display: flex; flex-wrap: wrap; gap: 20px; align-items: flex-end;
+  justify-content: space-between; padding-bottom: 20px; border-bottom: 1px solid var(--line); }
+h1 { font-size: 21px; font-weight: 600; letter-spacing: -.01em; margin: 0 0 6px; }
+.sub { font-size: 13px; color: var(--text-muted); margin: 0; max-width: 46ch; line-height: 1.5; }
+.eyebrow { font-family: var(--mono); font-size: 10.5px; letter-spacing: .14em;
+  text-transform: uppercase; color: var(--text-muted); margin: 0 0 10px; }
+
+.controls { display: flex; gap: 8px; flex-wrap: wrap; }
+.ctl { font-family: var(--mono); font-size: 11px; letter-spacing: .06em; text-transform: uppercase;
+  padding: 8px 12px; border-radius: 9px; border: 1px solid var(--line);
+  background: var(--surface-card); color: var(--text-muted); cursor: pointer;
+  transition: color var(--dur-state) var(--ease-soft), border-color var(--dur-state) var(--ease-soft); }
+.ctl[aria-pressed="true"] { color: var(--text); border-color: currentColor; }
+.ctl:focus-visible { outline: 2px solid var(--cat-raw); outline-offset: 2px; }
+
+.legend { display: flex; flex-wrap: wrap; gap: 28px; margin: 28px 0 8px; padding: 18px 20px;
+  background: var(--surface-card); border: 1px solid var(--line); border-radius: 16px; }
+.legend .item { display: flex; align-items: center; gap: 10px; color: var(--cat-raw); }
+.legend .item span { font-family: var(--mono); font-size: 11px; letter-spacing: .06em;
+  text-transform: uppercase; color: var(--text-muted); }
+.legend svg { width: 26px; height: 26px; }
+
+section { margin-top: 44px; }
+.sec-head { display: flex; align-items: baseline; gap: 12px; margin-bottom: 16px; }
+.sec-head h2 { font-size: 14px; font-weight: 600; margin: 0; }
+.sec-head .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--c); flex: none; }
+.sec-head p { margin: 0; font-size: 12.5px; color: var(--text-muted); }
+.sec-head .n { font-family: var(--mono); font-size: 11px; color: var(--text-muted); margin-left: auto; }
+
+.grid { display: grid; gap: 12px; grid-template-columns: repeat(auto-fill, minmax(124px, 1fr)); }
+.tile {
+  --size: 48px;
+  display: flex; flex-direction: column; align-items: center; gap: 10px;
+  padding: 18px 10px 14px; border: 1px solid var(--line); border-radius: 18px;
+  background: var(--surface-card); color: var(--c); cursor: pointer; font: inherit;
+  box-shadow: 0 1px 2px rgba(16,24,40,.04);
+  transition: transform var(--dur-press) var(--ease-out),
+              border-color var(--dur-state) var(--ease-soft),
+              box-shadow var(--dur-state) var(--ease-soft);
+  animation: appear var(--dur-appear) var(--ease-out) both;
+}
+.tile:active { transform: scale(.96); }
+.tile:focus-visible { outline: 2px solid currentColor; outline-offset: 2px; }
+.tile.is-active { border-color: color-mix(in srgb, currentColor 38%, transparent);
+  box-shadow: 0 2px 10px color-mix(in srgb, currentColor 14%, transparent); }
+
+.chip { display: grid; place-items: center; width: var(--size); height: var(--size);
+  border-radius: 50%; background: var(--chip-bg);
+  transition: background var(--dur-state) var(--ease-soft); }
+.tile.is-active .chip { background: var(--chip-bg-active); }
+.chip svg { width: calc(var(--size) * .56); height: calc(var(--size) * .56); display: block; }
+
+.code { font-family: var(--mono); font-size: 10.5px; letter-spacing: .03em; line-height: 1.35;
+  text-align: center; color: var(--text); text-transform: uppercase; }
+.tile.is-active .code { color: var(--c); }
+
+/* --- state transitions on the glyph itself --- */
+.ci-accent, .ci-stroke { transition: opacity var(--dur-state) var(--ease-soft),
+                                     stroke-width var(--dur-state) var(--ease-soft); }
+.tile:not(.is-active) .ci-stroke { opacity: .78; }
+.tile.is-active .ci-accent { opacity: .30; }
+.tile.is-active .ci-stroke { stroke-width: 1.75; opacity: 1; }
+
+/* --- motion: ambient runs only while a tile is selected --- */
+.ci-accent { transform-box: fill-box; transform-origin: center; }
+@keyframes appear { from { opacity: 0; transform: scale(.96); } to { opacity: 1; transform: none; } }
+@keyframes breathe { 50% { opacity: .40; } }
+@keyframes pulse   { 45% { opacity: .46; } }
+@keyframes sparkle { 50% { opacity: .48; transform: scale(1.04); } }
+@keyframes floaty  { 50% { transform: translateY(-.6px); } }
+@keyframes tick    { 50% { transform: rotate(7deg); } }
+
+body.motion .tile.is-active[data-anim="breathe"] .ci-accent { animation: breathe 3.6s var(--ease-soft) infinite; }
+body.motion .tile.is-active[data-anim="pulse"]   .ci-accent { animation: pulse 2.4s var(--ease-soft) infinite; }
+body.motion .tile.is-active[data-anim="sparkle"] .ci-accent { animation: sparkle 3.2s var(--ease-soft) infinite; }
+body.motion .tile.is-active[data-anim="float"]   .chip svg  { animation: floaty 4s var(--ease-soft) infinite; }
+body.motion .tile.is-active[data-anim="tick"]    .chip svg  { animation: tick 3.4s var(--ease-soft) infinite; }
+
+body.small .tile { --size: 32px; }
+body.gray { filter: grayscale(1); }
+
+@media (prefers-reduced-motion: reduce) {
+  * { animation: none !important; transition-duration: 1ms !important; }
+}
+
+.states { display: flex; gap: 12px; flex-wrap: wrap; }
+.states .tile { width: 150px; animation: none; }
+.states .label { font-family: var(--mono); font-size: 10px; letter-spacing: .08em;
+  text-transform: uppercase; color: var(--text-muted); }
+.pressed { transform: scale(.96); }
+footer { margin-top: 64px; padding-top: 20px; border-top: 1px solid var(--line);
+  font-size: 12px; color: var(--text-muted); line-height: 1.6; }
+</style>
+</head>
+<body class="motion">
+<div class="wrap">
+  <header class="top">
+    <div>
+      <p class="eyebrow">Icon system · 48 categories</p>
+      <h1>Material catalogue icons</h1>
+      <p class="sub">One duotone family on a 24&nbsp;grid. The glyph says what the material is;
+      the corner badge says what stage it is at, so a code like RM-GL and SFG-GL share a drawing
+      and still read apart — in colour or in grey.</p>
+    </div>
+    <div class="controls">
+      <button class="ctl" id="theme" aria-pressed="false">Dark</button>
+      <button class="ctl" id="size" aria-pressed="false">32 px</button>
+      <button class="ctl" id="gray" aria-pressed="false">Grayscale</button>
+      <button class="ctl" id="motion" aria-pressed="true">Motion</button>
+    </div>
+  </header>
+
+  <div class="legend"><div class="item"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24" fill="none" role="img" aria-label="RM-GI">
+<title>RM-GI</title>
+<mask id="ci-rm-gi-n" maskUnits="userSpaceOnUse" x="0" y="0" width="24" height="24"><rect width="24" height="24" fill="#fff"/><circle cx="19.1" cy="19.1" r="4.35" fill="#000"/></mask><g class="ci-accent ci-sparkle" fill="currentColor" opacity=".16"><g mask="url(#ci-rm-gi-n)" transform="translate(.56 .56) scale(.87)"><ellipse cx="7.6" cy="12" rx="3.3" ry="6.1"/></g></g>
+<g class="ci-stroke" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><g mask="url(#ci-rm-gi-n)" transform="translate(.56 .56) scale(.87)"><ellipse cx="7.6" cy="12" rx="3.3" ry="6.1"/><path d="M7.6 5.9h6.2a3.3 6.1 0 0 1 0 12.2H7.6"/><ellipse cx="7.6" cy="12" rx="1.35" ry="2.5"/><path d="M18.3 3.4C18.49343 4.85 19.75 6.10657 21.2 6.3C19.75 6.49343 18.49343 7.75 18.3 9.2C18.10657 7.75 16.85 6.49343 15.4 6.3C16.85 6.10657 18.10657 4.85 18.3 3.4z"/></g></g>
+<g class="ci-badge"><g fill="currentColor" opacity=".8"></g><g stroke="currentColor" stroke-width="1.25" fill="none" stroke-linejoin="round"><circle cx="19.1" cy="19.1" r="2.9"/></g></g></svg><span>ring · raw</span></div><div class="item"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24" fill="none" role="img" aria-label="SFG-GL">
+<title>SFG-GL</title>
+<mask id="ci-sfg-gl-n" maskUnits="userSpaceOnUse" x="0" y="0" width="24" height="24"><rect width="24" height="24" fill="#fff"/><circle cx="19.1" cy="19.1" r="4.35" fill="#000"/></mask><g class="ci-accent ci-breathe" fill="currentColor" opacity=".16"><g mask="url(#ci-sfg-gl-n)" transform="translate(.56 .56) scale(.87)"><ellipse cx="7.6" cy="12" rx="3.3" ry="6.1"/></g></g>
+<g class="ci-stroke" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><g mask="url(#ci-sfg-gl-n)" transform="translate(.56 .56) scale(.87)"><ellipse cx="7.6" cy="12" rx="3.3" ry="6.1"/><path d="M7.6 5.9h6.2a3.3 6.1 0 0 1 0 12.2H7.6"/><ellipse cx="7.6" cy="12" rx="1.35" ry="2.5"/><path d="M18.4 3.6 20.8 4.6v2.2c0 1.6-1.1 2.6-2.4 3.2-1.3-.6-2.4-1.6-2.4-3.2V4.6z"/></g></g>
+<g class="ci-badge"><g fill="currentColor" opacity=".8"><path d="M19.1 16.2a2.9 2.9 0 0 1 0 5.8z"/></g><g stroke="currentColor" stroke-width="1.25" fill="none" stroke-linejoin="round"><circle cx="19.1" cy="19.1" r="2.9"/></g></g></svg><span>half · semi-finished</span></div><div class="item"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24" fill="none" role="img" aria-label="FG-MH">
+<title>FG-MH</title>
+<mask id="ci-fg-mh-n" maskUnits="userSpaceOnUse" x="0" y="0" width="24" height="24"><rect width="24" height="24" fill="#fff"/><circle cx="19.1" cy="19.1" r="4.35" fill="#000"/></mask><g class="ci-accent ci-breathe" fill="currentColor" opacity=".16"><g mask="url(#ci-fg-mh-n)" transform="translate(.56 .56) scale(.87)"><rect x="6.5" y="10.4" width="4.5" height="4.5" rx="1"/></g></g>
+<g class="ci-stroke" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><g mask="url(#ci-fg-mh-n)" transform="translate(.56 .56) scale(.87)"><rect x="3.7" y="7.6" width="10.1" height="10.1" rx="1.7"/><path d="M6.6 4.7h10.3a1.7 1.7 0 0 1 1.7 1.7v10.3"/><path d="m3.7 7.6 2.9-2.9M13.8 7.6l2.9-2.9M13.8 17.7l2.9-2.9"/><rect x="6.5" y="10.4" width="4.5" height="4.5" rx="1"/></g></g>
+<g class="ci-badge"><g fill="currentColor" opacity=".8"><circle cx="19.1" cy="19.1" r="2.9"/></g><g stroke="currentColor" stroke-width="1.25" fill="none" stroke-linejoin="round"><circle cx="19.1" cy="19.1" r="2.9"/></g></g></svg><span>solid · finished</span></div><div class="item"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24" fill="none" role="img" aria-label="I-Beam (Traded)">
+<title>I-Beam (Traded)</title>
+<mask id="ci-i-beam-traded-n" maskUnits="userSpaceOnUse" x="0" y="0" width="24" height="24"><rect width="24" height="24" fill="#fff"/><circle cx="19.1" cy="19.1" r="4.35" fill="#000"/></mask><g class="ci-accent ci-breathe" fill="currentColor" opacity=".16"><g mask="url(#ci-i-beam-traded-n)" transform="translate(.56 .56) scale(.87)"><path d="M5.8 4.4h12.4v3.1h-4.6v9h4.6v3.1H5.8v-3.1h4.6v-9H5.8z"/></g></g>
+<g class="ci-stroke" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><g mask="url(#ci-i-beam-traded-n)" transform="translate(.56 .56) scale(.87)"><path d="M5.8 4.4h12.4v3.1h-4.6v9h4.6v3.1H5.8v-3.1h4.6v-9H5.8z"/></g></g>
+<g class="ci-badge"><g fill="currentColor" opacity=".8"></g><g stroke="currentColor" stroke-width="1.25" fill="none" stroke-linejoin="round"><path d="m19.1 16.2 2.9 2.9-2.9 2.9-2.9-2.9z"/></g></g></svg><span>diamond · traded</span></div></div>
+
+  <section>
+    <div class="sec-head" style="--c: var(--cat-raw)"><span class="dot"></span>
+      <h2>States</h2><p>Tap any tile below to select it. Ambient motion runs on the selection only.</p></div>
+    <div class="states"><div><div class="label">Inactive</div><button class="tile" data-anim="sparkle" data-key="rm-gi" style="--c: var(--cat-raw)" title="Galvanized-iron coil, spangle mark"><span class="chip"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24" fill="none" role="img" aria-label="RM-GI">
+<title>RM-GI</title>
+<mask id="ci-rm-gi-n" maskUnits="userSpaceOnUse" x="0" y="0" width="24" height="24"><rect width="24" height="24" fill="#fff"/><circle cx="19.1" cy="19.1" r="4.35" fill="#000"/></mask><g class="ci-accent ci-sparkle" fill="currentColor" opacity=".16"><g mask="url(#ci-rm-gi-n)" transform="translate(.56 .56) scale(.87)"><ellipse cx="7.6" cy="12" rx="3.3" ry="6.1"/></g></g>
+<g class="ci-stroke" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><g mask="url(#ci-rm-gi-n)" transform="translate(.56 .56) scale(.87)"><ellipse cx="7.6" cy="12" rx="3.3" ry="6.1"/><path d="M7.6 5.9h6.2a3.3 6.1 0 0 1 0 12.2H7.6"/><ellipse cx="7.6" cy="12" rx="1.35" ry="2.5"/><path d="M18.3 3.4C18.49343 4.85 19.75 6.10657 21.2 6.3C19.75 6.49343 18.49343 7.75 18.3 9.2C18.10657 7.75 16.85 6.49343 15.4 6.3C16.85 6.10657 18.10657 4.85 18.3 3.4z"/></g></g>
+<g class="ci-badge"><g fill="currentColor" opacity=".8"></g><g stroke="currentColor" stroke-width="1.25" fill="none" stroke-linejoin="round"><circle cx="19.1" cy="19.1" r="2.9"/></g></g></svg></span><span class="code">RM-GI</span></button></div><div><div class="label">Pressed</div><button class="tile pressed" data-anim="sparkle" data-key="rm-gi" style="--c: var(--cat-raw)" title="Galvanized-iron coil, spangle mark"><span class="chip"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24" fill="none" role="img" aria-label="RM-GI">
+<title>RM-GI</title>
+<mask id="ci-rm-gi-n" maskUnits="userSpaceOnUse" x="0" y="0" width="24" height="24"><rect width="24" height="24" fill="#fff"/><circle cx="19.1" cy="19.1" r="4.35" fill="#000"/></mask><g class="ci-accent ci-sparkle" fill="currentColor" opacity=".16"><g mask="url(#ci-rm-gi-n)" transform="translate(.56 .56) scale(.87)"><ellipse cx="7.6" cy="12" rx="3.3" ry="6.1"/></g></g>
+<g class="ci-stroke" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><g mask="url(#ci-rm-gi-n)" transform="translate(.56 .56) scale(.87)"><ellipse cx="7.6" cy="12" rx="3.3" ry="6.1"/><path d="M7.6 5.9h6.2a3.3 6.1 0 0 1 0 12.2H7.6"/><ellipse cx="7.6" cy="12" rx="1.35" ry="2.5"/><path d="M18.3 3.4C18.49343 4.85 19.75 6.10657 21.2 6.3C19.75 6.49343 18.49343 7.75 18.3 9.2C18.10657 7.75 16.85 6.49343 15.4 6.3C16.85 6.10657 18.10657 4.85 18.3 3.4z"/></g></g>
+<g class="ci-badge"><g fill="currentColor" opacity=".8"></g><g stroke="currentColor" stroke-width="1.25" fill="none" stroke-linejoin="round"><circle cx="19.1" cy="19.1" r="2.9"/></g></g></svg></span><span class="code">RM-GI</span></button></div><div><div class="label">Active</div><button class="tile is-active" data-anim="sparkle" data-key="rm-gi" style="--c: var(--cat-raw)" title="Galvanized-iron coil, spangle mark"><span class="chip"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24" fill="none" role="img" aria-label="RM-GI">
+<title>RM-GI</title>
+<mask id="ci-rm-gi-n" maskUnits="userSpaceOnUse" x="0" y="0" width="24" height="24"><rect width="24" height="24" fill="#fff"/><circle cx="19.1" cy="19.1" r="4.35" fill="#000"/></mask><g class="ci-accent ci-sparkle" fill="currentColor" opacity=".16"><g mask="url(#ci-rm-gi-n)" transform="translate(.56 .56) scale(.87)"><ellipse cx="7.6" cy="12" rx="3.3" ry="6.1"/></g></g>
+<g class="ci-stroke" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><g mask="url(#ci-rm-gi-n)" transform="translate(.56 .56) scale(.87)"><ellipse cx="7.6" cy="12" rx="3.3" ry="6.1"/><path d="M7.6 5.9h6.2a3.3 6.1 0 0 1 0 12.2H7.6"/><ellipse cx="7.6" cy="12" rx="1.35" ry="2.5"/><path d="M18.3 3.4C18.49343 4.85 19.75 6.10657 21.2 6.3C19.75 6.49343 18.49343 7.75 18.3 9.2C18.10657 7.75 16.85 6.49343 15.4 6.3C16.85 6.10657 18.10657 4.85 18.3 3.4z"/></g></g>
+<g class="ci-badge"><g fill="currentColor" opacity=".8"></g><g stroke="currentColor" stroke-width="1.25" fill="none" stroke-linejoin="round"><circle cx="19.1" cy="19.1" r="2.9"/></g></g></svg></span><span class="code">RM-GI</span></button></div></div>
+  </section>
+
+  <section><div class="sec-head" style="--c: var(--cat-product)"><span class="dot"></span><h2>Named products</h2><p>Steel products carried in the catalogue by name</p><span class="n">10</span></div><div class="grid"><button class="tile" data-anim="breathe" data-key="pipe" style="--c: var(--cat-product)" title="Round tube seen end-on: thin wall, open bore"><span class="chip"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24" fill="none" role="img" aria-label="Pipe">
+<title>Pipe</title>
+<g class="ci-accent ci-breathe" fill="currentColor" opacity=".16"><ellipse cx="7.6" cy="12" rx="1.7" ry="3.2"/></g>
+<g class="ci-stroke" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><ellipse cx="7.6" cy="12" rx="3.3" ry="6.1"/><ellipse cx="7.6" cy="12" rx="1.7" ry="3.2"/><path d="M7.6 5.9h6.2M7.6 18.1h6.2M13.8 5.9a3.3 6.1 0 0 1 0 12.2"/></g>
+</svg></span><span class="code">Pipe</span></button><button class="tile" data-anim="breathe" data-key="reinforcement-bar-traded" style="--c: var(--cat-product)" title="Deformed bar drawn on the diagonal with three ribs"><span class="chip"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24" fill="none" role="img" aria-label="Reinforcement Bar (Traded)">
+<title>Reinforcement Bar (Traded)</title>
+<mask id="ci-reinforcement-bar-traded-n" maskUnits="userSpaceOnUse" x="0" y="0" width="24" height="24"><rect width="24" height="24" fill="#fff"/><circle cx="19.1" cy="19.1" r="4.35" fill="#000"/></mask><g class="ci-accent ci-breathe" fill="currentColor" opacity=".16"><g mask="url(#ci-reinforcement-bar-traded-n)" transform="translate(.56 .56) scale(.87)"><path d="M4.6 16.2 16.2 4.6l3.2 3.2L7.8 19.4z"/></g></g>
+<g class="ci-stroke" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><g mask="url(#ci-reinforcement-bar-traded-n)" transform="translate(.56 .56) scale(.87)"><path d="M4.6 16.2 16.2 4.6M7.8 19.4 19.4 7.8"/><path d="M4.6 16.2a2.26 2.26 0 0 0 3.2 3.2M16.2 4.6a2.26 2.26 0 0 1 3.2 3.2"/><path d="m8.1 12.7 3.2 3.2M10.4 10.4l3.2 3.2M12.7 8.1l3.2 3.2"/></g></g>
+<g class="ci-badge"><g fill="currentColor" opacity=".8"></g><g stroke="currentColor" stroke-width="1.25" fill="none" stroke-linejoin="round"><path d="m19.1 16.2 2.9 2.9-2.9 2.9-2.9-2.9z"/></g></g></svg></span><span class="code">Reinforcement Bar (Traded)</span></button><button class="tile" data-anim="breathe" data-key="cold-formed-sections" style="--c: var(--cat-product)" title="C-section profile: the shape roll-forming produces"><span class="chip"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24" fill="none" role="img" aria-label="Cold Formed Sections">
+<title>Cold Formed Sections</title>
+<g class="ci-accent ci-breathe" fill="currentColor" opacity=".16"><path d="M17.6 4.6H5.6v14.8h12v-3.1H8.7V7.7h8.9z"/></g>
+<g class="ci-stroke" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M17.6 4.6H5.6v14.8h12v-3.1H8.7V7.7h8.9z"/></g>
+</svg></span><span class="code">Cold Formed Sections</span></button><button class="tile" data-anim="sparkle" data-key="galvanized-steel" style="--c: var(--cat-product)" title="Plate stack carrying the zinc spangle on its face"><span class="chip"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24" fill="none" role="img" aria-label="Galvanized Steel">
+<title>Galvanized Steel</title>
+<g class="ci-accent ci-sparkle" fill="currentColor" opacity=".16"><path d="M12 3.9 20.1 8.3 12 12.7 3.9 8.3z"/><path d="M12 5.8999999999999995C12.15341 7.049999999999999 13.15 8.04659 14.3 8.2C13.15 8.353409999999998 12.15341 9.35 12 10.5C11.84659 9.35 10.85 8.353409999999998 9.7 8.2C10.85 8.04659 11.84659 7.049999999999999 12 5.8999999999999995z"/></g>
+<g class="ci-stroke" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3.9 20.1 8.3 12 12.7 3.9 8.3z"/><path d="M3.9 11.8 12 16.2l8.1-4.4"/><path d="M3.9 15.1 12 19.5l8.1-4.4"/><path d="M12 5.8999999999999995C12.15341 7.049999999999999 13.15 8.04659 14.3 8.2C13.15 8.353409999999998 12.15341 9.35 12 10.5C11.84659 9.35 10.85 8.353409999999998 9.7 8.2C10.85 8.04659 11.84659 7.049999999999999 12 5.8999999999999995z"/></g>
+</svg></span><span class="code">Galvanized Steel</span></button><button class="tile" data-anim="float" data-key="profile-roofing" style="--c: var(--cat-product)" title="Ribbed roofing panel seen along the slope"><span class="chip"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24" fill="none" role="img" aria-label="Profile Roofing">
+<title>Profile Roofing</title>
+<g class="ci-accent ci-float" fill="currentColor" opacity=".16"><path d="M3.4 15.2 10.4 5.8h10.2l-7 9.4z"/></g>
+<g class="ci-stroke" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M3.4 15.2 10.4 5.8h10.2l-7 9.4z"/><path d="M5.95 15.2 12.95 5.8M8.5 15.2 15.5 5.8M11.05 15.2 18.05 5.8"/></g>
+</svg></span><span class="code">Profile Roofing</span></button><button class="tile" data-anim="breathe" data-key="i-beam-traded" style="--c: var(--cat-product)" title="I-section cross-section, flange and web true to profile"><span class="chip"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24" fill="none" role="img" aria-label="I-Beam (Traded)">
+<title>I-Beam (Traded)</title>
+<mask id="ci-i-beam-traded-n" maskUnits="userSpaceOnUse" x="0" y="0" width="24" height="24"><rect width="24" height="24" fill="#fff"/><circle cx="19.1" cy="19.1" r="4.35" fill="#000"/></mask><g class="ci-accent ci-breathe" fill="currentColor" opacity=".16"><g mask="url(#ci-i-beam-traded-n)" transform="translate(.56 .56) scale(.87)"><path d="M5.8 4.4h12.4v3.1h-4.6v9h4.6v3.1H5.8v-3.1h4.6v-9H5.8z"/></g></g>
+<g class="ci-stroke" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><g mask="url(#ci-i-beam-traded-n)" transform="translate(.56 .56) scale(.87)"><path d="M5.8 4.4h12.4v3.1h-4.6v9h4.6v3.1H5.8v-3.1h4.6v-9H5.8z"/></g></g>
+<g class="ci-badge"><g fill="currentColor" opacity=".8"></g><g stroke="currentColor" stroke-width="1.25" fill="none" stroke-linejoin="round"><path d="m19.1 16.2 2.9 2.9-2.9 2.9-2.9-2.9z"/></g></g></svg></span><span class="code">I-Beam (Traded)</span></button><button class="tile" data-anim="float" data-key="roofing-accessories" style="--c: var(--cat-product)" title="Ridge cap closed profile, fixed down with two screws"><span class="chip"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24" fill="none" role="img" aria-label="Roofing Accessories">
+<title>Roofing Accessories</title>
+<g class="ci-accent ci-float" fill="currentColor" opacity=".16"><path d="M3.6 15.4 12 7.8l8.4 7.6v3.4L12 11.2l-8.4 7.6z"/></g>
+<g class="ci-stroke" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M3.6 15.4 12 7.8l8.4 7.6v3.4L12 11.2l-8.4 7.6z"/><path d="M7.4 15.6v2.8M16.6 15.6v2.8"/></g>
+</svg></span><span class="code">Roofing Accessories</span></button><button class="tile" data-anim="breathe" data-key="h-beam-traded" style="--c: var(--cat-product)" title="H-section, the I-beam rotated - reads as a pair"><span class="chip"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24" fill="none" role="img" aria-label="H-Beam (Traded)">
+<title>H-Beam (Traded)</title>
+<mask id="ci-h-beam-traded-n" maskUnits="userSpaceOnUse" x="0" y="0" width="24" height="24"><rect width="24" height="24" fill="#fff"/><circle cx="19.1" cy="19.1" r="4.35" fill="#000"/></mask><g class="ci-accent ci-breathe" fill="currentColor" opacity=".16"><g mask="url(#ci-h-beam-traded-n)" transform="translate(.56 .56) scale(.87)"><path d="M4.4 5.8v12.4h3.1v-4.6h9v4.6h3.1V5.8h-3.1v4.6h-9V5.8z"/></g></g>
+<g class="ci-stroke" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><g mask="url(#ci-h-beam-traded-n)" transform="translate(.56 .56) scale(.87)"><path d="M4.4 5.8v12.4h3.1v-4.6h9v4.6h3.1V5.8h-3.1v4.6h-9V5.8z"/></g></g>
+<g class="ci-badge"><g fill="currentColor" opacity=".8"></g><g stroke="currentColor" stroke-width="1.25" fill="none" stroke-linejoin="round"><path d="m19.1 16.2 2.9 2.9-2.9 2.9-2.9-2.9z"/></g></g></svg></span><span class="code">H-Beam (Traded)</span></button><button class="tile" data-anim="float" data-key="steel-sheet" style="--c: var(--cat-product)" title="Three flat plates stacked in isometric"><span class="chip"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24" fill="none" role="img" aria-label="Steel Sheet">
+<title>Steel Sheet</title>
+<g class="ci-accent ci-float" fill="currentColor" opacity=".16"><path d="M12 3.9 20.1 8.3 12 12.7 3.9 8.3z"/></g>
+<g class="ci-stroke" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3.9 20.1 8.3 12 12.7 3.9 8.3z"/><path d="M3.9 11.8 12 16.2l8.1-4.4"/><path d="M3.9 15.1 12 19.5l8.1-4.4"/></g>
+</svg></span><span class="code">Steel Sheet</span></button><button class="tile" data-anim="breathe" data-key="galvalume-steel-coil" style="--c: var(--cat-product)" title="Coil with a shield mark for the Al-Zn coating"><span class="chip"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24" fill="none" role="img" aria-label="Galvalume Steel Coil">
+<title>Galvalume Steel Coil</title>
+<g class="ci-accent ci-breathe" fill="currentColor" opacity=".16"><ellipse cx="7.6" cy="12" rx="3.3" ry="6.1"/></g>
+<g class="ci-stroke" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><ellipse cx="7.6" cy="12" rx="3.3" ry="6.1"/><path d="M7.6 5.9h6.2a3.3 6.1 0 0 1 0 12.2H7.6"/><ellipse cx="7.6" cy="12" rx="1.35" ry="2.5"/><path d="M18.4 3.6 20.8 4.6v2.2c0 1.6-1.1 2.6-2.4 3.2-1.3-.6-2.4-1.6-2.4-3.2V4.6z"/></g>
+</svg></span><span class="code">Galvalume Steel Coil</span></button></div></section>
+<section><div class="sec-head" style="--c: var(--cat-raw)"><span class="dot"></span><h2>RM — Raw material</h2><p>Inbound stock, not yet processed</p><span class="n">8</span></div><div class="grid"><button class="tile" data-anim="breathe" data-key="pre-painted-coil-raw" style="--c: var(--cat-raw)" title="Coil with a paint droplet for the colour-coated layer"><span class="chip"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24" fill="none" role="img" aria-label="Pre-Painted Coil (Raw)">
+<title>Pre-Painted Coil (Raw)</title>
+<mask id="ci-pre-painted-coil-raw-n" maskUnits="userSpaceOnUse" x="0" y="0" width="24" height="24"><rect width="24" height="24" fill="#fff"/><circle cx="19.1" cy="19.1" r="4.35" fill="#000"/></mask><g class="ci-accent ci-breathe" fill="currentColor" opacity=".16"><g mask="url(#ci-pre-painted-coil-raw-n)" transform="translate(.56 .56) scale(.87)"><ellipse cx="7.6" cy="12" rx="3.3" ry="6.1"/></g></g>
+<g class="ci-stroke" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><g mask="url(#ci-pre-painted-coil-raw-n)" transform="translate(.56 .56) scale(.87)"><ellipse cx="7.6" cy="12" rx="3.3" ry="6.1"/><path d="M7.6 5.9h6.2a3.3 6.1 0 0 1 0 12.2H7.6"/><ellipse cx="7.6" cy="12" rx="1.35" ry="2.5"/><path d="M18.3 3.2c1.8 2 2.7 3.3 2.7 4.4a2.7 2.7 0 0 1-5.4 0c0-1.1.9-2.4 2.7-4.4z"/></g></g>
+<g class="ci-badge"><g fill="currentColor" opacity=".8"></g><g stroke="currentColor" stroke-width="1.25" fill="none" stroke-linejoin="round"><circle cx="19.1" cy="19.1" r="2.9"/></g></g></svg></span><span class="code">Pre-Painted Coil (Raw)</span></button><button class="tile" data-anim="sparkle" data-key="rm-gi" style="--c: var(--cat-raw)" title="Galvanized-iron coil, spangle mark"><span class="chip"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24" fill="none" role="img" aria-label="RM-GI">
+<title>RM-GI</title>
+<mask id="ci-rm-gi-n" maskUnits="userSpaceOnUse" x="0" y="0" width="24" height="24"><rect width="24" height="24" fill="#fff"/><circle cx="19.1" cy="19.1" r="4.35" fill="#000"/></mask><g class="ci-accent ci-sparkle" fill="currentColor" opacity=".16"><g mask="url(#ci-rm-gi-n)" transform="translate(.56 .56) scale(.87)"><ellipse cx="7.6" cy="12" rx="3.3" ry="6.1"/></g></g>
+<g class="ci-stroke" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><g mask="url(#ci-rm-gi-n)" transform="translate(.56 .56) scale(.87)"><ellipse cx="7.6" cy="12" rx="3.3" ry="6.1"/><path d="M7.6 5.9h6.2a3.3 6.1 0 0 1 0 12.2H7.6"/><ellipse cx="7.6" cy="12" rx="1.35" ry="2.5"/><path d="M18.3 3.4C18.49343 4.85 19.75 6.10657 21.2 6.3C19.75 6.49343 18.49343 7.75 18.3 9.2C18.10657 7.75 16.85 6.49343 15.4 6.3C16.85 6.10657 18.10657 4.85 18.3 3.4z"/></g></g>
+<g class="ci-badge"><g fill="currentColor" opacity=".8"></g><g stroke="currentColor" stroke-width="1.25" fill="none" stroke-linejoin="round"><circle cx="19.1" cy="19.1" r="2.9"/></g></g></svg></span><span class="code">RM-GI</span></button><button class="tile" data-anim="breathe" data-key="rm-gl" style="--c: var(--cat-raw)" title="Galvalume coil, Al-Zn shield mark"><span class="chip"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24" fill="none" role="img" aria-label="RM-GL">
+<title>RM-GL</title>
+<mask id="ci-rm-gl-n" maskUnits="userSpaceOnUse" x="0" y="0" width="24" height="24"><rect width="24" height="24" fill="#fff"/><circle cx="19.1" cy="19.1" r="4.35" fill="#000"/></mask><g class="ci-accent ci-breathe" fill="currentColor" opacity=".16"><g mask="url(#ci-rm-gl-n)" transform="translate(.56 .56) scale(.87)"><ellipse cx="7.6" cy="12" rx="3.3" ry="6.1"/></g></g>
+<g class="ci-stroke" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><g mask="url(#ci-rm-gl-n)" transform="translate(.56 .56) scale(.87)"><ellipse cx="7.6" cy="12" rx="3.3" ry="6.1"/><path d="M7.6 5.9h6.2a3.3 6.1 0 0 1 0 12.2H7.6"/><ellipse cx="7.6" cy="12" rx="1.35" ry="2.5"/><path d="M18.4 3.6 20.8 4.6v2.2c0 1.6-1.1 2.6-2.4 3.2-1.3-.6-2.4-1.6-2.4-3.2V4.6z"/></g></g>
+<g class="ci-badge"><g fill="currentColor" opacity=".8"></g><g stroke="currentColor" stroke-width="1.25" fill="none" stroke-linejoin="round"><circle cx="19.1" cy="19.1" r="2.9"/></g></g></svg></span><span class="code">RM-GL</span></button><button class="tile" data-anim="breathe" data-key="rm-crc" style="--c: var(--cat-raw)" title="Cold-rolled coil: roller squeezed between two passes"><span class="chip"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24" fill="none" role="img" aria-label="RM-CRC">
+<title>RM-CRC</title>
+<mask id="ci-rm-crc-n" maskUnits="userSpaceOnUse" x="0" y="0" width="24" height="24"><rect width="24" height="24" fill="#fff"/><circle cx="19.1" cy="19.1" r="4.35" fill="#000"/></mask><g class="ci-accent ci-breathe" fill="currentColor" opacity=".16"><g mask="url(#ci-rm-crc-n)" transform="translate(.56 .56) scale(.87)"><ellipse cx="7.6" cy="12" rx="3.3" ry="6.1"/></g></g>
+<g class="ci-stroke" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><g mask="url(#ci-rm-crc-n)" transform="translate(.56 .56) scale(.87)"><ellipse cx="7.6" cy="12" rx="3.3" ry="6.1"/><path d="M7.6 5.9h6.2a3.3 6.1 0 0 1 0 12.2H7.6"/><ellipse cx="7.6" cy="12" rx="1.35" ry="2.5"/><circle cx="18.3" cy="6.4" r="1.9"/><path d="M15.4 3.3h5.8M15.4 9.5h5.8"/></g></g>
+<g class="ci-badge"><g fill="currentColor" opacity=".8"></g><g stroke="currentColor" stroke-width="1.25" fill="none" stroke-linejoin="round"><circle cx="19.1" cy="19.1" r="2.9"/></g></g></svg></span><span class="code">RM-CRC</span></button><button class="tile" data-anim="sparkle" data-key="rm-ss" style="--c: var(--cat-raw)" title="Stainless plate with a mirror-polish band"><span class="chip"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24" fill="none" role="img" aria-label="RM-SS">
+<title>RM-SS</title>
+<mask id="ci-rm-ss-n" maskUnits="userSpaceOnUse" x="0" y="0" width="24" height="24"><rect width="24" height="24" fill="#fff"/><circle cx="19.1" cy="19.1" r="4.35" fill="#000"/></mask><g class="ci-accent ci-sparkle" fill="currentColor" opacity=".16"><g mask="url(#ci-rm-ss-n)" transform="translate(.56 .56) scale(.87)"><path d="M12 3.9 20.1 8.3 12 12.7 3.9 8.3z"/><path d="M9.2 9.2 13.4 6.9l1.7 1-4.2 2.3z"/></g></g>
+<g class="ci-stroke" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><g mask="url(#ci-rm-ss-n)" transform="translate(.56 .56) scale(.87)"><path d="M12 3.9 20.1 8.3 12 12.7 3.9 8.3z"/><path d="M3.9 11.8 12 16.2l8.1-4.4"/><path d="M9.2 9.2 13.4 6.9l1.7 1-4.2 2.3z"/></g></g>
+<g class="ci-badge"><g fill="currentColor" opacity=".8"></g><g stroke="currentColor" stroke-width="1.25" fill="none" stroke-linejoin="round"><circle cx="19.1" cy="19.1" r="2.9"/></g></g></svg></span><span class="code">RM-SS</span></button><button class="tile" data-anim="breathe" data-key="rm-mh" style="--c: var(--cat-raw)" title="Mild hollow section: square tube in isometric"><span class="chip"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24" fill="none" role="img" aria-label="RM-MH">
+<title>RM-MH</title>
+<mask id="ci-rm-mh-n" maskUnits="userSpaceOnUse" x="0" y="0" width="24" height="24"><rect width="24" height="24" fill="#fff"/><circle cx="19.1" cy="19.1" r="4.35" fill="#000"/></mask><g class="ci-accent ci-breathe" fill="currentColor" opacity=".16"><g mask="url(#ci-rm-mh-n)" transform="translate(.56 .56) scale(.87)"><rect x="6.5" y="10.4" width="4.5" height="4.5" rx="1"/></g></g>
+<g class="ci-stroke" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><g mask="url(#ci-rm-mh-n)" transform="translate(.56 .56) scale(.87)"><rect x="3.7" y="7.6" width="10.1" height="10.1" rx="1.7"/><path d="M6.6 4.7h10.3a1.7 1.7 0 0 1 1.7 1.7v10.3"/><path d="m3.7 7.6 2.9-2.9M13.8 7.6l2.9-2.9M13.8 17.7l2.9-2.9"/><rect x="6.5" y="10.4" width="4.5" height="4.5" rx="1"/></g></g>
+<g class="ci-badge"><g fill="currentColor" opacity=".8"></g><g stroke="currentColor" stroke-width="1.25" fill="none" stroke-linejoin="round"><circle cx="19.1" cy="19.1" r="2.9"/></g></g></svg></span><span class="code">RM-MH</span></button><button class="tile" data-anim="float" data-key="rm-tile-adhesiv" style="--c: var(--cat-raw)" title="Bagged tile adhesive, tile emblem on the sack"><span class="chip"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24" fill="none" role="img" aria-label="RM-Tile Adhesive">
+<title>RM-Tile Adhesive</title>
+<mask id="ci-rm-tile-adhesiv-n" maskUnits="userSpaceOnUse" x="0" y="0" width="24" height="24"><rect width="24" height="24" fill="#fff"/><circle cx="19.1" cy="19.1" r="4.35" fill="#000"/></mask><g class="ci-accent ci-float" fill="currentColor" opacity=".16"><g mask="url(#ci-rm-tile-adhesiv-n)" transform="translate(.56 .56) scale(.87)"><path d="M12 10.8 14.8 13 12 15.2 9.2 13z"/></g></g>
+<g class="ci-stroke" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><g mask="url(#ci-rm-tile-adhesiv-n)" transform="translate(.56 .56) scale(.87)"><path d="M7.6 7.4h8.8l1.3 11.4a1.8 1.8 0 0 1-1.8 2H8.1a1.8 1.8 0 0 1-1.8-2z"/><path d="M7.6 7.4 9.4 3.6h5.2l1.8 3.8"/><path d="M12 10.8 14.8 13 12 15.2 9.2 13z"/></g></g>
+<g class="ci-badge"><g fill="currentColor" opacity=".8"></g><g stroke="currentColor" stroke-width="1.25" fill="none" stroke-linejoin="round"><circle cx="19.1" cy="19.1" r="2.9"/></g></g></svg></span><span class="code">RM-Tile Adhesive</span></button><button class="tile" data-anim="sparkle" data-key="rm-starcode" style="--c: var(--cat-raw)" title="Branded grade: star above a code strip"><span class="chip"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24" fill="none" role="img" aria-label="RM-STARCODE">
+<title>RM-STARCODE</title>
+<mask id="ci-rm-starcode-n" maskUnits="userSpaceOnUse" x="0" y="0" width="24" height="24"><rect width="24" height="24" fill="#fff"/><circle cx="19.1" cy="19.1" r="4.35" fill="#000"/></mask><g class="ci-accent ci-sparkle" fill="currentColor" opacity=".16"><g mask="url(#ci-rm-starcode-n)" transform="translate(.56 .56) scale(.87)"><path d="M12 3.4 14 7.4l4.4.6-3.2 3.1.8 4.4-4-2.1-4 2.1.8-4.4-3.2-3.1 4.4-.6z"/></g></g>
+<g class="ci-stroke" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><g mask="url(#ci-rm-starcode-n)" transform="translate(.56 .56) scale(.87)"><path d="M12 3.4 14 7.4l4.4.6-3.2 3.1.8 4.4-4-2.1-4 2.1.8-4.4-3.2-3.1 4.4-.6z"/><path d="M6.8 18.6v2.8M9.6 18.6v2.8M12.4 18.6v2.8M15.2 18.6v2.8"/></g></g>
+<g class="ci-badge"><g fill="currentColor" opacity=".8"></g><g stroke="currentColor" stroke-width="1.25" fill="none" stroke-linejoin="round"><circle cx="19.1" cy="19.1" r="2.9"/></g></g></svg></span><span class="code">RM-STARCODE</span></button></div></section>
+<section><div class="sec-head" style="--c: var(--cat-semi)"><span class="dot"></span><h2>SFG — Semi-finished</h2><p>Processed, awaiting a further operation</p><span class="n">8</span></div><div class="grid"><button class="tile" data-anim="sparkle" data-key="galvanized-coil-semi" style="--c: var(--cat-semi)" title="Steel coil with a zinc-spangle star on the outer wrap"><span class="chip"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24" fill="none" role="img" aria-label="Galvanized Coil (Semi-Finished)">
+<title>Galvanized Coil (Semi-Finished)</title>
+<mask id="ci-galvanized-coil-semi-n" maskUnits="userSpaceOnUse" x="0" y="0" width="24" height="24"><rect width="24" height="24" fill="#fff"/><circle cx="19.1" cy="19.1" r="4.35" fill="#000"/></mask><g class="ci-accent ci-sparkle" fill="currentColor" opacity=".16"><g mask="url(#ci-galvanized-coil-semi-n)" transform="translate(.56 .56) scale(.87)"><ellipse cx="7.6" cy="12" rx="3.3" ry="6.1"/></g></g>
+<g class="ci-stroke" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><g mask="url(#ci-galvanized-coil-semi-n)" transform="translate(.56 .56) scale(.87)"><ellipse cx="7.6" cy="12" rx="3.3" ry="6.1"/><path d="M7.6 5.9h6.2a3.3 6.1 0 0 1 0 12.2H7.6"/><ellipse cx="7.6" cy="12" rx="1.35" ry="2.5"/><path d="M18.3 3.4C18.49343 4.85 19.75 6.10657 21.2 6.3C19.75 6.49343 18.49343 7.75 18.3 9.2C18.10657 7.75 16.85 6.49343 15.4 6.3C16.85 6.10657 18.10657 4.85 18.3 3.4z"/></g></g>
+<g class="ci-badge"><g fill="currentColor" opacity=".8"><path d="M19.1 16.2a2.9 2.9 0 0 1 0 5.8z"/></g><g stroke="currentColor" stroke-width="1.25" fill="none" stroke-linejoin="round"><circle cx="19.1" cy="19.1" r="2.9"/></g></g></svg></span><span class="code">Galvanized Coil (Semi-Finished)</span></button><button class="tile" data-anim="breathe" data-key="pre-painted-coil-semi" style="--c: var(--cat-semi)" title="Paint-droplet coil, half-stage badge"><span class="chip"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24" fill="none" role="img" aria-label="Pre-Painted Coil (Semi-Finished)">
+<title>Pre-Painted Coil (Semi-Finished)</title>
+<mask id="ci-pre-painted-coil-semi-n" maskUnits="userSpaceOnUse" x="0" y="0" width="24" height="24"><rect width="24" height="24" fill="#fff"/><circle cx="19.1" cy="19.1" r="4.35" fill="#000"/></mask><g class="ci-accent ci-breathe" fill="currentColor" opacity=".16"><g mask="url(#ci-pre-painted-coil-semi-n)" transform="translate(.56 .56) scale(.87)"><ellipse cx="7.6" cy="12" rx="3.3" ry="6.1"/></g></g>
+<g class="ci-stroke" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><g mask="url(#ci-pre-painted-coil-semi-n)" transform="translate(.56 .56) scale(.87)"><ellipse cx="7.6" cy="12" rx="3.3" ry="6.1"/><path d="M7.6 5.9h6.2a3.3 6.1 0 0 1 0 12.2H7.6"/><ellipse cx="7.6" cy="12" rx="1.35" ry="2.5"/><path d="M18.3 3.2c1.8 2 2.7 3.3 2.7 4.4a2.7 2.7 0 0 1-5.4 0c0-1.1.9-2.4 2.7-4.4z"/></g></g>
+<g class="ci-badge"><g fill="currentColor" opacity=".8"><path d="M19.1 16.2a2.9 2.9 0 0 1 0 5.8z"/></g><g stroke="currentColor" stroke-width="1.25" fill="none" stroke-linejoin="round"><circle cx="19.1" cy="19.1" r="2.9"/></g></g></svg></span><span class="code">Pre-Painted Coil (Semi-Finished)</span></button><button class="tile" data-anim="sparkle" data-key="sfg-gs" style="--c: var(--cat-semi)" title="Galvanized plate: spangle sitting on the face"><span class="chip"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24" fill="none" role="img" aria-label="SFG-GS">
+<title>SFG-GS</title>
+<mask id="ci-sfg-gs-n" maskUnits="userSpaceOnUse" x="0" y="0" width="24" height="24"><rect width="24" height="24" fill="#fff"/><circle cx="19.1" cy="19.1" r="4.35" fill="#000"/></mask><g class="ci-accent ci-sparkle" fill="currentColor" opacity=".16"><g mask="url(#ci-sfg-gs-n)" transform="translate(.56 .56) scale(.87)"><path d="M12 3.9 20.1 8.3 12 12.7 3.9 8.3z"/><path d="M12 5.8999999999999995C12.15341 7.049999999999999 13.15 8.04659 14.3 8.2C13.15 8.353409999999998 12.15341 9.35 12 10.5C11.84659 9.35 10.85 8.353409999999998 9.7 8.2C10.85 8.04659 11.84659 7.049999999999999 12 5.8999999999999995z"/></g></g>
+<g class="ci-stroke" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><g mask="url(#ci-sfg-gs-n)" transform="translate(.56 .56) scale(.87)"><path d="M12 3.9 20.1 8.3 12 12.7 3.9 8.3z"/><path d="M3.9 11.8 12 16.2l8.1-4.4"/><path d="M12 5.8999999999999995C12.15341 7.049999999999999 13.15 8.04659 14.3 8.2C13.15 8.353409999999998 12.15341 9.35 12 10.5C11.84659 9.35 10.85 8.353409999999998 9.7 8.2C10.85 8.04659 11.84659 7.049999999999999 12 5.8999999999999995z"/></g></g>
+<g class="ci-badge"><g fill="currentColor" opacity=".8"><path d="M19.1 16.2a2.9 2.9 0 0 1 0 5.8z"/></g><g stroke="currentColor" stroke-width="1.25" fill="none" stroke-linejoin="round"><circle cx="19.1" cy="19.1" r="2.9"/></g></g></svg></span><span class="code">SFG-GS</span></button><button class="tile" data-anim="breathe" data-key="sfg-gl" style="--c: var(--cat-semi)" title="Galvalume coil at half stage"><span class="chip"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24" fill="none" role="img" aria-label="SFG-GL">
+<title>SFG-GL</title>
+<mask id="ci-sfg-gl-n" maskUnits="userSpaceOnUse" x="0" y="0" width="24" height="24"><rect width="24" height="24" fill="#fff"/><circle cx="19.1" cy="19.1" r="4.35" fill="#000"/></mask><g class="ci-accent ci-breathe" fill="currentColor" opacity=".16"><g mask="url(#ci-sfg-gl-n)" transform="translate(.56 .56) scale(.87)"><ellipse cx="7.6" cy="12" rx="3.3" ry="6.1"/></g></g>
+<g class="ci-stroke" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><g mask="url(#ci-sfg-gl-n)" transform="translate(.56 .56) scale(.87)"><ellipse cx="7.6" cy="12" rx="3.3" ry="6.1"/><path d="M7.6 5.9h6.2a3.3 6.1 0 0 1 0 12.2H7.6"/><ellipse cx="7.6" cy="12" rx="1.35" ry="2.5"/><path d="M18.4 3.6 20.8 4.6v2.2c0 1.6-1.1 2.6-2.4 3.2-1.3-.6-2.4-1.6-2.4-3.2V4.6z"/></g></g>
+<g class="ci-badge"><g fill="currentColor" opacity=".8"><path d="M19.1 16.2a2.9 2.9 0 0 1 0 5.8z"/></g><g stroke="currentColor" stroke-width="1.25" fill="none" stroke-linejoin="round"><circle cx="19.1" cy="19.1" r="2.9"/></g></g></svg></span><span class="code">SFG-GL</span></button><button class="tile" data-anim="breathe" data-key="sfg-crc" style="--c: var(--cat-semi)" title="Cold-rolled coil at half stage"><span class="chip"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24" fill="none" role="img" aria-label="SFG-CRC">
+<title>SFG-CRC</title>
+<mask id="ci-sfg-crc-n" maskUnits="userSpaceOnUse" x="0" y="0" width="24" height="24"><rect width="24" height="24" fill="#fff"/><circle cx="19.1" cy="19.1" r="4.35" fill="#000"/></mask><g class="ci-accent ci-breathe" fill="currentColor" opacity=".16"><g mask="url(#ci-sfg-crc-n)" transform="translate(.56 .56) scale(.87)"><ellipse cx="7.6" cy="12" rx="3.3" ry="6.1"/></g></g>
+<g class="ci-stroke" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><g mask="url(#ci-sfg-crc-n)" transform="translate(.56 .56) scale(.87)"><ellipse cx="7.6" cy="12" rx="3.3" ry="6.1"/><path d="M7.6 5.9h6.2a3.3 6.1 0 0 1 0 12.2H7.6"/><ellipse cx="7.6" cy="12" rx="1.35" ry="2.5"/><circle cx="18.3" cy="6.4" r="1.9"/><path d="M15.4 3.3h5.8M15.4 9.5h5.8"/></g></g>
+<g class="ci-badge"><g fill="currentColor" opacity=".8"><path d="M19.1 16.2a2.9 2.9 0 0 1 0 5.8z"/></g><g stroke="currentColor" stroke-width="1.25" fill="none" stroke-linejoin="round"><circle cx="19.1" cy="19.1" r="2.9"/></g></g></svg></span><span class="code">SFG-CRC</span></button><button class="tile" data-anim="sparkle" data-key="sfg-ss" style="--c: var(--cat-semi)" title="Stainless plate at half stage"><span class="chip"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24" fill="none" role="img" aria-label="SFG-SS">
+<title>SFG-SS</title>
+<mask id="ci-sfg-ss-n" maskUnits="userSpaceOnUse" x="0" y="0" width="24" height="24"><rect width="24" height="24" fill="#fff"/><circle cx="19.1" cy="19.1" r="4.35" fill="#000"/></mask><g class="ci-accent ci-sparkle" fill="currentColor" opacity=".16"><g mask="url(#ci-sfg-ss-n)" transform="translate(.56 .56) scale(.87)"><path d="M12 3.9 20.1 8.3 12 12.7 3.9 8.3z"/><path d="M9.2 9.2 13.4 6.9l1.7 1-4.2 2.3z"/></g></g>
+<g class="ci-stroke" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><g mask="url(#ci-sfg-ss-n)" transform="translate(.56 .56) scale(.87)"><path d="M12 3.9 20.1 8.3 12 12.7 3.9 8.3z"/><path d="M3.9 11.8 12 16.2l8.1-4.4"/><path d="M9.2 9.2 13.4 6.9l1.7 1-4.2 2.3z"/></g></g>
+<g class="ci-badge"><g fill="currentColor" opacity=".8"><path d="M19.1 16.2a2.9 2.9 0 0 1 0 5.8z"/></g><g stroke="currentColor" stroke-width="1.25" fill="none" stroke-linejoin="round"><circle cx="19.1" cy="19.1" r="2.9"/></g></g></svg></span><span class="code">SFG-SS</span></button><button class="tile" data-anim="breathe" data-key="sfg-mh" style="--c: var(--cat-semi)" title="Mild hollow section at half stage"><span class="chip"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24" fill="none" role="img" aria-label="SFG-MH">
+<title>SFG-MH</title>
+<mask id="ci-sfg-mh-n" maskUnits="userSpaceOnUse" x="0" y="0" width="24" height="24"><rect width="24" height="24" fill="#fff"/><circle cx="19.1" cy="19.1" r="4.35" fill="#000"/></mask><g class="ci-accent ci-breathe" fill="currentColor" opacity=".16"><g mask="url(#ci-sfg-mh-n)" transform="translate(.56 .56) scale(.87)"><rect x="6.5" y="10.4" width="4.5" height="4.5" rx="1"/></g></g>
+<g class="ci-stroke" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><g mask="url(#ci-sfg-mh-n)" transform="translate(.56 .56) scale(.87)"><rect x="3.7" y="7.6" width="10.1" height="10.1" rx="1.7"/><path d="M6.6 4.7h10.3a1.7 1.7 0 0 1 1.7 1.7v10.3"/><path d="m3.7 7.6 2.9-2.9M13.8 7.6l2.9-2.9M13.8 17.7l2.9-2.9"/><rect x="6.5" y="10.4" width="4.5" height="4.5" rx="1"/></g></g>
+<g class="ci-badge"><g fill="currentColor" opacity=".8"><path d="M19.1 16.2a2.9 2.9 0 0 1 0 5.8z"/></g><g stroke="currentColor" stroke-width="1.25" fill="none" stroke-linejoin="round"><circle cx="19.1" cy="19.1" r="2.9"/></g></g></svg></span><span class="code">SFG-MH</span></button><button class="tile" data-anim="breathe" data-key="sfg-oth" style="--c: var(--cat-semi)" title="Unspecified semi-finished stock: plate plus continuation dots"><span class="chip"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24" fill="none" role="img" aria-label="SFG-OTH">
+<title>SFG-OTH</title>
+<mask id="ci-sfg-oth-n" maskUnits="userSpaceOnUse" x="0" y="0" width="24" height="24"><rect width="24" height="24" fill="#fff"/><circle cx="19.1" cy="19.1" r="4.35" fill="#000"/></mask><g class="ci-accent ci-breathe" fill="currentColor" opacity=".16"><g mask="url(#ci-sfg-oth-n)" transform="translate(.56 .56) scale(.87)"><path d="M12 3.9 20.1 8.3 12 12.7 3.9 8.3z"/><circle cx="7.6" cy="18.4" r="1.15"/><circle cx="11" cy="18.4" r="1.15"/><circle cx="14.4" cy="18.4" r="1.15"/></g></g>
+<g class="ci-stroke" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><g mask="url(#ci-sfg-oth-n)" transform="translate(.56 .56) scale(.87)"><path d="M12 3.9 20.1 8.3 12 12.7 3.9 8.3z"/><path d="M3.9 11.8 12 16.2l8.1-4.4"/><circle cx="7.6" cy="18.4" r="1.15"/><circle cx="11" cy="18.4" r="1.15"/><circle cx="14.4" cy="18.4" r="1.15"/></g></g>
+<g class="ci-badge"><g fill="currentColor" opacity=".8"><path d="M19.1 16.2a2.9 2.9 0 0 1 0 5.8z"/></g><g stroke="currentColor" stroke-width="1.25" fill="none" stroke-linejoin="round"><circle cx="19.1" cy="19.1" r="2.9"/></g></g></svg></span><span class="code">SFG-OTH</span></button></div></section>
+<section><div class="sec-head" style="--c: var(--cat-finished)"><span class="dot"></span><h2>FG — Finished goods</h2><p>Ready for despatch</p><span class="n">5</span></div><div class="grid"><button class="tile" data-anim="breathe" data-key="fg-sc" style="--c: var(--cat-finished)" title="Finished steel coil, ready to ship"><span class="chip"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24" fill="none" role="img" aria-label="FG-SC">
+<title>FG-SC</title>
+<mask id="ci-fg-sc-n" maskUnits="userSpaceOnUse" x="0" y="0" width="24" height="24"><rect width="24" height="24" fill="#fff"/><circle cx="19.1" cy="19.1" r="4.35" fill="#000"/></mask><g class="ci-accent ci-breathe" fill="currentColor" opacity=".16"><g mask="url(#ci-fg-sc-n)" transform="translate(.56 .56) scale(.87)"><ellipse cx="7.6" cy="12" rx="3.3" ry="6.1"/></g></g>
+<g class="ci-stroke" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><g mask="url(#ci-fg-sc-n)" transform="translate(.56 .56) scale(.87)"><ellipse cx="7.6" cy="12" rx="3.3" ry="6.1"/><path d="M7.6 5.9h6.2a3.3 6.1 0 0 1 0 12.2H7.6"/><ellipse cx="7.6" cy="12" rx="1.35" ry="2.5"/></g></g>
+<g class="ci-badge"><g fill="currentColor" opacity=".8"><circle cx="19.1" cy="19.1" r="2.9"/></g><g stroke="currentColor" stroke-width="1.25" fill="none" stroke-linejoin="round"><circle cx="19.1" cy="19.1" r="2.9"/></g></g></svg></span><span class="code">FG-SC</span></button><button class="tile" data-anim="breathe" data-key="fg-mh" style="--c: var(--cat-finished)" title="Mild hollow section, finished"><span class="chip"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24" fill="none" role="img" aria-label="FG-MH">
+<title>FG-MH</title>
+<mask id="ci-fg-mh-n" maskUnits="userSpaceOnUse" x="0" y="0" width="24" height="24"><rect width="24" height="24" fill="#fff"/><circle cx="19.1" cy="19.1" r="4.35" fill="#000"/></mask><g class="ci-accent ci-breathe" fill="currentColor" opacity=".16"><g mask="url(#ci-fg-mh-n)" transform="translate(.56 .56) scale(.87)"><rect x="6.5" y="10.4" width="4.5" height="4.5" rx="1"/></g></g>
+<g class="ci-stroke" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><g mask="url(#ci-fg-mh-n)" transform="translate(.56 .56) scale(.87)"><rect x="3.7" y="7.6" width="10.1" height="10.1" rx="1.7"/><path d="M6.6 4.7h10.3a1.7 1.7 0 0 1 1.7 1.7v10.3"/><path d="m3.7 7.6 2.9-2.9M13.8 7.6l2.9-2.9M13.8 17.7l2.9-2.9"/><rect x="6.5" y="10.4" width="4.5" height="4.5" rx="1"/></g></g>
+<g class="ci-badge"><g fill="currentColor" opacity=".8"><circle cx="19.1" cy="19.1" r="2.9"/></g><g stroke="currentColor" stroke-width="1.25" fill="none" stroke-linejoin="round"><circle cx="19.1" cy="19.1" r="2.9"/></g></g></svg></span><span class="code">FG-MH</span></button><button class="tile" data-anim="sparkle" data-key="fg-gh" style="--c: var(--cat-finished)" title="Galvanized hollow section: same tube, spangle mark"><span class="chip"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24" fill="none" role="img" aria-label="FG-GH">
+<title>FG-GH</title>
+<mask id="ci-fg-gh-n" maskUnits="userSpaceOnUse" x="0" y="0" width="24" height="24"><rect width="24" height="24" fill="#fff"/><circle cx="19.1" cy="19.1" r="4.35" fill="#000"/></mask><g class="ci-accent ci-sparkle" fill="currentColor" opacity=".16"><g mask="url(#ci-fg-gh-n)" transform="translate(.56 .56) scale(.87)"><rect x="6.5" y="10.4" width="4.5" height="4.5" rx="1"/></g></g>
+<g class="ci-stroke" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><g mask="url(#ci-fg-gh-n)" transform="translate(.56 .56) scale(.87)"><rect x="3.7" y="7.6" width="10.1" height="10.1" rx="1.7"/><path d="M6.6 4.7h10.3a1.7 1.7 0 0 1 1.7 1.7v10.3"/><path d="m3.7 7.6 2.9-2.9M13.8 7.6l2.9-2.9M13.8 17.7l2.9-2.9"/><rect x="6.5" y="10.4" width="4.5" height="4.5" rx="1"/><path d="M4.4 1.0999999999999996C4.546740000000001 2.1999999999999997 5.5 3.15326 6.6000000000000005 3.3C5.5 3.4467399999999997 4.546740000000001 4.4 4.4 5.5C4.25326 4.4 3.3000000000000003 3.4467399999999997 2.2 3.3C3.3000000000000003 3.15326 4.25326 2.1999999999999997 4.4 1.0999999999999996z"/></g></g>
+<g class="ci-badge"><g fill="currentColor" opacity=".8"><circle cx="19.1" cy="19.1" r="2.9"/></g><g stroke="currentColor" stroke-width="1.25" fill="none" stroke-linejoin="round"><circle cx="19.1" cy="19.1" r="2.9"/></g></g></svg></span><span class="code">FG-GH</span></button><button class="tile" data-anim="breathe" data-key="fg-pt" style="--c: var(--cat-finished)" title="Pipe and tube, finished"><span class="chip"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24" fill="none" role="img" aria-label="FG-PT">
+<title>FG-PT</title>
+<mask id="ci-fg-pt-n" maskUnits="userSpaceOnUse" x="0" y="0" width="24" height="24"><rect width="24" height="24" fill="#fff"/><circle cx="19.1" cy="19.1" r="4.35" fill="#000"/></mask><g class="ci-accent ci-breathe" fill="currentColor" opacity=".16"><g mask="url(#ci-fg-pt-n)" transform="translate(.56 .56) scale(.87)"><ellipse cx="7.6" cy="12" rx="1.7" ry="3.2"/></g></g>
+<g class="ci-stroke" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><g mask="url(#ci-fg-pt-n)" transform="translate(.56 .56) scale(.87)"><ellipse cx="7.6" cy="12" rx="3.3" ry="6.1"/><ellipse cx="7.6" cy="12" rx="1.7" ry="3.2"/><path d="M7.6 5.9h6.2M7.6 18.1h6.2M13.8 5.9a3.3 6.1 0 0 1 0 12.2"/></g></g>
+<g class="ci-badge"><g fill="currentColor" opacity=".8"><circle cx="19.1" cy="19.1" r="2.9"/></g><g stroke="currentColor" stroke-width="1.25" fill="none" stroke-linejoin="round"><circle cx="19.1" cy="19.1" r="2.9"/></g></g></svg></span><span class="code">FG-PT</span></button><button class="tile" data-anim="breathe" data-key="fg-cfp-light-gauge-steel" style="--c: var(--cat-finished)" title="Light-gauge stud: C-section with service holes"><span class="chip"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24" fill="none" role="img" aria-label="FG-CFP Light Gauge Steel">
+<title>FG-CFP Light Gauge Steel</title>
+<mask id="ci-fg-cfp-light-gauge-steel-n" maskUnits="userSpaceOnUse" x="0" y="0" width="24" height="24"><rect width="24" height="24" fill="#fff"/><circle cx="19.1" cy="19.1" r="4.35" fill="#000"/></mask><g class="ci-accent ci-breathe" fill="currentColor" opacity=".16"><g mask="url(#ci-fg-cfp-light-gauge-steel-n)" transform="translate(.56 .56) scale(.87)"><circle cx="7.15" cy="10.1" r="1.15"/><circle cx="7.15" cy="13.9" r="1.15"/></g></g>
+<g class="ci-stroke" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><g mask="url(#ci-fg-cfp-light-gauge-steel-n)" transform="translate(.56 .56) scale(.87)"><path d="M17.6 4.6H5.6v14.8h12v-3.1H8.7V7.7h8.9z"/><circle cx="7.15" cy="10.1" r="1.15"/><circle cx="7.15" cy="13.9" r="1.15"/></g></g>
+<g class="ci-badge"><g fill="currentColor" opacity=".8"><circle cx="19.1" cy="19.1" r="2.9"/></g><g stroke="currentColor" stroke-width="1.25" fill="none" stroke-linejoin="round"><circle cx="19.1" cy="19.1" r="2.9"/></g></g></svg></span><span class="code">FG-CFP Light Gauge Steel</span></button></div></section>
+<section><div class="sec-head" style="--c: var(--cat-fitting)"><span class="dot"></span><h2>FT — Fittings & fixings</h2><p>Parts that join, fix or close a build</p><span class="n">6</span></div><div class="grid"><button class="tile" data-anim="pulse" data-key="ft-scheider" style="--c: var(--cat-fitting)" title="DIN-rail breaker module with its toggle"><span class="chip"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24" fill="none" role="img" aria-label="FT-SCHEIDER">
+<title>FT-SCHEIDER</title>
+<g class="ci-accent ci-pulse" fill="currentColor" opacity=".16"><rect x="9.6" y="11.4" width="4.8" height="6" rx="1.4"/></g>
+<g class="ci-stroke" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="6.8" y="3.6" width="10.4" height="16.8" rx="2.4"/><path d="M6.8 8.8h10.4M9.6 3.6v2.2M14.4 3.6v2.2"/><rect x="9.6" y="11.4" width="4.8" height="6" rx="1.4"/></g>
+</svg></span><span class="code">FT-SCHEIDER</span></button><button class="tile" data-anim="pulse" data-key="ft-board" style="--c: var(--cat-fitting)" title="Distribution board with three breaker ways"><span class="chip"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24" fill="none" role="img" aria-label="FT-BOARD">
+<title>FT-BOARD</title>
+<g class="ci-accent ci-pulse" fill="currentColor" opacity=".16"><rect x="6.2" y="11.4" width="2.8" height="5.4" rx="1"/><rect x="10.6" y="11.4" width="2.8" height="5.4" rx="1"/><rect x="15" y="11.4" width="2.8" height="5.4" rx="1"/></g>
+<g class="ci-stroke" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="3.4" y="4.6" width="17.2" height="14.8" rx="2.6"/><path d="M3.4 9h17.2"/><rect x="6.2" y="11.4" width="2.8" height="5.4" rx="1"/><rect x="10.6" y="11.4" width="2.8" height="5.4" rx="1"/><rect x="15" y="11.4" width="2.8" height="5.4" rx="1"/></g>
+</svg></span><span class="code">FT-BOARD</span></button><button class="tile" data-anim="pulse" data-key="ft-cable" style="--c: var(--cat-fitting)" title="Cable spiralled onto itself, connector on the free end"><span class="chip"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24" fill="none" role="img" aria-label="FT-CABLE">
+<title>FT-CABLE</title>
+<g class="ci-accent ci-pulse" fill="currentColor" opacity=".16"><circle cx="16.4" cy="2.8" r="1.5"/><circle cx="12" cy="12" r="3.2"/></g>
+<g class="ci-stroke" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5.2a6.8 6.8 0 1 1-6.8 6.8"/><path d="M12 8.8a3.2 3.2 0 1 0 3.2 3.2"/><path d="m12 5.2 2.6-1.5"/><circle cx="16.4" cy="2.8" r="1.5"/></g>
+</svg></span><span class="code">FT-CABLE</span></button><button class="tile" data-anim="breathe" data-key="ft-rf-screw" style="--c: var(--cat-fitting)" title="Hex-head roofing screw with washer and thread"><span class="chip"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24" fill="none" role="img" aria-label="FT-RF-SCREW">
+<title>FT-RF-SCREW</title>
+<g class="ci-accent ci-breathe" fill="currentColor" opacity=".16"><path d="M8.9 3.4h6.2l1.6 2.6-1.6 2.6H8.9L7.3 6z"/></g>
+<g class="ci-stroke" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M8.9 3.4h6.2l1.6 2.6-1.6 2.6H8.9L7.3 6z"/><path d="M7.4 9.6h9.2"/><path d="M12 8.6v10.8"/><path d="M10.1 12h3.8M10.1 14.4h3.8M10.5 16.8h3"/></g>
+</svg></span><span class="code">FT-RF-SCREW</span></button><button class="tile" data-anim="float" data-key="ft-tran-sheet" style="--c: var(--cat-fitting)" title="See-through panel: hollow face, hatched like glazing"><span class="chip"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24" fill="none" role="img" aria-label="FT-TRAN-SHEET">
+<title>FT-TRAN-SHEET</title>
+<g class="ci-accent ci-float" fill="currentColor" opacity=".16"></g>
+<g class="ci-stroke" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5.6 20.2 10.1 12 14.6 3.8 10.1z"/><path d="M3.8 13.4 12 17.9l8.2-4.5"/><path d="m8.4 8.1 3.1 1.7M11.6 6.4l3.1 1.7"/></g>
+</svg></span><span class="code">FT-TRAN-SHEET</span></button><button class="tile" data-anim="breathe" data-key="ft-oth" style="--c: var(--cat-fitting)" title="Hex nut - the generic fixing"><span class="chip"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24" fill="none" role="img" aria-label="FT-OTH">
+<title>FT-OTH</title>
+<g class="ci-accent ci-breathe" fill="currentColor" opacity=".16"><circle cx="12" cy="12" r="3"/></g>
+<g class="ci-stroke" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4.4 18.6 8.2v7.6L12 19.6 5.4 15.8V8.2z"/><circle cx="12" cy="12" r="3"/></g>
+</svg></span><span class="code">FT-OTH</span></button></div></section>
+<section><div class="sec-head" style="--c: var(--cat-part)"><span class="dot"></span><h2>SP · MP · EP — Parts</h2><p>Spare, maintenance and equipment parts</p><span class="n">4</span></div><div class="grid"><button class="tile" data-anim="tick" data-key="sp-mech" style="--c: var(--cat-part)" title="Single gear - mechanical spare part"><span class="chip"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24" fill="none" role="img" aria-label="SP-MECH">
+<title>SP-MECH</title>
+<g class="ci-accent ci-tick" fill="currentColor" opacity=".16"><circle cx="12" cy="12" r="2.1"/></g>
+<g class="ci-stroke" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5.1"/><circle cx="12" cy="12" r="2.1"/><path d="M12 3.3v2.1M12 18.6v2.1M20.7 12h-2.1M5.4 12H3.3M18.15 5.85 16.7 7.3M7.3 16.7l-1.45 1.45M18.15 18.15 16.7 16.7M7.3 7.3 5.85 5.85"/></g>
+</svg></span><span class="code">SP-MECH</span></button><button class="tile" data-anim="tick" data-key="mp-mech" style="--c: var(--cat-part)" title="Two meshed gears - mechanical maintenance parts"><span class="chip"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24" fill="none" role="img" aria-label="MP-MECH">
+<title>MP-MECH</title>
+<g class="ci-accent ci-tick" fill="currentColor" opacity=".16"><circle cx="9.4" cy="9.4" r="1.6"/><circle cx="17" cy="17" r="2.7"/></g>
+<g class="ci-stroke" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="9.4" cy="9.4" r="4"/><circle cx="9.4" cy="9.4" r="1.6"/><path d="M9.4 3.6v1.8M9.4 13.4v1.8M15.2 9.4h-1.8M5.4 9.4H3.6"/><circle cx="17" cy="17" r="2.7"/><path d="M17 13.1v1.2M17 19.7v1.2M20.9 17h-1.2M14.3 17h-1.2"/></g>
+</svg></span><span class="code">MP-MECH</span></button><button class="tile" data-anim="pulse" data-key="sp-elec" style="--c: var(--cat-part)" title="Bolt glyph - electrical spare part"><span class="chip"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24" fill="none" role="img" aria-label="SP-ELEC">
+<title>SP-ELEC</title>
+<g class="ci-accent ci-pulse" fill="currentColor" opacity=".16"><path d="M13.1 3.8 7.6 12.6h4.2l-1 7.6 6.1-9.4h-4.4z"/></g>
+<g class="ci-stroke" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M13.1 3.8 7.6 12.6h4.2l-1 7.6 6.1-9.4h-4.4z"/></g>
+</svg></span><span class="code">SP-ELEC</span></button><button class="tile" data-anim="pulse" data-key="ep-elec" style="--c: var(--cat-part)" title="Plug body and pins - electrical equipment part"><span class="chip"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24" fill="none" role="img" aria-label="EP-ELEC">
+<title>EP-ELEC</title>
+<g class="ci-accent ci-pulse" fill="currentColor" opacity=".16"><path d="M6.4 8.2h11.2v2.6a5.6 5.6 0 0 1-11.2 0z"/></g>
+<g class="ci-stroke" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M9 3.6v4.2M15 3.6v4.2"/><path d="M6.4 8.2h11.2v2.6a5.6 5.6 0 0 1-11.2 0z"/><path d="M12 16.4v3.9"/></g>
+</svg></span><span class="code">EP-ELEC</span></button></div></section>
+<section><div class="sec-head" style="--c: var(--cat-supply)"><span class="dot"></span><h2>GEN-SUPP — General supply</h2><p>Consumables by requesting function</p><span class="n">3</span></div><div class="grid"><button class="tile" data-anim="breathe" data-key="gen-supp-oper" style="--c: var(--cat-supply)" title="Stock shelf - operational supplies held on site"><span class="chip"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24" fill="none" role="img" aria-label="GEN-SUPP-OPER">
+<title>GEN-SUPP-OPER</title>
+<g class="ci-accent ci-breathe" fill="currentColor" opacity=".16"><rect x="6.2" y="6.2" width="3.4" height="1.9" rx=".7"/><rect x="6.2" y="11.3" width="5.6" height="1.9" rx=".7"/><rect x="6.2" y="16.4" width="4.2" height="1.9" rx=".7"/></g>
+<g class="ci-stroke" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="3.4" y="4.4" width="17.2" height="15.2" rx="2.5"/><path d="M3.4 9.5h17.2M3.4 14.6h17.2"/><rect x="6.2" y="6.2" width="3.4" height="1.9" rx=".7"/><rect x="6.2" y="11.3" width="5.6" height="1.9" rx=".7"/><rect x="6.2" y="16.4" width="4.2" height="1.9" rx=".7"/></g>
+</svg></span><span class="code">GEN-SUPP-OPER</span></button><button class="tile" data-anim="breathe" data-key="gen-supp-hr-adm" style="--c: var(--cat-supply)" title="Personnel record: document behind a person"><span class="chip"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24" fill="none" role="img" aria-label="GEN-SUPP-HR-ADM">
+<title>GEN-SUPP-HR-ADM</title>
+<g class="ci-accent ci-breathe" fill="currentColor" opacity=".16"><circle cx="15.8" cy="12.6" r="2.5"/></g>
+<g class="ci-stroke" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="3.4" y="3" width="11" height="13.2" rx="2.2"/><path d="M6.4 6.8h5M6.4 9.8h3.6"/><circle cx="15.8" cy="12.6" r="2.5"/><path d="M20.4 20.2a4.6 4.6 0 0 0-9.2 0"/></g>
+</svg></span><span class="code">GEN-SUPP-HR-ADM</span></button><button class="tile" data-anim="pulse" data-key="gen-supp-mrk" style="--c: var(--cat-supply)" title="Megaphone - marketing and promotional supply"><span class="chip"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24" fill="none" role="img" aria-label="GEN-SUPP-MRK">
+<title>GEN-SUPP-MRK</title>
+<g class="ci-accent ci-pulse" fill="currentColor" opacity=".16"><path d="M4.6 10v4a1.9 1.9 0 0 0 1.9 1.9h1.4L14.6 19V5L7.9 8.1H6.5A1.9 1.9 0 0 0 4.6 10z"/></g>
+<g class="ci-stroke" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4.6 10v4a1.9 1.9 0 0 0 1.9 1.9h1.4L14.6 19V5L7.9 8.1H6.5A1.9 1.9 0 0 0 4.6 10z"/><path d="M17.6 9.4a3.8 3.8 0 0 1 0 5.2"/><path d="M8.4 15.9v2.9a1.4 1.4 0 0 0 2.8 0v-1.5"/></g>
+</svg></span><span class="code">GEN-SUPP-MRK</span></button></div></section>
+<section><div class="sec-head" style="--c: var(--cat-misc)"><span class="dot"></span><h2>Operational</h2><p>Everything that isn't stocked material</p><span class="n">4</span></div><div class="grid"><button class="tile" data-anim="float" data-key="cm-com" style="--c: var(--cat-misc)" title="Sealed carton in isometric - common consumables"><span class="chip"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24" fill="none" role="img" aria-label="CM-COM">
+<title>CM-COM</title>
+<g class="ci-accent ci-float" fill="currentColor" opacity=".16"><path d="M4.6 7.3 12 11.2v8.4L4.6 15.7z"/></g>
+<g class="ci-stroke" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3.4 19.4 7.3v8.4L12 19.6 4.6 15.7V7.3z"/><path d="M4.6 7.3 12 11.2l7.4-3.9M12 11.2v8.4"/></g>
+</svg></span><span class="code">CM-COM</span></button><button class="tile" data-anim="tick" data-key="scrap" style="--c: var(--cat-misc)" title="Offcut inside a return loop - material going back to melt"><span class="chip"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24" fill="none" role="img" aria-label="SCRAP">
+<title>SCRAP</title>
+<g class="ci-accent ci-tick" fill="currentColor" opacity=".16"><path d="M12 8.6 15.4 10.6v3.8L12 16.4 8.6 14.4v-3.8z"/></g>
+<g class="ci-stroke" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4.6a7.4 7.4 0 1 1-5.2 2.2"/><path d="M6.8 3.4V7h3.6"/><path d="M12 8.6 15.4 10.6v3.8L12 16.4 8.6 14.4v-3.8z"/></g>
+</svg></span><span class="code">SCRAP</span></button><button class="tile" data-anim="breathe" data-key="services" style="--c: var(--cat-misc)" title="Signed-off work order - a service, not a stocked item"><span class="chip"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24" fill="none" role="img" aria-label="SERVICES">
+<title>SERVICES</title>
+<g class="ci-accent ci-breathe" fill="currentColor" opacity=".16"><path d="M9 4.9v-.8a1.6 1.6 0 0 1 1.6-1.6h2.8A1.6 1.6 0 0 1 15 4.1v.8z"/></g>
+<g class="ci-stroke" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="4.6" y="4.9" width="14.8" height="15.1" rx="2.4"/><path d="M9 4.9v-.8a1.6 1.6 0 0 1 1.6-1.6h2.8A1.6 1.6 0 0 1 15 4.1v.8z"/><path d="m9.2 12.6 2.2 2.2 4.2-4.2"/></g>
+</svg></span><span class="code">SERVICES</span></button><button class="tile" data-anim="breathe" data-key="others" style="--c: var(--cat-misc)" title="Four-dot grid - the catch-all bucket"><span class="chip"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24" fill="none" role="img" aria-label="OTHERS">
+<title>OTHERS</title>
+<g class="ci-accent ci-breathe" fill="currentColor" opacity=".16"><circle cx="15.8" cy="15.8" r="2.7"/></g>
+<g class="ci-stroke" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="8.2" cy="8.2" r="2.7"/><circle cx="15.8" cy="8.2" r="2.7"/><circle cx="8.2" cy="15.8" r="2.7"/><circle cx="15.8" cy="15.8" r="2.7"/></g>
+</svg></span><span class="code">OTHERS</span></button></div></section>
+
+  <footer>
+    Stroke 1.6 on a 24&nbsp;×&nbsp;24 grid, 1.75 when active · accent fill 16% → 30% ·
+    appear 300&nbsp;ms, press 140&nbsp;ms, state 220&nbsp;ms · ambient 2.4–4&nbsp;s, selection only ·
+    reduced-motion honoured.
+  </footer>
+</div>
+<script>
+const b = document.body, r = document.documentElement;
+const flip = (el, on) => el.setAttribute('aria-pressed', on);
+theme.onclick = () => { const d = r.dataset.theme === 'dark';
+  r.dataset.theme = d ? 'light' : 'dark'; theme.textContent = d ? 'Dark' : 'Light'; flip(theme, !d); };
+size.onclick = () => { const s = b.classList.toggle('small');
+  size.textContent = s ? '48 px' : '32 px'; flip(size, s); };
+gray.onclick = () => flip(gray, b.classList.toggle('gray'));
+motion.onclick = () => flip(motion, b.classList.toggle('motion'));
+document.querySelectorAll('.tile').forEach((t, i) => {
+  if (!t.closest('.states')) t.style.animationDelay = Math.min(i, 30) * 18 + 'ms';
+  t.addEventListener('click', () => { if (!t.closest('.states')) t.classList.toggle('is-active'); });
+});
+</script>
+</body>
+</html>

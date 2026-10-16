@@ -1,0 +1,132 @@
+# Secrets.
+#
+# `lib/core/config/env.dart` documents .env as "the git-ignored `.env` file",
+# but no .gitignore existed, so nothing enforced that. .env now carries DB_SALT
+# — the salt for the SQLCipher key derivation — and .env.example exists to be
+# committed in its place.
+.env
+.test
+.docs
+.env.*
+!.env.example
+android/key.properties
+android/keystore/
+*.jks
+*.keystore
+# Generated from .env by `dart run tool/generate_ios_env.dart`; carries the
+# Google Maps key that SECURITY.md §9 keeps out of git history.
+ios/Flutter/Env.xcconfig
+
+# Note: build/ and .dart_tool/ are deliberately NOT listed here. This repo
+# already tracks files under both, so ignoring them now would only hide further
+# changes without untracking what is committed. Removing them is a separate,
+# deliberate cleanup:
+#   git rm -r --cached build .dart_tool
+# Flutter / Dart build artifacts
+.dart_tool/
+build/
+.flutter-plugins
+.flutter-plugins-dependencies
+.pub-cache/
+.pub/
+
+# iOS build artifacts
+ios/Pods/
+ios/Runner.xcworkspace
+.DS_Store
+
+# Graphify knowledge graph (rebuildable artifact: `graphify update .`)
+graphify-out/
+
+# Envied output. Deliberately the ONE generated file that is not committed:
+# unlike the drift *.g.dart files, it embeds the obfuscated SAP gateway URL and
+# the database salt. Obfuscation is defense-in-depth, not a secret store
+# (docs/skills/security.md §4), so it is regenerated at build time instead.
+lib/core/config/env.g.dart
+
+# Machine-specific Claude Code settings: the graphify PreToolUse hooks embed an
+# ABSOLUTE path to the executable, which differs per OS and per user. Committing
+# them breaks every other developer's machine, so each developer generates their
+# own with `graphify claude install`. See docs/GRAPHIFY.md.
+.claude/settings.local.json
+
+# Firebase per-app config. Not high-severity secrets — they ship inside the
+# binary — but they name the project and its API keys, and
+# `docs/feature/notification/notification-mobile.md` Step 1 asks for them to be
+# kept out of the repo.
+#
+# ⚠️ BOTH FILES ARE STILL TRACKED, so these two lines currently do nothing:
+# .gitignore does not affect a file git already follows. Untracking them is a
+# deliberate, coordinated change — every developer and the CI runner has to
+# obtain them out of band first, or the Android build fails at
+# `processDebugGoogleServices` and iOS silently loses its Firebase config.
+#
+# To complete it, once the team has the files distributed:
+#     git rm --cached android/app/google-services.json \
+#                     ios/Runner/GoogleService-Info.plist
+#
+# These entries are here so a fresh copy is not re-added by accident the moment
+# that happens.
+android/app/google-services.json
+ios/Runner/GoogleService-Info.plist
+
+# Release signing and distribution credentials — repo-wide.
+#
+# android/.gitignore already covers key.properties / *.jks / *.keystore, but
+# only beneath android/. These catch a keystore or credential dropped anywhere
+# else (repo root, a CI workspace, docs/). See docs/release/android-release.md.
+key.properties
+*.jks
+*.keystore
+*.p12
+# Firebase / Google Cloud service-account keys used for App Distribution
+# uploads. They grant write access to the project — never commit one.
+*service-account*.json
+*-firebase-adminsdk-*.json
+# Built artifacts that may be copied out of build/ for distribution.
+*.aab
+*.apk
+
+# Kotlin compile-daemon session markers. Empty, per-machine, recreated on every
+# Gradle run — and one was accidentally committed in `feat: notification
+# integration` because this directory was not ignored.
+android/.kotlin/
+
+# Test suite and QA scaffolding — untracked deliberately, on request.
+#
+# Both remain on disk and still run locally (`flutter test`); they are simply
+# no longer carried in the repository from this commit onward. Earlier commits
+# still contain them, so nothing is lost — `git show <old-sha>:test/...` and
+# `git checkout <old-sha> -- test` both still work.
+#
+# ⚠️ Consequences, so this is not rediscovered the hard way:
+#   • CI cannot run the coverage gates in `docs/skills/engineering-standard.md`
+#     §10 (domain ≥90%, data ≥80%, crypto and sync-queue 100% of branches) —
+#     the tests are not in a fresh clone.
+#   • A teammate who pulls will LOSE their local `test/` only if they had no
+#     local edits; git leaves untracked files alone, but a fresh clone has none.
+#   • `QA-engineering/` additionally imports `package:steelforce_app/`, a
+#     package name this repo does not use — it accounted for 145 of the 304
+#     `flutter analyze` issues while tracked.
+#
+# To reverse: delete these two lines and `git add test QA-engineering`.
+
+# Python QA automation framework (automation/). Secrets live in
+# automation/projects/<project>/.env.<environment>, already covered by `.env.*`
+# above; only `.env.example` is committed.
+automation/.venv/
+automation/reports/
+automation/history/
+__pycache__/
+*.pyc
+.pytest_cache/
+.ruff_cache/
+
+
+# Local test coverage output and Flutter crash logs — per-machine, regenerated.
+coverage/
+flutter_*.log
+
+# Brand guide source PDF (60 MB, work in progress). Kept locally only: too large
+# for git, and not for a public repository.
+docs/style-rule/*.pdf

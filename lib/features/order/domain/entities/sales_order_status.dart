@@ -1,0 +1,1 @@
+enum SalesOrderStatus { pending, confirmed }

@@ -1,0 +1,192 @@
+name: steelforce
+description: Centralized enterprise mobile solution for KIC GROUP and subsidiaries.
+publish_to: 'none'
+
+version: 1.0.0+1
+
+environment:
+  sdk: '>=3.3.0 <4.0.0'
+
+dependencies:
+  flutter:
+    sdk: flutter
+  flutter_localizations:
+    sdk: flutter
+
+  cupertino_icons: ^1.0.6
+  url_launcher: ^6.3.0
+  intl: ^0.20.2
+  flutter_bloc: ^8.1.3
+  bloc: 8.1.4
+  equatable: ^2.0.7
+  get_it: ^7.6.0
+  flutter_secure_storage: ^9.0.0
+  dio: ^5.4.0
+  connectivity_plus: ^6.0.0
+  bloc_concurrency: ^0.2.5
+  hive_flutter: ^1.1.0
+  drift: ^2.20.0
+  gal: ^2.3.0 # or image_gallery_saver
+  sqlite3: ^2.4.0
+  sqlcipher_flutter_libs: ^0.6.0
+  path_provider: ^2.1.0
+  envied: ^1.2.0
+  crypto: ^3.0.0
+  cached_network_image: ^3.3.1
+  # Vector brand marks (the ISI Group wordmark on the sign-in screen).
+  # Already resolved transitively via `printing`; declared directly because
+  # application code now imports it.
+  flutter_svg: ^2.3.0
+  lottie: ^3.1.2
+  flutter_screenutil: ^5.9.3
+  geolocator: ^11.0.0
+  sqflite: ^2.3.0
+  path: ^1.9.0
+  json_annotation: ^4.9.0
+  google_maps_flutter: ^2.9.0
+  image_picker: ^1.1.2
+  speech_to_text: ^7.0.0
+  image: ^4.5.0
+  phone_form_field: ^10.0.18
+  pdf: ^3.12.0
+  printing: ^5.14.3
+  open_filex: ^4.7.0
+  cross_file: ^0.3.4+2
+  http: ^1.2.0
+
+  # ── Push notifications (docs/feature/notification/notification-mobile.md) ──────────
+  # The inbox is the notification; these three only accelerate it. Every one
+  # of them is no-op'd on web behind `core/notifications/push_*` conditional
+  # imports — a browser has no FCM registration in this build and the inbox
+  # still syncs (ADR-010).
+  firebase_core: ^4.14.0
+  firebase_messaging: ^16.6.0
+  # Renders the foreground/local alert Android and iOS will not draw for us
+  # while the app is visible, and owns the ten per-category channels the
+  # backend addresses by `channel_id` (§9.3).
+  flutter_local_notifications: ^22.3.0
+  # The backend needs an **IANA** zone (`Asia/Phnom_Penh`) to place quiet
+  # hours and digests on a wall clock (§4.2). Dart core exposes only the
+  # abbreviation (`ICT`), which is what `DeviceIdentity` already flags as
+  # inadequate for exactly this case.
+  flutter_timezone: ^4.1.0
+  # The real handset model for the device registry
+  # (`docs/feature/notification/api/devices-register.md` — `deviceName`, shown
+  # to support). `Platform.localHostname` answers "localhost" on Android, so
+  # every registration looked identical in the registry; there is no way to get
+  # the model from `dart:io`.
+  device_info_plus: ^11.2.0
+  workmanager: ^0.10.10
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  integration_test:
+    sdk: flutter
+  flutter_lints: ^6.0.0
+  bloc_test: ^9.1.7
+  mocktail: ^1.0.4
+  build_runner: ^2.15.0
+  drift_dev: ^2.20.0
+  envied_generator: ^1.2.0
+  json_serializable: ^6.14.0
+  # 1. Added the launcher icons tool here
+  flutter_launcher_icons: ^0.13.1
+
+flutter:
+  uses-material-design: true
+  assets:
+
+    # 2. Include your logos folder here
+    - assets/logos/
+    # SteelForce brand marks (app logo, light ink, wordmark, icon).
+    - assets/logos/steelforce/
+    - assets/mock/
+    # Synthetic stand-in images for the simulator camera. Its own line
+    # because Flutter does not recurse into subdirectories (see above).
+    - assets/mock/camera/
+    - assets/lotties/
+    - assets/images/
+    # Flutter does not recurse into subdirectories: `assets/images/` bundles
+    # only the files directly inside it, so every nested folder needs its own
+    # line, or its files are silently absent at runtime.
+    - assets/images/icons/
+    - assets/images/icons/categories-icon/svg/
+    - assets/lang/
+    # The bundled Cambodian administrative gazetteer (~1.3 MB), imported into
+    # the encrypted database on first use. Bundled rather than fetched because
+    # there is no geographic endpoint to fetch it from, and an address form has
+    # to work with no signal (docs/feature/geo-location/README.md).
+    - assets/geo/
+
+  # Font families are declared here and resolved in `core/theme/app_typography.dart`.
+  # The two families are strictly complementary — Source Sans 3 has no Khmer
+  # glyphs and MiSans Khmer has no Latin glyphs — so each is registered as the
+  # other's `fontFamilyFallback`. Never ship one without the other.
+  #
+  # Only .ttf/.otf/.ttc can be loaded by Flutter's font engine. MiSans Khmer was
+  # delivered as CFF .otf (which the `pdf` package cannot parse), so it was
+  # converted to .ttf; the original drop is kept alongside as the source of
+  # truth. Re-run the conversion if the vendor ships new weights.
+  fonts:
+    # Latin/English UI: Source Sans 3 (SIL OFL 1.1 — licence in the font folder).
+    # The *static* cuts, not the variable font: `weight:` below maps one file
+    # per slot, and the `pdf` package cannot read variable fonts.
+    #
+    # 400–700 only. Flutter snaps a requested weight to the nearest one
+    # declared, so w800/w900 (used by ~330 headings) render Bold — the same
+    # weight they rendered before, at ~760 KB less than shipping ExtraBold and
+    # Black. Add those cuts here if design wants the heavier headings.
+    - family: Source Sans 3
+      fonts:
+        - asset: assets/fonts/english/Source_Sans_3/static/SourceSans3-Regular.ttf
+          weight: 400
+        - asset: assets/fonts/english/Source_Sans_3/static/SourceSans3-Italic.ttf
+          weight: 400
+          style: italic
+        - asset: assets/fonts/english/Source_Sans_3/static/SourceSans3-Medium.ttf
+          weight: 500
+        - asset: assets/fonts/english/Source_Sans_3/static/SourceSans3-SemiBold.ttf
+          weight: 600
+        - asset: assets/fonts/english/Source_Sans_3/static/SourceSans3-Bold.ttf
+          weight: 700
+        - asset: assets/fonts/english/Source_Sans_3/static/SourceSans3-BoldItalic.ttf
+          weight: 700
+          style: italic
+    # Khmer UI (U+1780–U+17FF, incl. Khmer numerals). MiSans ships ten optical
+    # weights against Flutter's nine slots; weights are mapped by *name* rather
+    # than by the font's own usWeightClass so a given slot renders visually equal
+    # across both families (Bold pairs with Bold at w700). MiSansKhmer-Normal and
+    # -Demibold have no distinct slot and are intentionally not registered.
+    - family: MiSans Khmer
+      fonts:
+        - asset: assets/fonts/khmer/MiSansKhmer-Thin.ttf
+          weight: 100
+        - asset: assets/fonts/khmer/MiSansKhmer-ExtraLight.ttf
+          weight: 200
+        - asset: assets/fonts/khmer/MiSansKhmer-Light.ttf
+          weight: 300
+        - asset: assets/fonts/khmer/MiSansKhmer-Regular.ttf
+          weight: 400
+        - asset: assets/fonts/khmer/MiSansKhmer-Medium.ttf
+          weight: 500
+        - asset: assets/fonts/khmer/MiSansKhmer-Semibold.ttf
+          weight: 600
+        - asset: assets/fonts/khmer/MiSansKhmer-Bold.ttf
+          weight: 700
+        - asset: assets/fonts/khmer/MiSansKhmer-Heavy.ttf
+          weight: 900
+
+# 3. Added configuration for Android and iOS asset generation
+flutter_launcher_icons:
+  android: "launcher_icon"
+  ios: true
+  # SteelForce mark, full bleed: iOS rounds the corners itself and rejects
+  # transparency. Sources live outside the bundled asset folders.
+  image_path: "assets/branding/launcher/steelforce_icon_full.png"
+  remove_alpha_ios: true
+  # Android 8+ adaptive icon: the mark inside the safe zone, so round and
+  # squircle launcher masks never clip it.
+  adaptive_icon_background: "assets/branding/launcher/adaptive_background.png"
+  adaptive_icon_foreground: "assets/branding/launcher/adaptive_foreground.png"
+  min_sdk_android: 21

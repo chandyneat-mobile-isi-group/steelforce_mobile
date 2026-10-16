@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Launcher label only. The app is branded "SteelForce"; the Gradle
+  `applicationId` / package name is deliberately untouched (renaming it would
+  invalidate every installed build's data directory, the Keystore-sealed
+  database key, and the Firebase/Maps API key restrictions).
+
+  Kept in a resource rather than inline on <application android:label> so the
+  label can be overridden per build variant or per locale without editing the
+  manifest.
+-->
+<resources>
+    <string name="app_name">SteelForce</string>
+</resources>

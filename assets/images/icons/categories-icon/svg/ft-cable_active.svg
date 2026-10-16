@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24" fill="none" role="img" aria-label="FT-CABLE">
+<title>FT-CABLE</title>
+<g class="ci-accent ci-pulse" fill="currentColor" opacity=".30"><circle cx="16.4" cy="2.8" r="1.5"/><circle cx="12" cy="12" r="3.2"/></g>
+<g class="ci-stroke" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5.2a6.8 6.8 0 1 1-6.8 6.8"/><path d="M12 8.8a3.2 3.2 0 1 0 3.2 3.2"/><path d="m12 5.2 2.6-1.5"/><circle cx="16.4" cy="2.8" r="1.5"/></g>
+</svg>

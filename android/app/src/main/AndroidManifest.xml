@@ -1,0 +1,144 @@
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools">
+
+    <uses-permission android:name="android.permission.INTERNET"/>
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE"/>
+    <uses-permission android:name="android.permission.CAMERA"/>
+    <uses-feature android:name="android.hardware.camera" android:required="false"/>
+    <uses-permission android:name="android.permission.RECORD_AUDIO"/>
+    <uses-permission android:name="android.permission.WAKE_LOCK"/>
+    <!-- Android 13+ (API 33) gates every notification behind a runtime
+         grant. Declared here, requested from the in-app explainer rather
+         than at first launch
+         (docs/feature/notification/workflow.md §14): a rep who has
+         not yet seen a route has no reason to say yes, and a denial is sticky.
+         The inbox works fully without it.
+
+         Consequence worth knowing before filing a bug: on a fresh API 33+
+         install the app reports `push.permission status=notDetermined` and
+         registers the device with `pushPermissionGranted: false`. That is
+         correct, not a failure — §4.2 requires the registration be kept so the
+         inbox syncs and the delivery log reads `NO_DEVICE` once. Below API 33
+         there is no runtime grant, so the same install reports `authorized`.
+
+         `firebase_messaging` declares this permission in its own manifest too;
+         it is stated here so the app's requested permissions are readable
+         without spelunking plugin manifests, and so removing the plugin cannot
+         silently drop it. -->
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS"/>
+    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION"/>
+    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION"/>
+
+    <!-- Location is foreground-only in this release: check-in fixes, the
+         in-app heartbeat and depot GPS. The background route-tracking path
+         (`LocationTrackingCubit.start(background: true)`) has no caller, and
+         Play rejects background / foreground-service location without a
+         shipped feature, a prominent disclosure and a Console declaration.
+         Re-add these together with that feature. `tools:node="remove"` also
+         strips them if a plugin manifest merges them in. -->
+    <uses-permission android:name="android.permission.ACCESS_BACKGROUND_LOCATION" tools:node="remove"/>
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_LOCATION" tools:node="remove"/>
+
+    <!-- Gallery picks go through image_picker, which uses the system Photo
+         Picker and needs no media permission. Play's Photo & Video
+         Permissions policy rejects broad media access that is not core. -->
+    <uses-permission android:name="android.permission.READ_MEDIA_IMAGES" tools:node="remove"/>
+    <uses-permission android:name="android.permission.READ_MEDIA_VIDEO" tools:node="remove"/>
+    <uses-permission android:name="android.permission.READ_MEDIA_AUDIO" tools:node="remove"/>
+
+    <!-- CONSOLIDATED QUERIES BLOCK -->
+    <queries>
+        <!-- For launching Telegram -->
+        <intent>
+            <action android:name="android.intent.action.VIEW" />
+            <data android:scheme="tg" />
+        </intent>
+        <!-- For launching Phone Dialer -->
+        <intent>
+            <action android:name="android.intent.action.DIAL" />
+            <data android:scheme="tel" />
+        </intent>
+        <!-- For launching Google Maps -->
+        <intent>
+            <action android:name="android.intent.action.VIEW" />
+            <data android:scheme="https" />
+        </intent>
+        <!-- Flutter Engine Text Process -->
+        <intent>
+            <action android:name="android.intent.action.PROCESS_TEXT"/>
+            <data android:mimeType="text/plain"/>
+        </intent>
+        <!-- Speech to text -->
+        <intent>
+            <action android:name="android.speech.RecognitionService"/>
+        </intent>
+    </queries>
+
+    <application
+        android:label="@string/app_name"
+        android:name="${applicationName}"
+        android:icon="@mipmap/launcher_icon"
+        android:allowBackup="false"
+        tools:replace="android:allowBackup">
+
+        <meta-data
+            android:name="com.google.android.geo.API_KEY"
+            android:value="${GOOGLE_MAPS_API_KEY}" />
+
+        <activity
+            android:name=".MainActivity"
+            android:exported="true"
+            android:launchMode="singleTop"
+            android:taskAffinity=""
+            android:theme="@style/LaunchTheme"
+            android:configChanges="orientation|keyboardHidden|keyboard|screenSize|smallestScreenSize|locale|layoutDirection|fontScale|screenLayout|density|uiMode"
+            android:hardwareAccelerated="true"
+            android:windowSoftInputMode="adjustResize">
+            <meta-data
+              android:name="io.flutter.embedding.android.NormalTheme"
+              android:resource="@style/NormalTheme"
+              />
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN"/>
+                <category android:name="android.intent.category.LAUNCHER"/>
+            </intent-filter>
+
+            <!-- `app://` deep links, the URI scheme every notification's
+                 `deep_link` is built in (§11). Needed for links that arrive
+                 from outside FCM (a chat message, a QA test intent); a tap on
+                 an FCM notification reaches Dart through
+                 `onMessageOpenedApp` / `getInitialMessage()` instead and does
+                 not depend on this filter. `singleTop` above is what keeps a
+                 second link from stacking a second Flutter engine. -->
+            <intent-filter android:autoVerify="false">
+                <action android:name="android.intent.action.VIEW"/>
+                <category android:name="android.intent.category.DEFAULT"/>
+                <category android:name="android.intent.category.BROWSABLE"/>
+                <data android:scheme="app"/>
+            </intent-filter>
+        </activity>
+
+        <!-- Where a push lands when the backend sends no `channel_id`, or
+             sends one this build has not created. Android's own fallback is a
+             low-importance channel the user cannot see or control, so a
+             mis-tagged P1 would arrive silently. `system` is created at
+             startup by `NotificationChannelRegistrar` along with the other
+             nine categories (§9.3). -->
+        <meta-data
+            android:name="com.google.firebase.messaging.default_notification_channel_id"
+            android:value="system" />
+        <!-- A dedicated monochrome silhouette, NOT the launcher icon.
+             Android discards a small icon's colours and fills its alpha
+             silhouette with the accent colour, so an opaque full-colour
+             launcher icon renders as a featureless grey-white block. This
+             pointed at `@mipmap/launcher_icon` and did exactly that.
+             See the header comment in `res/drawable/ic_notification.xml`. -->
+        <meta-data
+            android:name="com.google.firebase.messaging.default_notification_icon"
+            android:resource="@drawable/ic_notification" />
+
+        <meta-data
+            android:name="flutterEmbedding"
+            android:value="2" />
+    </application>
+</manifest>

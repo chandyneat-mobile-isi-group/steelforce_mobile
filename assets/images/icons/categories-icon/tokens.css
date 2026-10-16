@@ -1,0 +1,50 @@
+/* Soft Enterprise — category icon tokens
+   One hue per family. Icons are duotone on a single currentColor:
+   strokes at full colour, accent shapes at 16% (30% when active). */
+
+:root {
+  --cat-product:  #5B7089;
+  --cat-raw:      #4E7FB6;
+  --cat-semi:     #3E8B82;
+  --cat-finished: #6470B4;
+  --cat-fitting:  #4E8A62;
+  --cat-part:     #96794A;
+  --cat-supply:   #7A6AA6;
+  --cat-misc:     #6B7482;
+
+  --icon-idle:    color-mix(in srgb, currentColor 62%, transparent);
+  --chip-bg:      #F1F3F7;
+  --chip-bg-active: color-mix(in srgb, currentColor 12%, #FFFFFF);
+
+  --surface-page: #F4F6FA;
+  --surface-card: #FFFFFF;
+  --line:         #E7EBF1;
+  --text:         #1B2430;
+  --text-muted:   #6B7482;
+
+  --ease-out:     cubic-bezier(.22,.61,.36,1);
+  --ease-soft:    cubic-bezier(.4,0,.2,1);
+  --dur-press:    140ms;
+  --dur-state:    220ms;
+  --dur-appear:   300ms;
+}
+
+[data-theme="dark"] {
+  --cat-product:  #A9BACD;
+  --cat-raw:      #8CB8E6;
+  --cat-semi:     #6FC3B9;
+  --cat-finished: #A3ABEE;
+  --cat-fitting:  #86C89C;
+  --cat-part:     #D6B47A;
+  --cat-supply:   #B4A7DD;
+  --cat-misc:     #A7B0BE;
+
+  --chip-bg:      #1E2731;
+  --chip-bg-active: color-mix(in srgb, currentColor 16%, #161C24);
+
+  --surface-page: #0E1319;
+  --surface-card: #161C24;
+  --line:         #232C37;
+  --text:         #E6EBF2;
+  --text-muted:   #8A95A3;
+}

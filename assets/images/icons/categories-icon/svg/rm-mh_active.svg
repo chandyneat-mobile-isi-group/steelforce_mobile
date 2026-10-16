@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24" fill="none" role="img" aria-label="RM-MH">
+<title>RM-MH</title>
+<mask id="ci-rm-mh-a" maskUnits="userSpaceOnUse" x="0" y="0" width="24" height="24"><rect width="24" height="24" fill="#fff"/><circle cx="19.1" cy="19.1" r="4.35" fill="#000"/></mask><g class="ci-accent ci-breathe" fill="currentColor" opacity=".30"><g mask="url(#ci-rm-mh-a)" transform="translate(.56 .56) scale(.87)"><rect x="6.5" y="10.4" width="4.5" height="4.5" rx="1"/></g></g>
+<g class="ci-stroke" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><g mask="url(#ci-rm-mh-a)" transform="translate(.56 .56) scale(.87)"><rect x="3.7" y="7.6" width="10.1" height="10.1" rx="1.7"/><path d="M6.6 4.7h10.3a1.7 1.7 0 0 1 1.7 1.7v10.3"/><path d="m3.7 7.6 2.9-2.9M13.8 7.6l2.9-2.9M13.8 17.7l2.9-2.9"/><rect x="6.5" y="10.4" width="4.5" height="4.5" rx="1"/></g></g>
+<g class="ci-badge"><g fill="currentColor" opacity=".92"></g><g stroke="currentColor" stroke-width="1.25" fill="none" stroke-linejoin="round"><circle cx="19.1" cy="19.1" r="2.9"/></g></g></svg>

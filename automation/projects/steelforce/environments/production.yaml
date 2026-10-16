@@ -1,0 +1,14 @@
+name: production
+description: LIVE production backend — real reps and real orders
+workbook_label: Production
+# Protected: refused unless --allow-protected AND the consent variable are both
+# given, and destructive / sms / lockout tests are refused even then.
+protected: true
+api:
+  base_url_env: STEELFORCE_API_BASE_URL
+  api_prefix: /api/v1
+  connect_timeout_s: 15
+  read_timeout_s: 20
+  retries: 0
+flutter:
+  device: null

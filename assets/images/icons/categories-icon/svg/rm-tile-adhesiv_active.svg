@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24" fill="none" role="img" aria-label="RM-Tile Adhesive">
+<title>RM-Tile Adhesive</title>
+<mask id="ci-rm-tile-adhesiv-a" maskUnits="userSpaceOnUse" x="0" y="0" width="24" height="24"><rect width="24" height="24" fill="#fff"/><circle cx="19.1" cy="19.1" r="4.35" fill="#000"/></mask><g class="ci-accent ci-float" fill="currentColor" opacity=".30"><g mask="url(#ci-rm-tile-adhesiv-a)" transform="translate(.56 .56) scale(.87)"><path d="M12 10.8 14.8 13 12 15.2 9.2 13z"/></g></g>
+<g class="ci-stroke" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><g mask="url(#ci-rm-tile-adhesiv-a)" transform="translate(.56 .56) scale(.87)"><path d="M7.6 7.4h8.8l1.3 11.4a1.8 1.8 0 0 1-1.8 2H8.1a1.8 1.8 0 0 1-1.8-2z"/><path d="M7.6 7.4 9.4 3.6h5.2l1.8 3.8"/><path d="M12 10.8 14.8 13 12 15.2 9.2 13z"/></g></g>
+<g class="ci-badge"><g fill="currentColor" opacity=".92"></g><g stroke="currentColor" stroke-width="1.25" fill="none" stroke-linejoin="round"><circle cx="19.1" cy="19.1" r="2.9"/></g></g></svg>

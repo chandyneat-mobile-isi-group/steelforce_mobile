@@ -1,0 +1,198 @@
+name: Deploy Web Demo to GitHub Pages
+
+# Builds the Flutter Web target as a STATIC DEMO — every feature backed by its
+# bundled demo data source, no backend — and publishes it to GitHub Pages for
+# stakeholder walkthroughs and UI testing.
+#
+# Repository: chandyneat-mobile-isi-group/steelforce_mobile
+# Source branch: `web`
+# Published:     https://chandyneat-mobile-isi-group.github.io/steelforce_mobile/
+#
+# ── REQUIRED one-time setup in the GitHub UI ────────────────────────────────
+#
+#   Settings → Pages → Build and deployment → Source: **GitHub Actions**
+#
+# This cannot be configured from a workflow file, and until it is done nothing
+# here reaches the site. While the Source is left as "Deploy from a branch",
+# Pages ignores this workflow entirely and instead serves the branch's raw
+# contents through Jekyll — which renders `README.md` as the home page. That is
+# the cause if the deployed site shows the README instead of the app.
+
+on:
+  push:
+    # The web demo is released from `web`, not `main`, so ordinary work on
+    # `main` never changes what stakeholders are looking at.
+    branches: [web]
+  # Lets a maintainer redeploy the current `web` without an empty commit.
+  workflow_dispatch:
+
+# The repo-name segment the site is served under. Changing the repository name
+# means changing this one value and nothing else.
+env:
+  BASE_HREF: /steelforce_mobile/
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# Never let two deploys race. `cancel-in-progress: false` because cancelling a
+# half-finished Pages deployment can leave the site in a broken state — queue
+# instead.
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: subosito/flutter-action@v2
+        with:
+          # Pinned to the version this build was verified against locally.
+          # Floating on `stable` would let an upstream release break a deploy
+          # with no change on our side.
+          flutter-version: '3.44.9'
+          channel: stable
+          cache: true
+
+      - name: Write placeholder .env
+        # ── This is a security control, not a convenience ──────────────────
+        #
+        # `Env` is Envied-obfuscated, which defends against *native binary*
+        # inspection. A web build is JavaScript: everything compiled into it is
+        # readable by anyone who opens devtools, and obfuscation buys nothing
+        # (`docs/skills/security.md` §4, `docs/blueprint/web-architecture.md`).
+        #
+        # So this job is never given real values at all. The demo talks to no
+        # backend: `USE_MOCK_DATA=true` swaps every remote data source for its
+        # demo one, and `AppNetwork` installs `DemoNetworkGuardAdapter`, which
+        # fails any request that slips through. `API_BASE_URL` points at the
+        # reserved `.invalid` TLD (RFC 2606) as a second guard — even a request
+        # that escaped both could not resolve to a real host.
+        #
+        # Never wire a repository secret into this job.
+        run: |
+          cat > .env <<'EOF'
+          APP_NAME=ISI STEEL SALES
+          APP_ENV=web-demo
+          API_BASE_URL=https://demo.invalid
+          API_TIMEOUT=30000
+          ENABLE_LOGGING=false
+          ENABLE_DEBUG=false
+          GOOGLE_MAPS_ANDROID_KEY=unused_on_web
+          GOOGLE_MAPS_IOS_KEY=unused_on_web
+          MAP_PROVIDER=google
+          AUTH_TOKEN_KEY=access_token
+          LOCAL_DB_NAME=unused_on_web
+          ANALYTICS_ENABLED=false
+          DB_SALT=web_build_has_no_encrypted_database_adr010
+          EOF
+
+      - run: flutter pub get
+
+      - name: Generate code
+        run: dart run build_runner build --delete-conflicting-outputs
+
+      - name: Check formatting
+        run: dart format --output=none --set-exit-if-changed lib
+
+      - name: Analyze
+        # Scoped to `lib/` — what ships. A deploy that ships analyzer errors is
+        # worse than a failed deploy; warnings are not fatal, as the repo
+        # carries some pre-existing ones unrelated to web.
+        #
+        # `test/` is not analyzed or run here yet: it currently has compile
+        # errors and failing tests unrelated to web. Add `flutter test` to this
+        # job once that suite is green, so the demo cannot ship over a red
+        # suite.
+        run: flutter analyze lib --no-fatal-warnings --no-fatal-infos
+
+      - name: Build web (demo data)
+        # `USE_MOCK_DATA=true` is the one switch for demo mode — see
+        # `lib/core/config/data_source_mode.dart`. It also turns on the DEMO
+        # badge and the demo sign-in hint, so nobody mistakes this site for a
+        # live system.
+        #
+        # `--base-href` is what makes every asset resolve under the repository
+        # sub-path. Without it the app loads at the root and 404s on Pages.
+        #
+        # `--no-web-resources-cdn` bundles CanvasKit into our own build output
+        # instead of loading it from `https://www.gstatic.com` at runtime, so
+        # the CSP below can keep `script-src 'self'` and the site has no
+        # third-party runtime dependency for its renderer.
+        #
+        # `--wasm` is NOT used: `flutter_secure_storage_web` and `geolocator_web`
+        # still import legacy `dart:html`, which the wasm dry run rejects.
+        run: |
+          flutter build web --release \
+            --base-href "$BASE_HREF" \
+            --no-web-resources-cdn \
+            --dart-define=USE_MOCK_DATA=true
+
+      - name: Inject Content Security Policy
+        # ── Why this is a deploy step and not a <meta> tag in web/index.html ──
+        #
+        # `flutter run -d chrome` serves that same file, and the debug bootstrap
+        # (DDC module loader, hot-reload client) runs inline scripts that any
+        # policy worth having would block. Injecting here gives the deployed
+        # build the strict policy and leaves the debug workflow untouched.
+        #
+        # `'wasm-unsafe-eval'` is required: CanvasKit and `sqlite3.wasm` both
+        # instantiate WebAssembly. It permits WASM compilation only — it does
+        # NOT re-enable `eval()` for JavaScript.
+        #
+        # NOT included: `frame-ancestors`, which browsers ignore when delivered
+        # via <meta>. GitHub Pages cannot send it as a header.
+        #
+        # Google Maps (loaded from web/index.html) needs four exact origins,
+        # never a wildcard: maps.googleapis.com and maps.gstatic.com for
+        # scripts, fonts.googleapis.com for styles, fonts.gstatic.com for fonts.
+        run: |
+          set -e
+          CSP="default-src 'self'; script-src 'self' 'wasm-unsafe-eval' https://maps.googleapis.com https://maps.gstatic.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; img-src 'self' data: blob: https:; font-src 'self' data: https://fonts.gstatic.com; connect-src 'self' https:; worker-src 'self' blob:; object-src 'none'; base-uri 'self'"
+          TAG="<meta http-equiv=\"Content-Security-Policy\" content=\"$CSP\">"
+          # Inserted immediately after <head> so it applies to everything below.
+          sed -i "0,/<head>/s|<head>|<head>\n  $TAG|" build/web/index.html
+          grep -q "Content-Security-Policy" build/web/index.html \
+            || { echo "::error::CSP injection failed — refusing to deploy without it."; exit 1; }
+          echo "CSP injected."
+
+      - name: Add SPA fallback
+        # GitHub Pages serves static files only. The app uses Flutter's default
+        # hash URL strategy (`/#/route`), so a refresh already requests the
+        # base path and works. This covers the rest — a hand-typed path, or a
+        # future switch to path URLs: Pages serves 404.html for any unmatched
+        # path, and as a copy of index.html that becomes a correct app load.
+        run: cp build/web/index.html build/web/404.html
+
+      - name: Verify web assets
+        # Cheap guard against failure modes that only show up in the browser,
+        # where they cost a full deploy cycle to diagnose.
+        run: |
+          set -e
+          test -f build/web/sqlite3.wasm \
+            || { echo "::error::sqlite3.wasm missing from build/web — Drift cannot start on web. It must be committed at web/sqlite3.wasm."; exit 1; }
+          grep -q 'base href="'"$BASE_HREF"'"' build/web/index.html \
+            || { echo "::error::base href was not substituted; assets will 404 under the repository sub-path."; exit 1; }
+          grep -q 'maps.googleapis.com/maps/api/js' build/web/index.html \
+            || { echo "::error::Google Maps JS loader missing from build/web/index.html — GoogleMap widgets render blank on web. It must stay in web/index.html <head>."; exit 1; }
+          echo "Web assets verified."
+
+      - uses: actions/configure-pages@v5
+
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: build/web
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4

@@ -1,0 +1,14 @@
+name: dev
+description: Development backend
+workbook_label: Dev
+protected: false
+api:
+  base_url_env: STEELFORCE_API_BASE_URL
+  api_prefix: /api/v1
+  connect_timeout_s: 15
+  read_timeout_s: 20
+  retries: 1
+  # Wait out a 429 (Retry-After) once instead of failing the test.
+  rate_limit_max_wait_s: 65
+flutter:
+  device: null

@@ -1,0 +1,43 @@
+{
+  "version": "0.2",
+  "language": "en",
+  "//": "Domain dictionary for the ISI Steel sales app. Almost every entry here is a real SAP code, supplier brand or Cambodian place name lifted verbatim from the material master, so these are not typos to be corrected — changing the spelling would break the match against SAP data.",
+  "words": [
+    "ALUZINC", "Aluzinc", "Gavalume", "PPGL", "SGCC", "MAKTX", "KONV",
+    "VertiPaq", "pbix", "Xpress",
+
+    "//  SAP material types",
+    "ERSA", "FERT", "HAWA", "HALB", "HIBE", "KMAT", "NLAG", "PROC", "SERV",
+
+    "// ISI product & profile vocabulary",
+    "Purlin", "Purlins", "Debar", "DEBAR", "Bullnose", "BULLNOSE",
+    "Decking", "Omega", "Trim", "Skylight", "Girth", "girth",
+    "configurator", "Cambo", "Intanu", "INTANU",
+
+    "// Electrical",
+    "mcb", "MCB", "mccb", "MCCB", "rccb", "RCCB", "Contactor", "Contactors",
+    "contactor", "contactors", "xlpe", "Xlpe", "XLPE", "LSHF", "EPDM",
+    "Acti", "Domae", "Daca", "TeSys", "EasyPact", "ComPact",
+
+    "// Supplier brands (verbatim from SAP Brand / MaterialDes)",
+    "Draka", "Cadivi", "CADIVI", "Sento", "Thipha", "Gyproc", "Shera",
+    "APLUS", "Duraflex", "Zeit", "Natalite", "NAACO", "Hilti", "POSCO",
+    "Hiwin", "Schneider", "Siemens", "CHNT", "Donghua", "DONGHUA",
+    "Tung", "Hoa", "Phat", "Sheng",
+
+    "// Cambodian provinces & places",
+    "Khmer", "Kampong", "Kampot", "Kandal", "Battambang", "Sihanoukville",
+    "Siem", "Reap", "Penh", "Marikina",
+
+    "// Flutter / project",
+    "Drift", "drift", "screenutil", "Equatable", "equatable"
+  ],
+  "ignorePaths": [
+    "assets/mock/products.json",
+    "**/*.g.dart",
+    "**/*.freezed.dart"
+  ],
+  "ignoreRegExpList": [
+    "/\\u1780-\\u17FF+/"
+  ]
+}

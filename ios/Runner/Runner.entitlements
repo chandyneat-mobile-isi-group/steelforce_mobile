@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<!-- Apple Push Notification service environment.
+	     `development` is correct for debug builds and for TestFlight; Xcode's
+	     "Automatically manage signing" and the App Store submission pipeline
+	     both rewrite this to `production` for a distribution build, so this
+	     value is a floor rather than a pin.
+
+	     Without this entitlement `registerForRemoteNotifications()` succeeds
+	     and then never calls back with a token — the app looks correctly wired
+	     and simply never receives a push. The inbox keeps syncing, which is
+	     what makes this the single easiest push misconfiguration to ship. -->
+	<key>aps-environment</key>
+	<string>development</string>
+</dict>
+</plist>

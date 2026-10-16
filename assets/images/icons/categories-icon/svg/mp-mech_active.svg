@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24" fill="none" role="img" aria-label="MP-MECH">
+<title>MP-MECH</title>
+<g class="ci-accent ci-tick" fill="currentColor" opacity=".30"><circle cx="9.4" cy="9.4" r="1.6"/><circle cx="17" cy="17" r="2.7"/></g>
+<g class="ci-stroke" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><circle cx="9.4" cy="9.4" r="4"/><circle cx="9.4" cy="9.4" r="1.6"/><path d="M9.4 3.6v1.8M9.4 13.4v1.8M15.2 9.4h-1.8M5.4 9.4H3.6"/><circle cx="17" cy="17" r="2.7"/><path d="M17 13.1v1.2M17 19.7v1.2M20.9 17h-1.2M14.3 17h-1.2"/></g>
+</svg>

@@ -1,0 +1,12 @@
+SteelForce QA Build
+
+Version: {VERSION_NAME}
+Build: {VERSION_CODE}
+
+Branch: {BRANCH}
+Commit: {COMMIT_SHORT_SHA}
+
+Changes:
+* {change 1}
+* {change 2}
+* Bug fixes

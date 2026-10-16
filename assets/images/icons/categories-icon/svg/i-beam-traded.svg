@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24" fill="none" role="img" aria-label="I-Beam (Traded)">
+<title>I-Beam (Traded)</title>
+<mask id="ci-i-beam-traded-n" maskUnits="userSpaceOnUse" x="0" y="0" width="24" height="24"><rect width="24" height="24" fill="#fff"/><circle cx="19.1" cy="19.1" r="4.35" fill="#000"/></mask><g class="ci-accent ci-breathe" fill="currentColor" opacity=".16"><g mask="url(#ci-i-beam-traded-n)" transform="translate(.56 .56) scale(.87)"><path d="M5.8 4.4h12.4v3.1h-4.6v9h4.6v3.1H5.8v-3.1h4.6v-9H5.8z"/></g></g>
+<g class="ci-stroke" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><g mask="url(#ci-i-beam-traded-n)" transform="translate(.56 .56) scale(.87)"><path d="M5.8 4.4h12.4v3.1h-4.6v9h4.6v3.1H5.8v-3.1h4.6v-9H5.8z"/></g></g>
+<g class="ci-badge"><g fill="currentColor" opacity=".8"></g><g stroke="currentColor" stroke-width="1.25" fill="none" stroke-linejoin="round"><path d="m19.1 16.2 2.9 2.9-2.9 2.9-2.9-2.9z"/></g></g></svg>

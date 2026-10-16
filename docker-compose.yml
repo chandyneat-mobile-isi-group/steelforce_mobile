@@ -1,0 +1,56 @@
+# Local development stack: API + PostgreSQL.
+# `restart: unless-stopped` brings both containers back whenever Docker starts,
+# until you run `docker compose down` / `docker compose stop`.
+# Database settings come from .env (DB_*); the defaults below are local-only, not secrets.
+name: backend
+
+services:
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: backend-api:dev
+    container_name: backend-api
+    restart: unless-stopped
+    # Security settings (LOGIN_*, OTP_*, PASSWORD_*, SMTP_*, SMS_*, USER_*, JWT_SIGNING_KEY, SEED_ADMIN_*) from .env, which is
+    # not committed. The API maps these names onto its configuration. See .env.example.
+    env_file:
+      - path: .env
+        required: false
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      ASPNETCORE_ENVIRONMENT: Development
+      Database__MigrateOnStartup: "true"
+      # Extra trusted roots for this machine only, for example an antivirus that re-signs TLS
+      # traffic (see certs/README.md). The image itself trusts only the system roots.
+      SSL_CERT_DIR: /etc/ssl/certs:/app/dev-certs
+    volumes:
+      - ./certs:/app/dev-certs:ro
+    ports:
+      - "${API_PORT:-8080}:8080"
+
+  postgres:
+    image: postgres:17-alpine
+    container_name: backend-postgres
+    restart: unless-stopped
+    # Name, user and password are applied only when the volume is first created.
+    environment:
+      POSTGRES_DB: ${DB_NAME:-backend}
+      POSTGRES_USER: ${DB_USERNAME:-${DB_USER:-backend}}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-backend}
+      # Same port inside and outside the container, so DB_PORT works for the API and your tools.
+      PGPORT: ${DB_PORT:-5432}
+    ports:
+      - "${DB_PORT:-5432}:${DB_PORT:-5432}"
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U \"$${POSTGRES_USER}\" -d \"$${POSTGRES_DB}\""]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+volumes:
+  postgres-data:

@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <!--
+    Serving under a sub-path (GitHub Pages).
+
+    `$FLUTTER_BASE_HREF` is substituted by `flutter build web --base-href`. For
+    GitHub Pages the app lives at https://<user>.github.io/<repo>/, so CI builds
+    with `--base-href "/isi-steel-sales-mobile/"`.
+
+    Every other URL in this file and in the app is deliberately RELATIVE so it
+    resolves against this base. That includes `sqlite3.wasm`, which the Drift
+    web connection loads at runtime — see
+    `lib/core/database/drift/connection/web_database.dart`. A single leading
+    slash anywhere here is the classic way to break the sub-path deployment
+    while still working perfectly on localhost.
+  -->
+  <base href="$FLUTTER_BASE_HREF">
+
+  <meta charset="UTF-8">
+  <meta content="IE=Edge" http-equiv="X-UA-Compatible">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes">
+  <meta name="description" content="SteelForce — offline-first field sales CRM for KIC Group.">
+
+  <!--
+    Content Security Policy is deliberately NOT declared here.
+
+    It is injected into `build/web/index.html` by the deploy workflow instead
+    (`.github/workflows/deploy-web.yml`, "Inject Content Security Policy").
+
+    Why not in this file: `flutter run -d chrome` serves this exact document,
+    and the debug bootstrap (DDC module loader, the hot-reload client) executes
+    inline scripts. A policy strict enough to be worth having blocks all of
+    them, so shipping it here would trade a real security control against every
+    developer's ability to run the app. Injecting at deploy time gives the
+    production build the strict policy and leaves debug alone.
+
+    See `docs/flutter-web.md` §6 for the policy itself and for the one control
+    that cannot be delivered this way at all (`frame-ancestors`).
+  -->
+
+  <!--
+    Google Maps JavaScript API — the web implementation of
+    `google_maps_flutter` (endorsed `google_maps_flutter_web`, resolved 0.6.3).
+
+    Unlike Android and iOS, the web key cannot come from `.env`/Envied: the
+    browser needs it before any Dart runs, and a web bundle is readable anyway
+    (`docs/flutter-web-support.md` §4 — obfuscation buys nothing here). This key
+    is therefore public by design, and the ONLY thing protecting it is an
+    HTTP-referrer restriction in the Google Cloud console. It must be limited to
+    the deployed origin plus localhost:
+
+        https://dydev99.github.io/isi-steel-sales-mobile/*
+        http://localhost:*/*
+
+    An unrestricted Maps key is billable by anyone who reads this file.
+
+    `libraries=drawing,geometry,marker`: `TransitMap` draws a circle (geofence),
+    a polyline (rep → shop) and markers, which the plugin's README puts in
+    `drawing`; `geometry,marker` match the plugin's own example app.
+
+    `defer` rather than a blocking load: the branded first-paint loader below
+    must not wait on a third-party script. Deferred execution still finishes
+    long before the Flutter engine boots and a `GoogleMap` widget is built, so
+    `google.maps` is always defined by the time the plugin looks for it. Google
+    logs a "loading=async" console advisory for this tag; the async bootstrap is
+    deliberately not used, because it would let the map widget race the API.
+  -->
+  <script defer
+    src="https://maps.googleapis.com/maps/api/js?key=AIzaSyA5-HtP8s0Ab4QIHpHvVpt4jt2Cq5RpNxk&libraries=drawing,geometry,marker"></script>
+
+  <!-- iOS meta tags & icons -->
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black">
+  <meta name="apple-mobile-web-app-title" content="SteelForce">
+  <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+
+  <!-- Favicon -->
+  <link rel="icon" type="image/png" href="favicon.png"/>
+
+  <title>SteelForce</title>
+  <link rel="manifest" href="manifest.json">
+
+  <style>
+    /*
+      First-paint loader. A Flutter web app shows nothing until the engine and
+      the main bundle are parsed, which on a slow Cambodian mobile connection is
+      several seconds of blank white page — indistinguishable from a broken
+      link. This gives that wait a visible, branded state.
+
+      It is plain CSS in the document head on purpose: it must render before any
+      Dart or engine code exists.
+    */
+    html, body { height: 100%; margin: 0; background: #0F172A; }
+    #boot {
+      position: fixed; inset: 0; display: flex; flex-direction: column;
+      align-items: center; justify-content: center; gap: 20px;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      color: #E2E8F0; transition: opacity .35s ease;
+    }
+    #boot.hidden { opacity: 0; pointer-events: none; }
+    #boot .ring {
+      width: 42px; height: 42px; border-radius: 50%;
+      border: 3px solid rgba(226, 232, 240, .18);
+      border-top-color: #E2E8F0;
+      animation: spin 900ms linear infinite;
+    }
+    #boot .label { font-size: 14px; letter-spacing: .04em; opacity: .75; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    @media (prefers-reduced-motion: reduce) {
+      #boot .ring { animation-duration: 2.4s; }
+    }
+  </style>
+</head>
+<body>
+  <div id="boot" role="status" aria-live="polite">
+    <div class="ring"></div>
+    <div class="label">Loading SteelForce…</div>
+  </div>
+
+  <!--
+    External rather than inline so the deployed CSP can keep `script-src 'self'`
+    without an `'unsafe-inline'` escape hatch or a per-build hash.
+    Relative src, so it resolves under the GitHub Pages sub-path.
+  -->
+  <script src="boot.js" defer></script>
+
+  <script src="flutter_bootstrap.js" async></script>
+</body>
+</html>

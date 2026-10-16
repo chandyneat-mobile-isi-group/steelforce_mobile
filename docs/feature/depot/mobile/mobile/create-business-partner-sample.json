@@ -1,0 +1,60 @@
+{
+  "Commit": true,
+  "DepotNumber": "",
+
+  "PartnerCategory": "2",
+  "PartnerGroup": "Z001",
+  "BpRole": "ZFLCU1",
+  "AccountGroup": "Z001",
+
+  "Name1": "Bayon Steel Trading",
+  "Name2": "",
+  "Name3": "ហាងដែកបាយ័ន",
+  "CoName": "",
+  "SearchTerm1": "PHNOM PENH",
+  "SearchTerm2": "BAYON STEEL SENSOK",
+
+  "District": "Sen Sok",
+  "Country": "KH",
+  "Region": "R01",
+  "City": "Phnom Penh",
+  "Street": "Street 1986",
+  "HouseNo": "45C",
+  "PostalCode": "120801",
+  "Latitude": "11.5680",
+  "Longitude": "104.8920",
+
+  "Language": "E",
+  "Telephone": "023987654",
+  "MobilePhone": "0966172834",
+
+  "SalesOrg": "0001",
+  "DistributionChannel": "10",
+  "Division": "10",
+  "DepotGroup": "01",
+  "SalesOffice": "0001",
+  "SalesGroup": "010",
+  "PriceGroup": "21",
+  "PricingProc": "1",
+  "DeliveryPriority": "01",
+  "ShippingCondition": "01",
+  "Currency": "USD",
+  "PaymentTerms": "T015",
+  "CreditControlArea": "0001",
+
+  "TaxCountry": "KH",
+  "TaxType": "MWST",
+  "TaxClass": "0",
+
+  "PartnerFunction": "VE",
+  "PartnerCounter": "001",
+  "PersonnelNumber": "0000100001",
+
+  "OrderBlock": "",
+  "SALESBLOCK": "",
+  "BLOCKFLAG": "",
+
+  "submitToSap": true,
+
+  "creditLimit": 5000.50
+}

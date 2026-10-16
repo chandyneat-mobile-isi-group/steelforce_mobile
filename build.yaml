@@ -1,0 +1,12 @@
+# Build configuration for code generators.
+#
+# Drift: store DateTime columns as ISO-8601 **UTC text** rather than the default
+# unix-seconds integers. This keeps instants unambiguous across timezones (the
+# app syncs with SAP and runs in the field), so a stored UTC time round-trips as
+# UTC instead of being reinterpreted in the device's local zone.
+targets:
+  $default:
+    builders:
+      drift_dev:
+        options:
+          store_date_time_values_as_text: true

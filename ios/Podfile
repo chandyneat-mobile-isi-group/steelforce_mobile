@@ -1,0 +1,66 @@
+# Pinned explicitly rather than inheriting Flutter's default. 15.0 is the
+# highest floor among this app's plugins, verified from their podspecs:
+#   firebase_core     4.14.0 → 15.0  ← binding constraint
+#   firebase_messaging 16.6.0 → 15.0  ← binding constraint
+#   google_maps_flutter_ios 2.18.4 → 14.0
+#   image_picker_ios        0.8.13 → 13.0
+#   mobile_scanner          7.x    → 11.0  (uses Apple Vision, no MLKit)
+#   geolocator_apple        2.3.14 → 11.0
+#   sqlcipher_flutter_libs  0.6.8  →  8.0
+#
+# Raised 14.0 → 15.0 by the Firebase upgrade. Note that
+# `docs/feature/notification/notification-mobile.md` Step 4 says "deployment
+# target is already 14.0 — fine, FCM needs 12+"; that is **wrong for the
+# versions the same document pins**. The build fails outright with
+# "the package product 'firebase-core' requires minimum platform version 15.0",
+# so this is forced, not discretionary.
+#
+# It drops no hardware: iOS 15 supports exactly the same devices as iOS 14
+# (iPhone 6s and later). Only users who have declined to update past iOS 14 are
+# affected. iOS 16 is where that device list actually shrinks.
+#
+# Leaving the platform unpinned surfaces the floor as an opaque pod resolution
+# error instead. Keep in sync with IPHONEOS_DEPLOYMENT_TARGET in
+# Runner.xcodeproj.
+platform :ios, '15.0'
+
+# CocoaPods analytics sends network stats synchronously affecting flutter build latency.
+ENV['COCOAPODS_DISABLE_STATS'] = 'true'
+
+project 'Runner', {
+  'Debug' => :debug,
+  'Profile' => :release,
+  'Release' => :release,
+}
+
+def flutter_root
+  generated_xcode_build_settings_path = File.expand_path(File.join('..', 'Flutter', 'Generated.xcconfig'), __FILE__)
+  unless File.exist?(generated_xcode_build_settings_path)
+    raise "#{generated_xcode_build_settings_path} must exist. If you're running pod install manually, make sure flutter pub get is executed first"
+  end
+
+  File.foreach(generated_xcode_build_settings_path) do |line|
+    matches = line.match(/FLUTTER_ROOT\=(.*)/)
+    return matches[1].strip if matches
+  end
+  raise "FLUTTER_ROOT not found in #{generated_xcode_build_settings_path}. Try deleting Generated.xcconfig, then run flutter pub get"
+end
+
+require File.expand_path(File.join('packages', 'flutter_tools', 'bin', 'podhelper'), flutter_root)
+
+flutter_ios_podfile_setup
+
+target 'Runner' do
+  use_frameworks!
+
+  flutter_install_all_ios_pods File.dirname(File.realpath(__FILE__))
+  target 'RunnerTests' do
+    inherit! :search_paths
+  end
+end
+
+post_install do |installer|
+  installer.pods_project.targets.each do |target|
+    flutter_additional_ios_build_settings(target)
+  end
+end

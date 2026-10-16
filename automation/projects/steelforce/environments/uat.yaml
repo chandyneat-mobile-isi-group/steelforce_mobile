@@ -1,0 +1,17 @@
+name: uat
+description: UAT backend used by QA
+workbook_label: UAT
+protected: false
+api:
+  # The URL itself is not written here: it comes from .env.uat or the process
+  # environment under this name.
+  base_url_env: STEELFORCE_API_BASE_URL
+  api_prefix: /api/v1
+  # Same limits as the app (lib/core/network/api/api_defaults.dart).
+  connect_timeout_s: 15
+  read_timeout_s: 20
+  retries: 1
+  # Wait out a 429 (Retry-After) once instead of failing the test.
+  rate_limit_max_wait_s: 65
+flutter:
+  device: null
