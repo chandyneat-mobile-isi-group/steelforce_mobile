@@ -5,6 +5,7 @@ import 'package:steelforce/core/error/failures.dart';
 import 'package:steelforce/core/logging/app_logger.dart';
 import 'package:steelforce/core/logging/debug_trace.dart';
 import 'package:steelforce/core/network/api/api_error.dart';
+import 'package:steelforce/core/platform/storage/local_files.dart';
 import 'package:steelforce/core/utils/result.dart';
 import 'package:steelforce/core/utils/typedefs.dart';
 import 'package:steelforce/features/depots/data/remote/depot_document_remote_data_source.dart';
@@ -61,7 +62,7 @@ class DepotDocumentRepositoryImpl implements DepotDocumentRepository {
 
       // The camera file can be gone by the time this runs — a share sheet, a
       // cache sweep, an OS cleanup. Nothing to retry, so it is a rejection.
-      if (!file.existsSync()) {
+      if (!localFileExists(pending.filePath)) {
         _logger.warning('depots.documents.upload.fileMissing',
             fields: {'slot': pending.type.code});
         rejected.add(pending.type);

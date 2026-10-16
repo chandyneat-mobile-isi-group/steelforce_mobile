@@ -147,12 +147,19 @@ jobs:
         # NOT included: `frame-ancestors`, which browsers ignore when delivered
         # via <meta>. GitHub Pages cannot send it as a header.
         #
+        # `connect-src blob:` is required for photos: on web, `image_picker`
+        # returns each picked image as a `blob:` URL and `XFile.readAsBytes()`
+        # loads it with an XMLHttpRequest, which this directive governs.
+        # Without it every capture and upload fails silently in the browser.
+        # `blob:` URLs can only be minted by this page itself, so this opens no
+        # path to another origin.
+        #
         # Google Maps (loaded from web/index.html) needs four exact origins,
         # never a wildcard: maps.googleapis.com and maps.gstatic.com for
         # scripts, fonts.googleapis.com for styles, fonts.gstatic.com for fonts.
         run: |
           set -e
-          CSP="default-src 'self'; script-src 'self' 'wasm-unsafe-eval' https://maps.googleapis.com https://maps.gstatic.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; img-src 'self' data: blob: https:; font-src 'self' data: https://fonts.gstatic.com; connect-src 'self' https:; worker-src 'self' blob:; object-src 'none'; base-uri 'self'"
+          CSP="default-src 'self'; script-src 'self' 'wasm-unsafe-eval' https://maps.googleapis.com https://maps.gstatic.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; img-src 'self' data: blob: https:; font-src 'self' data: https://fonts.gstatic.com; connect-src 'self' https: blob:; worker-src 'self' blob:; object-src 'none'; base-uri 'self'"
           TAG="<meta http-equiv=\"Content-Security-Policy\" content=\"$CSP\">"
           # Inserted immediately after <head> so it applies to everything below.
           sed -i "0,/<head>/s|<head>|<head>\n  $TAG|" build/web/index.html

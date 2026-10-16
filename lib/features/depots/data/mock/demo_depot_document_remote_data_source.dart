@@ -16,6 +16,7 @@ import 'dart:io';
 import 'package:steelforce/core/demo/demo_network.dart';
 import 'package:steelforce/core/error/exceptions.dart';
 import 'package:steelforce/core/network/api/api_envelope.dart';
+import 'package:steelforce/core/platform/storage/local_files.dart';
 import 'package:steelforce/core/utils/typedefs.dart';
 import 'package:steelforce/features/depots/data/models/depot_document_mapper.dart';
 import 'package:steelforce/features/depots/data/remote/depot_document_remote_data_source.dart';
@@ -50,7 +51,7 @@ class DemoDepotDocumentRemoteDataSource
       'typeDisplay': null,
       'fileName': file.uri.pathSegments.last,
       'contentType': contentType,
-      'sizeBytes': file.existsSync() ? file.lengthSync() : null,
+      'sizeBytes': readLocalFileSync(file.path)?.lengthInBytes,
       'url': 'demo://depots/$depotId/documents/$id',
       // Mirrors the server: only the storefront slots are ever published.
       'publicUrl': type.isPubliclyVisible ? 'demo://public/$id' : null,

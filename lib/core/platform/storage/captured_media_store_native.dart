@@ -1,6 +1,7 @@
 import 'dart:io';
 import 'dart:typed_data';
 
+import 'package:cross_file/cross_file.dart';
 import 'package:path_provider/path_provider.dart';
 
 /// Android/iOS: write [bytes] next to the file the picker produced, which is
@@ -24,6 +25,10 @@ Future<String?> appMediaDirectory(String subfolder) async {
   final appDir = await getApplicationDocumentsDirectory();
   return '${appDir.path}${Platform.pathSeparator}$subfolder';
 }
+
+/// Native: a picked image is already a real file on disk, so there is
+/// nothing to retain. Exists for the web store, which must record the bytes.
+Future<void> retainCapturedFile(XFile file) async {}
 
 /// Copies [sourcePath] to [targetDirectory]/[fileName] and returns the new path.
 Future<String> copyCapturedFile(

@@ -1,35 +1,25 @@
 import 'dart:typed_data';
 
 import 'package:flutter/widgets.dart';
+import 'package:steelforce/core/platform/storage/web_media_registry.dart';
 
 /// Web implementations. Selected by the conditional export in
 /// `local_files.dart` — never compiled on Android/iOS.
 ///
-/// ## Why these report "nothing there" rather than throwing
+/// A browser has no filesystem, so a "path" here is the `blob:` reference the
+/// web capture store handed out, and its bytes live in [WebMediaRegistry] for
+/// the life of the tab. An image captured in this session is therefore shown
+/// and read like a file on mobile.
 ///
-/// Every caller of these functions is asking about a **filesystem path** that a
-/// mobile build wrote earlier — a captured proof photo, an uploaded drawing.
-/// A browser has no such path and no such file, so "absent" is the truthful
-/// answer, not a failure.
-///
-/// It is also the answer the call sites already handle well: each one guards
-/// with an existence check and renders a placeholder when the image is missing,
-/// because a file can legitimately disappear on mobile too (cache eviction,
-/// user cleanup). Web simply takes that existing branch every time, which is
-/// why adapting these screens needed no new UI states.
-///
-/// This is the honest consequence of ADR-010: on web there is no durable local
-/// media, so previously-captured local media cannot be shown. Newly picked
-/// images still work in-session — `image_picker_for_web` hands back bytes, and
-/// the flows that use bytes rather than paths are unaffected.
+/// Anything else — a `blob:` path persisted by an earlier session, or a mobile
+/// path in synced data — is reported absent. Every call site already handles
+/// a missing file with a placeholder, because a file can legitimately
+/// disappear on mobile too (cache eviction, user cleanup).
 
-bool localFileExists(String path) => false;
+bool localFileExists(String path) => WebMediaRegistry.contains(path);
 
-Uint8List? readLocalFileSync(String path) => null;
+Uint8List? readLocalFileSync(String path) => WebMediaRegistry.get(path);
 
-/// Never reached: every call site is guarded by [localFileExists], which is
-/// always false here. Kept total rather than throwing so that a future
-/// unguarded caller degrades to an empty box instead of crashing a screen.
 Image localFileImage(
   String path, {
   BoxFit? fit,
@@ -37,7 +27,7 @@ Image localFileImage(
   double? height,
 }) {
   return Image.memory(
-    Uint8List(0),
+    WebMediaRegistry.get(path) ?? Uint8List(0),
     fit: fit,
     width: width,
     height: height,
