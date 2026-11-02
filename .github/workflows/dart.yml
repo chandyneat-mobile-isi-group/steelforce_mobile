@@ -1,0 +1,102 @@
+name: iOS-ipa-build
+
+# Builds an UNSIGNED iOS release .ipa on demand (Actions → iOS-ipa-build →
+# Run workflow). Unsigned means it cannot be installed on an iPhone as-is: it
+# must be re-signed (Xcode, Sideloadly, AltStore, or a later signing step)
+# before it runs on a device. Signing and store upload stay manual.
+#
+# ── REQUIRED one-time setup: repository secrets ────────────────────────────
+#
+#   Settings → Secrets and variables → Actions → New repository secret
+#
+#   ENV_FILE                   full contents of your local `.env`
+#   GOOGLE_SERVICE_INFO_PLIST  base64 of ios/Runner/GoogleService-Info.plist
+#                              (`base64 -i ios/Runner/GoogleService-Info.plist | pbcopy`)
+#
+# Both files are gitignored, so a clean checkout has neither: without `.env`
+# Envied cannot generate `env.g.dart`, and without the plist iOS loses its
+# Firebase config. The job fails fast below if either secret is missing.
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ios-build-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build-ios:
+    name: 🎉 iOS Build
+    runs-on: macos-latest
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: subosito/flutter-action@v2
+        with:
+          # Same pin as deploy-web.yml — the version verified locally.
+          flutter-version: '3.44.9'
+          channel: stable
+          cache: true
+
+      - name: Restore gitignored config from secrets
+        env:
+          ENV_FILE: ${{ secrets.ENV_FILE }}
+          GOOGLE_SERVICE_INFO_PLIST: ${{ secrets.GOOGLE_SERVICE_INFO_PLIST }}
+        run: |
+          set -e
+          [ -n "$ENV_FILE" ] \
+            || { echo "::error::Secret ENV_FILE is not set — see the header of this workflow."; exit 1; }
+          [ -n "$GOOGLE_SERVICE_INFO_PLIST" ] \
+            || { echo "::error::Secret GOOGLE_SERVICE_INFO_PLIST is not set — see the header of this workflow."; exit 1; }
+          printf '%s\n' "$ENV_FILE" > .env
+          echo "$GOOGLE_SERVICE_INFO_PLIST" | base64 --decode > ios/Runner/GoogleService-Info.plist
+
+      - run: flutter pub get
+
+      - name: Generate code
+        run: dart run build_runner build --delete-conflicting-outputs
+
+      - name: Generate iOS Env.xcconfig
+        run: dart run tool/generate_ios_env.dart
+
+      - name: Analyze
+        run: flutter analyze lib --no-fatal-warnings --no-fatal-infos
+
+      - name: Install pods
+        run: pod install --repo-update
+        working-directory: ios
+
+      - name: Build iOS (release, unsigned)
+        # Symbols from --split-debug-info are kept as a separate artifact:
+        # without them, obfuscated release stack traces cannot be read.
+        run: |
+          flutter build ios --release --no-codesign \
+            --obfuscate --split-debug-info=build/symbols
+
+      - name: Package .ipa
+        run: |
+          set -e
+          mkdir Payload
+          mv Runner.app Payload/
+          zip -qq -r -9 SteelForce-unsigned.ipa Payload
+        working-directory: build/ios/iphoneos
+
+      # Workflow artifacts are visible only to people with access to this
+      # repository and expire automatically — unlike a GitHub Release, which is
+      # public on a public repo. The binary embeds the real (obfuscated)
+      # backend config, so it is not published.
+      - uses: actions/upload-artifact@v4
+        with:
+          name: ios-ipa-${{ github.run_number }}
+          path: build/ios/iphoneos/SteelForce-unsigned.ipa
+          retention-days: 14
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: ios-symbols-${{ github.run_number }}
+          path: build/symbols
+          retention-days: 90
