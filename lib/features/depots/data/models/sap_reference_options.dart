@@ -1,5 +1,4 @@
-import 'package:steelforce/features/depots/domain/entities/sap_master_data.dart';
-import 'package:steelforce/features/depots/domain/entities/sap_option.dart';
+import 'package:steelforce/features/depots/data/models/bp_depot_form_data.dart';
 import 'package:steelforce/features/depots/data/remote/depot_datasources.dart';
 
 /// The catalogue names the registration form reads, as the server spells them.

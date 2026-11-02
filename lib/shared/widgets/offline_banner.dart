@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:connectivity_plus/connectivity_plus.dart';
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:steelforce/core/localization/localization_services.dart';
 import 'package:steelforce/core/theme/theme_extensions.dart';
@@ -75,9 +76,17 @@ class _OfflineBannerState extends State<OfflineBanner> {
           const SizedBox(width: 8),
           Expanded(
             child: Text(
-              'my_visits.flow.offline_saved'.tr,
+              // ADR-010: web holds data in memory only, so "saved on your
+              // device" would be untrue there — closing the tab loses it.
+              (kIsWeb
+                      ? 'my_visits.flow.offline_saved_web'
+                      : 'my_visits.flow.offline_saved')
+                  .tr,
               style: TextStyle(
-                color: colors.warning,
+                // Keep the warning icon amber, but use the theme's primary
+                // text color so the offline message stays readable in both
+                // light and dark mode.
+                color: theme.colorScheme.onSurface,
                 fontSize: 11.5,
                 fontWeight: FontWeight.w600,
               ),

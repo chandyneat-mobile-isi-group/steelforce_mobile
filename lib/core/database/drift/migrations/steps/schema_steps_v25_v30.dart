@@ -81,4 +81,24 @@ final Map<int, SchemaMigrationStep> _stepsV25toV30 = <int, SchemaMigrationStep>{
       await _addColumnIfMissing(m, db, db.visitCheckOuts, column);
     }
   },
+
+  // v29: the outlet list's own fields — type, creator, sales team and
+  // profile — so the details screen shows them offline. Purely additive and
+  // nullable: a depot synced under v28 simply has none until the next pull.
+  29: (m, db) async {
+    for (final column in [
+      db.depots.depotType,
+      db.depots.createdBy,
+      db.depots.salesEmployeesJson,
+      db.depots.profileJson,
+    ]) {
+      await _addColumnIfMissing(m, db, db.depots, column);
+    }
+  },
+
+  // v30: the plans endpoints' last answers, so the Visits tab and the Home
+  // badge work offline. A new server-owned table, so purely additive.
+  30: (m, db) async {
+    await _createTableIfMissing(m, db, db.visitPlanSnapshots);
+  },
 };

@@ -1,3 +1,4 @@
+import 'package:steelforce/core/localization/localization_services.dart';
 import 'package:steelforce/core/platform/storage/local_files.dart';
 import 'dart:typed_data';
 
@@ -208,25 +209,29 @@ class QuotationPdfData {
             final wStr = m.widthMm == m.widthMm!.roundToDouble()
                 ? m.widthMm!.toStringAsFixed(0)
                 : m.widthMm!.toString();
-            customParts.add('Width: $wStr mm');
+            customParts
+                .add('${'orders.quotation.pdf.spec_width'.tr}: $wStr mm');
           }
           if (m.lengthMm != null && m.lengthMm! > 0) {
             final lStr = m.lengthMm == m.lengthMm!.roundToDouble()
                 ? m.lengthMm!.toStringAsFixed(0)
                 : m.lengthMm!.toString();
-            customParts.add('Length: $lStr mm');
+            customParts
+                .add('${'orders.quotation.pdf.spec_length'.tr}: $lStr mm');
           }
           if (m.thicknessMm != null && m.thicknessMm! > 0) {
             final tStr = m.thicknessMm == m.thicknessMm!.roundToDouble()
                 ? m.thicknessMm!.toStringAsFixed(0)
                 : m.thicknessMm!.toString();
-            customParts.add('Thickness: $tStr mm');
+            customParts
+                .add('${'orders.quotation.pdf.spec_thickness'.tr}: $tStr mm');
           }
           if (m.heightMm != null && m.heightMm! > 0) {
             final hStr = m.heightMm == m.heightMm!.roundToDouble()
                 ? m.heightMm!.toStringAsFixed(0)
                 : m.heightMm!.toString();
-            customParts.add('Height: $hStr mm');
+            customParts
+                .add('${'orders.quotation.pdf.spec_height'.tr}: $hStr mm');
           }
           if (m.diameterMm != null && m.diameterMm! > 0) {
             final dStr = m.diameterMm == m.diameterMm!.roundToDouble()
@@ -253,7 +258,10 @@ class QuotationPdfData {
         }
       } else {
         final specParts = <String>[];
-        if (product.grade.isNotEmpty) specParts.add('Grade: ${product.grade}');
+        if (product.grade.isNotEmpty) {
+          specParts
+              .add('${'orders.quotation.pdf.spec_grade'.tr}: ${product.grade}');
+        }
         if (product.diameter > 0) {
           final diaStr = product.diameter == product.diameter.roundToDouble()
               ? product.diameter.toStringAsFixed(0)
@@ -287,8 +295,16 @@ class QuotationPdfData {
 
       final freeUnits = DemoCartPromotions.freeQuantityFor(item);
       final freeRule = DemoCartPromotions.freeRuleFor(item);
-      final promoName = DemoCartPromotions.promotionNameFor(item) ??
-          (item.discountPercent > 0 ? 'Promotion' : null);
+      final namedPromo = DemoCartPromotions.promotionNameFor(item);
+      final promoName = namedPromo ??
+          (item.discountPercent > 0
+              ? 'orders.discount_source.promotion'.tr
+              : null);
+      // Only a real campaign name earns a prefix; the generic fallback
+      // label above would just repeat the column's meaning.
+      final hasNamedPromo = namedPromo != null &&
+          namedPromo.isNotEmpty &&
+          namedPromo != 'Promotion';
 
       final hasPercent = item.discountPercent > 0;
       final discountAmount = item.lineDiscount;
@@ -301,21 +317,15 @@ class QuotationPdfData {
                 ? '${item.discountPercent.toStringAsFixed(0)}%'
                 : '${item.discountPercent.toStringAsFixed(1)}%';
         discountRule = percentFormatted;
-        final promoPrefix = (promoName != null &&
-                promoName.isNotEmpty &&
-                promoName != 'Promotion')
-            ? '$promoName — '
-            : '';
+        final promoPrefix = hasNamedPromo ? '$namedPromo — ' : '';
         discountText =
             '$promoPrefix$percentFormatted / -\$${discountAmount.toStringAsFixed(2)}';
       } else if (freeUnits > 0) {
-        final rule = freeRule ?? 'Free $freeUnits';
+        final rule = freeRule ??
+            'orders.discount_summary.free_rule'
+                .trParams({'count': '$freeUnits'});
         discountRule = rule;
-        final promoPrefix = (promoName != null &&
-                promoName.isNotEmpty &&
-                promoName != 'Promotion')
-            ? '$promoName — '
-            : '';
+        final promoPrefix = hasNamedPromo ? '$namedPromo — ' : '';
         discountText = '$promoPrefix$rule';
       } else {
         discountText = '—';
@@ -323,7 +333,9 @@ class QuotationPdfData {
 
       return QuotationPdfLine(
         sku: sku,
-        name: product.name.isNotEmpty ? product.name : 'Structural Item',
+        name: product.name.isNotEmpty
+            ? product.name
+            : 'orders.quotation_extra.structural_item'.tr,
         description: description,
         unit: item.unit,
         quantity: item.quantity,
@@ -372,11 +384,14 @@ class QuotationPdfData {
       salesTerritory: salesTerritory ?? 'Phnom Penh',
       createdDate: createdDate,
       validUntil: validUntil,
-      paymentTerms: paymentTerms ??
-          '30% advance payment upon confirmation. Remaining balance according to agreed terms.',
-      deliveryTerms: deliveryTerms ?? 'Depot Site / Standard Lead Time',
-      deliveryLocation: deliveryLocation ?? (depotAddress ?? 'Depot Site'),
-      estimatedDelivery: estimatedDelivery ?? '3–5 business days',
+      paymentTerms:
+          paymentTerms ?? 'orders.quotation.pdf.default_payment_terms_full'.tr,
+      deliveryTerms:
+          deliveryTerms ?? 'orders.quotation.pdf.default_delivery_terms'.tr,
+      deliveryLocation: deliveryLocation ??
+          (depotAddress ?? 'orders.quotation.pdf.default_delivery_location'.tr),
+      estimatedDelivery:
+          estimatedDelivery ?? 'orders.quotation.pdf.default_eta'.tr,
       deliveryFee: deliveryFee,
       lines: lines,
       subtotal: subtotal,

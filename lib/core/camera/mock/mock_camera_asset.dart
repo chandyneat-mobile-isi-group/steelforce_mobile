@@ -1,3 +1,5 @@
+import 'package:steelforce/core/assets/app_assets.dart';
+
 /// A bundled test image the stand-in camera can return.
 ///
 /// Synthetic placeholders, drawn programmatically — **no real depot
@@ -18,7 +20,7 @@ enum MockCameraAsset {
   /// developer-facing scaffolding that never reaches a representative.
   final String label;
 
-  static const String directory = 'assets/mock/camera';
+  static const String directory = AppDataAssets.mockCameraFolder;
 
   String get assetPath => '$directory/$fileName';
 

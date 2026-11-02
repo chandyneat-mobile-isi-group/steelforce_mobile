@@ -27,11 +27,6 @@ run. Skipping a stage is allowed; *claiming* you ran it is not.
 
 Type C and D changes are the ones that are expensive to retrofit. Slow down.
 
-**Approval gate.** Type C, Type D, and structural refactors: present the
-problem, proposed design, trade-offs, and blast radius, then **wait for
-approval** before editing production code. Reading and graph queries never need
-approval. Raise a bad design before building it (`CLAUDE.md` §1).
-
 ---
 
 ## 3. Discover before editing
@@ -106,8 +101,7 @@ Use the smallest useful check first, then broaden:
 ```
 
 Type C and D changes use the broadest applicable level. Which tests a change
-requires: `testing.md`. A hot-path change also needs a before/after
-measurement: `performance.md` §4.
+requires: `testing.md`.
 
 **Never claim a task is verified because the app compiles.**
 

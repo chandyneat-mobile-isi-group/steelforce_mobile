@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:steelforce/core/responsive/responsive_sizing.dart';
 import 'package:steelforce/core/theme/theme_extensions.dart';
+import 'package:steelforce/core/localization/localization_services.dart';
+import 'package:steelforce/features/my_visits/presentation/localization/my_visits_labels.dart';
 
 /// Collects the rep's written reason for checking in away from the stop's pin.
 ///
@@ -61,12 +63,12 @@ class RemoteCheckInSheet extends StatefulWidget {
 
   /// Prefills for "Check in without GPS" — the situations that actually
   /// produce no fix.
-  static const noGpsPresets = <String>[
-    'No GPS signal inside the building',
-    'Location stayed on "searching" for a long time',
-    'Inside a warehouse with a metal roof',
-    'Phone GPS not working today',
-  ];
+  static List<String> get noGpsPresets => <String>[
+        'my_visits.remote_check_in.no_gps_preset_building'.tr,
+        'my_visits.remote_check_in.no_gps_preset_searching'.tr,
+        'my_visits.remote_check_in.no_gps_preset_metal_roof'.tr,
+        'my_visits.remote_check_in.no_gps_preset_phone'.tr,
+      ];
 
   static Future<String?> show(
     BuildContext context, {
@@ -103,25 +105,21 @@ class RemoteCheckInSheet extends StatefulWidget {
 }
 
 class _RemoteCheckInSheetState extends State<RemoteCheckInSheet> {
-  // TODO(i18n): these read from `.tr` once the keys land in en/km. Written as
-  // literals rather than key strings on purpose — a missing key renders as the
-  // key itself, and `my_visits.checkin.override.title` on a rep's screen is
-  // worse than untranslated English.
-  static const _title = 'Check in from here?';
-  static const _bodyPrefix = "You're not at the recorded location for this "
-      'stop. You can still check in, but you need to say why.';
-  static const _fieldLabel = 'Reason (required)';
-  static const _hint = 'e.g. depot gate is 200 m from the pin on the map';
-  static const _confirm = 'Check in anyway';
-  static const _cancel = 'Go back';
+  // Getters, not constants, so the copy re-translates on a language change.
+  static String get _title => 'my_visits.remote_check_in.title'.tr;
+  static String get _bodyPrefix => 'my_visits.remote_check_in.body'.tr;
+  static String get _fieldLabel => 'my_visits.remote_check_in.field_label'.tr;
+  static String get _hint => 'my_visits.remote_check_in.hint'.tr;
+  static String get _confirm => 'my_visits.remote_check_in.confirm'.tr;
+  static String get _cancel => 'my_visits.remote_check_in.cancel'.tr;
 
   /// Prefills, not choices — see the class doc.
-  static const _presets = <String>[
-    'Depot entrance is far from the recorded pin',
-    'No GPS signal inside the warehouse',
-    'Depot pin on the map is wrong',
-    'Met the depot at a different location',
-  ];
+  static List<String> get _presets => <String>[
+        'my_visits.remote_check_in.preset_far_entrance'.tr,
+        'my_visits.remote_check_in.preset_no_signal_warehouse'.tr,
+        'my_visits.remote_check_in.preset_wrong_pin'.tr,
+        'my_visits.remote_check_in.preset_other_location'.tr,
+      ];
 
   final TextEditingController _controller = TextEditingController();
 
@@ -233,9 +231,11 @@ class _RemoteCheckInSheetState extends State<RemoteCheckInSheet> {
                     // number is what makes "the pin is wrong" checkable later.
                     widget.distanceMeters == null ||
                             widget.distanceMeters!.isNaN
-                        ? widget.blockedReason
-                        : '${widget.blockedReason}\n'
-                            '${widget.distanceMeters!.round()} m from the recorded location.',
+                        ? localizeCheckInMessage(widget.blockedReason)
+                        : '${localizeCheckInMessage(widget.blockedReason)}\n'
+                            '${'my_visits.remote_check_in.distance_from_pin'.trParams({
+                                'distance': widget.distanceMeters!.round()
+                              })}',
                     style: TextStyle(
                       fontSize: context.rsp(11.5),
                       fontWeight: FontWeight.w600,
@@ -275,8 +275,10 @@ class _RemoteCheckInSheetState extends State<RemoteCheckInSheet> {
                     hintText: _hint,
                     // Counts down only while short, then goes quiet. A
                     // permanent counter reads as a target to hit.
-                    helperText:
-                        _valid ? null : '$_remaining more characters needed',
+                    helperText: _valid
+                        ? null
+                        : 'my_visits.remote_check_in.more_chars'
+                            .trParams({'count': _remaining}),
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(context.rr(12)),
                     ),

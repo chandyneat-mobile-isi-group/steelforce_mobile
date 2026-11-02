@@ -77,7 +77,7 @@ class ProductListSection extends StatelessWidget {
             Row(
               children: [
                 Text(
-                  'Products',
+                  'orders.catalog.products'.tr,
                   style: TextStyle(
                       fontWeight: FontWeight.bold,
                       fontSize: context.rsp(14),

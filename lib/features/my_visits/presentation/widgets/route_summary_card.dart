@@ -9,6 +9,7 @@ import 'package:steelforce/features/my_visits/domain/entities/route_stop.dart';
 import 'package:steelforce/features/my_visits/domain/entities/visit_status.dart';
 import 'package:steelforce/features/my_visits/domain/services/geofence_service.dart';
 import 'package:steelforce/core/responsive/responsive_sizing.dart';
+import 'package:steelforce/core/localization/localized_text_context.dart';
 
 /// Dashboard route-summary card — one per [RoutePlan]. Answers "which route
 /// should I start?" with a glanceable summary only (name, territory, status,
@@ -118,7 +119,7 @@ class RouteSummaryCard extends StatelessWidget {
 
                 // Territory · date subline.
                 Text(
-                  '${route.territory} · ${DateFormat('EEE, MMM d').format(route.visitDate)}',
+                  '${route.territory} · ${DateFormat('EEE, MMM d', context.languageCode).format(route.visitDate)}',
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                   style: TextStyle(

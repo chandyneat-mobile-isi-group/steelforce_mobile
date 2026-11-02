@@ -1,5 +1,4 @@
 import 'package:flutter/foundation.dart' show kDebugMode;
-import 'package:steelforce/core/config/data_source_mode.dart';
 import 'package:steelforce/features/my_visits/domain/entities/depot_stop_info.dart';
 import 'package:steelforce/features/my_visits/domain/services/check_in_location_verifier.dart';
 
@@ -117,19 +116,8 @@ class StopOutletLocationSource implements OutletLocationSource {
 /// distance nobody measured. Neither is acceptable in a rep's hands; both are
 /// exactly what is wanted while the outlet feed and location permissions are
 /// still being built. It must be off before release.
-///
-/// ## Demo builds
-///
-/// TODO(release-gate): demo-only geofence bypass. Also on in any build with
-/// `USE_MOCK_DATA=true` ([DataSourceMode.useMocks]), whatever its build mode,
-/// because a presenter showing the visit journey is never at the demo
-/// depots. That cannot weaken a live build: the flag is compile-time, a build
-/// that sets it registers demo data sources only, and every `dio` client in
-/// it refuses to send (`DemoNetworkGuardAdapter`) — a check-in it records has
-/// no server to reach.
-const bool kUseStaticCheckInPosition = DataSourceMode.useMocks ||
-    (kDebugMode &&
-        bool.fromEnvironment('STATIC_CHECK_IN_POSITION', defaultValue: true));
+const bool kUseStaticCheckInPosition = kDebugMode &&
+    bool.fromEnvironment('STATIC_CHECK_IN_POSITION', defaultValue: true);
 
 /// Opt-in, debug-only: measure every stop against the fixed demo pin
 /// ([StaticOutletLocationSource] — ISI's Phnom Penh office) instead of the

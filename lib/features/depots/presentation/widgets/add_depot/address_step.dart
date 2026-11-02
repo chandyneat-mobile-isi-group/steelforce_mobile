@@ -62,8 +62,8 @@ extension AddressStepExtension on _AddDepotBottomSheetState {
         ),
         _gap(8),
         _twoCol(
-          _infoChip(Icons.flag_outlined, 'KH - Cambodia'),
-          _infoChip(Icons.public, 'R01 - Central Area'),
+          _infoChip(Icons.flag_outlined, 'add_depot.country_kh'.tr),
+          _infoChip(Icons.public, 'add_depot.region_r01'.tr),
         ),
       ],
     );
@@ -86,14 +86,14 @@ extension AddressStepExtension on _AddDepotBottomSheetState {
           child: Container(
             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
             decoration: BoxDecoration(
-              color: Colors.white,
+              color: context.appColors.card,
               borderRadius: BorderRadius.circular(14),
               border: Border.all(
                 color: hasError
                     ? Theme.of(context).colorScheme.error
                     : (hasFix
-                        ? const Color(0xFF10B981)
-                        : const Color(0xFFE2E8F0)),
+                        ? context.appColors.success
+                        : context.appColors.border),
                 width: 1.1,
               ),
               boxShadow: [
@@ -109,13 +109,14 @@ extension AddressStepExtension on _AddDepotBottomSheetState {
                 Container(
                   width: 26,
                   height: 26,
-                  decoration: const BoxDecoration(
-                    color: Color(0xFF2563EB),
+                  decoration: BoxDecoration(
+                    color: Theme.of(context).colorScheme.primary,
                     shape: BoxShape.circle,
                   ),
-                  child: const Center(
-                    child:
-                        Icon(Icons.location_on, color: Colors.white, size: 15),
+                  child: Center(
+                    child: Icon(Icons.location_on,
+                        color: Theme.of(context).colorScheme.onPrimary,
+                        size: 15),
                   ),
                 ),
                 const SizedBox(width: 8),
@@ -127,7 +128,7 @@ extension AddressStepExtension on _AddDepotBottomSheetState {
                       Row(
                         children: [
                           Text(
-                            'Address Location',
+                            'geo.section_title'.tr,
                             style: TextStyle(
                               color: Theme.of(context).colorScheme.onSurface,
                               fontSize: _fontSize(12),
@@ -140,15 +141,16 @@ extension AddressStepExtension on _AddDepotBottomSheetState {
                               padding: const EdgeInsets.symmetric(
                                   horizontal: 6, vertical: 1),
                               decoration: BoxDecoration(
-                                color: const Color(0xFFECFDF5),
+                                color: context.appColors.success
+                                    .withValues(alpha: 0.10),
                                 borderRadius: BorderRadius.circular(8),
-                                border:
-                                    Border.all(color: const Color(0xFF10B981)),
+                                border: Border.all(
+                                    color: context.appColors.success),
                               ),
                               child: Text(
-                                'Verified',
+                                'add_depot.verified'.tr,
                                 style: TextStyle(
-                                  color: const Color(0xFF059669),
+                                  color: context.appColors.success,
                                   fontSize: _fontSize(10),
                                   fontWeight: FontWeight.w700,
                                 ),
@@ -161,14 +163,15 @@ extension AddressStepExtension on _AddDepotBottomSheetState {
                         _capturingGps
                             ? 'add_depot.gps_capturing'.tr
                             : (hasFix
-                                ? (draft.geoFix?.display ?? 'GPS Captured')
-                                : 'Search or select location'),
+                                ? (draft.geoFix?.display ??
+                                    'add_depot.gps_captured'.tr)
+                                : 'add_depot.search_or_select_location'.tr),
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                         style: TextStyle(
                           color: hasFix
                               ? Theme.of(context).colorScheme.onSurface
-                              : const Color(0xFF94A3B8),
+                              : context.appColors.textHint,
                           fontSize: _fontSize(12),
                           fontWeight:
                               hasFix ? FontWeight.w600 : FontWeight.w400,
@@ -188,8 +191,8 @@ extension AddressStepExtension on _AddDepotBottomSheetState {
                   Icon(
                     hasFix ? Icons.check_circle_rounded : Icons.map_outlined,
                     color: hasFix
-                        ? const Color(0xFF10B981)
-                        : const Color(0xFF3B82F6),
+                        ? context.appColors.success
+                        : Theme.of(context).colorScheme.primary,
                     size: 20,
                   ),
               ],

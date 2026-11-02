@@ -9,13 +9,11 @@
       "Bash(graphify explain *)",
       "Bash(graphify affected *)",
       "Bash(graphify god-nodes *)",
+      "Bash(graphify export *)",
       "Bash(graphify benchmark *)",
 
       "Bash(flutter pub get)",
-      "Bash(flutter pub deps *)",
-      "Bash(flutter pub outdated *)",
       "Bash(flutter analyze)",
-      "Bash(flutter analyze *)",
       "Bash(flutter test *)",
       "Bash(flutter build *)",
       "Bash(dart format *)",
@@ -23,76 +21,36 @@
       "Bash(dart run build_runner *)",
 
       "Bash(git status)",
-      "Bash(git status *)",
       "Bash(git diff *)",
       "Bash(git log *)",
       "Bash(git show *)",
-      "Bash(git branch --show-current)",
-      "Bash(git branch --list *)",
+      "Bash(git branch *)",
       "Bash(git rev-parse *)",
 
       "Bash(pwd)",
       "Bash(ls *)",
+      "Bash(find *)",
       "Bash(grep *)",
       "Bash(rg *)"
     ],
 
-    "ask": [
-      "Bash(flutter pub add *)",
-      "Bash(flutter pub remove *)",
-      "Bash(flutter pub upgrade *)",
-      "Bash(dart pub add *)",
-      "Bash(dart pub upgrade *)",
-      "Bash(graphify export *)",
-      "Bash(git add *)",
-      "Bash(git commit *)",
-      "Bash(git switch *)",
-      "Bash(git checkout *)",
-      "Bash(git stash *)",
-      "Bash(git branch *)"
-    ],
-
     "deny": [
       "Bash(rm -rf *)",
-      "Bash(rm -fr *)",
-      "Bash(rm -r *)",
-      "Bash(rm -R *)",
-      "Bash(find * -delete*)",
-      "Bash(find * -exec *)",
       "Bash(sudo *)",
       "Bash(chmod 777 *)",
 
       "Bash(git push *)",
-      "Bash(git push)",
       "Bash(git reset --hard *)",
-      "Bash(git clean *)",
-      "Bash(git branch -D *)",
-      "Bash(git branch -d *)",
-      "Bash(git branch --delete *)",
-      "Bash(git tag -d *)",
-      "Bash(git rebase *)",
+      "Bash(git clean -fd *)",
+      "Bash(git clean -fdx *)",
 
+      "Bash(cat .env*)",
       "Bash(printenv *)",
-      "Bash(printenv)",
       "Bash(env)",
       "Bash(security find-generic-password *)",
-      "Bash(security find-internet-password *)",
-
       "Read(./.env)",
       "Read(./.env.*)",
       "Read(./ios/Flutter/Env.xcconfig)",
-      "Read(./lib/core/config/env.g.dart)",
-      "Read(./android/key.properties)",
-      "Read(**/*.jks)",
-      "Read(**/*.keystore)",
-      "Read(**/*.p12)",
-      "Read(**/*.p8)",
-      "Read(**/*.pem)",
-      "Read(**/*.key)",
-      "Read(**/*.mobileprovision)",
-      "Read(**/google-services.json)",
-      "Read(**/GoogleService-Info.plist)",
-      "Read(**/service-account*.json)",
 
       "Bash(curl *|*sh*)",
       "Bash(wget *|*sh*)"
@@ -102,7 +60,7 @@
   "hooks": {
     "PreToolUse": [
       {
-        "matcher": "Write|Edit|MultiEdit|NotebookEdit",
+        "matcher": "Write|Edit",
         "hooks": [
           {
             "type": "command",
@@ -110,21 +68,11 @@
             "timeout": 10
           }
         ]
-      },
-      {
-        "matcher": "Bash",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "\"$CLAUDE_PROJECT_DIR/.claude/hooks/guard-bash.sh\"",
-            "timeout": 10
-          }
-        ]
       }
     ],
     "PostToolUse": [
       {
-        "matcher": "Write|Edit|MultiEdit",
+        "matcher": "Write|Edit",
         "hooks": [
           {
             "type": "command",

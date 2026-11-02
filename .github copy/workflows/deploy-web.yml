@@ -1,0 +1,276 @@
+name: Deploy Web to GitHub Pages
+
+# Builds the Flutter Web target and publishes it to GitHub Pages.
+#
+# Repository: DyDev99/isi-steel-sales-mobile
+# Source branch: `web`
+# Published:     https://dydev99.github.io/isi-steel-sales-mobile/
+#
+# ── REQUIRED one-time setup in the GitHub UI ────────────────────────────────
+#
+#   Settings → Pages → Build and deployment → Source: **GitHub Actions**
+#
+# This cannot be configured from a workflow file, and until it is done nothing
+# here reaches the site. While the Source is left as "Deploy from a branch",
+# Pages ignores this workflow entirely and instead serves the branch's raw
+# contents through Jekyll — which renders `README.md` as the home page. That is
+# the cause if the deployed site shows the README's "A new Flutter project"
+# text instead of the app.
+
+on:
+  push:
+    # The web target is developed and released from `web`, not `main`.
+    branches: [web]
+  # Lets a maintainer redeploy the current `web` without an empty commit.
+  workflow_dispatch:
+
+# The repo-name segment the site is served under. Changing the repository name
+# means changing this one value and nothing else.
+env:
+  BASE_HREF: /isi-steel-sales-mobile/
+  # The browser Origin this app sends on every API call once deployed. A
+  # browser sends scheme+host+port only — never the /isi-steel-sales-mobile/
+  # path — so this is the bare github.io host, not the site URL.
+  PAGES_ORIGIN: https://dydev99.github.io
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# Never let two deploys race. `cancel-in-progress: false` because cancelling a
+# half-finished Pages deployment can leave the site in a broken state — queue
+# instead.
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: subosito/flutter-action@v2
+        with:
+          # Pinned to the version this project is developed against
+          # (`.metadata` revision ad70ec4617). Floating on `stable` would let an
+          # upstream release break a deploy with no change on our side.
+          flutter-version: '3.44.4'
+          channel: stable
+          cache: true
+
+      - name: Write placeholder .env
+        # ── This is a security control, not a convenience ──────────────────
+        #
+        # `Env` is Envied-obfuscated, which defends against *native binary*
+        # inspection. A web build is JavaScript: everything compiled into it is
+        # readable by anyone who opens devtools, and obfuscation buys nothing
+        # (`docs/skills/security.md` §4, `docs/blueprint/web-architecture.md`).
+        #
+        # So the web job is never given the real secrets at all. `DB_SALT` in
+        # particular is meaningless here — per ADR-010 the web build has no
+        # encrypted database to key — and this way it is not merely
+        # tree-shaken-and-probably-absent, it was never present.
+        #
+        # If the web app later needs a real API endpoint, add ONLY that one as a
+        # repository secret. Never wire `secrets.DB_SALT` into this job.
+        run: |
+          cat > .env <<'EOF'
+          APP_NAME=ISI STEEL SALES
+          APP_ENV=web
+          API_BASE_URL=${{ vars.WEB_API_BASE_URL || 'https://www.pnc-spts-stg-api.me' }}
+          API_TIMEOUT=30000
+          ENABLE_LOGGING=false
+          ENABLE_DEBUG=false
+          GOOGLE_MAPS_ANDROID_KEY=unused_on_web
+          GOOGLE_MAPS_IOS_KEY=unused_on_web
+          MAP_PROVIDER=google
+          AUTH_TOKEN_KEY=access_token
+          LOCAL_DB_NAME=unused_on_web
+          ANALYTICS_ENABLED=false
+          DB_SALT=web_build_has_no_encrypted_database_adr010
+          EOF
+
+      - name: Assert the API base URL has no trailing slash
+        # `AppConfig.apiBaseUrl` is contracted as "scheme and host, no trailing
+        # slash and no /api/v1"; `AppConstants.apiPrefix` supplies the rest. A
+        # trailing slash here produces `https://host//api/v1/...`, which the
+        # API answers with 404 — on web only, and long after CORS has been
+        # cleared, which makes it look like a CORS regression when it is not.
+        # Cheap to assert, expensive to diagnose in a browser.
+        run: |
+          set -e
+          URL=$(grep '^API_BASE_URL=' .env | cut -d= -f2-)
+          case "$URL" in
+            */) echo "::error::API_BASE_URL ends with '/': $URL — see AppConfig.apiBaseUrl"; exit 1 ;;
+            */api/v1*) echo "::error::API_BASE_URL must not include /api/v1: $URL"; exit 1 ;;
+          esac
+          echo "API base URL shape OK."
+
+      - name: Assert the Pages origin is on the API's CORS allowlist
+        # The deployed app is a *browser* client, so it is bound by CORS in a
+        # way the Android and iOS builds never are. If the API does not return
+        # `Access-Control-Allow-Origin` for PAGES_ORIGIN, every request fails
+        # before it leaves the browser, and Dio reports it as
+        # `status=null / connectionError` — which reads like the backend is
+        # down rather than like a policy rejection. That misdiagnosis is the
+        # expensive part, so catch it here instead of in a user's devtools.
+        #
+        # The allowlist lives in the API, not in this repo: a new deploy origin
+        # (custom domain, a fork's github.io, a preview host) has to be added
+        # there first, and this step is what says so out loud.
+        #
+        # Deliberately distinguishes the two failure modes: a *reachable* API
+        # that withholds the header is a real misconfiguration and fails the
+        # build; an unreachable API is more likely a CI network blip than a
+        # code problem, so it warns rather than blocking a deploy on it.
+        run: |
+          set -u
+          URL=$(grep '^API_BASE_URL=' .env | cut -d= -f2-)
+          echo "Preflighting $URL as Origin: $PAGES_ORIGIN"
+          HDRS=""
+          for attempt in 1 2 3; do
+            HDRS=$(curl -s -D - -o /dev/null -X OPTIONS \
+              "$URL/api/v1/mobile/auth/send-otp" \
+              -H "Origin: $PAGES_ORIGIN" \
+              -H "Access-Control-Request-Method: POST" \
+              -H "Access-Control-Request-Headers: content-type" \
+              --max-time 30 2>/dev/null | tr -d '\r') && [ -n "$HDRS" ] && break
+            echo "attempt $attempt: no response, retrying..."
+            sleep 5
+          done
+
+          if [ -z "$HDRS" ]; then
+            echo "::warning::Could not reach $URL to verify CORS after 3 attempts. Not failing the deploy — this is usually a CI network issue, but if the site cannot talk to the API once live, check this first."
+            exit 0
+          fi
+
+          if echo "$HDRS" | grep -iq '^access-control-allow-origin:'; then
+            echo "CORS OK: $(echo "$HDRS" | grep -i '^access-control-allow-origin:')"
+          else
+            echo "::error::$URL is reachable but did NOT return Access-Control-Allow-Origin for $PAGES_ORIGIN. The deployed site will fail every API call. Add $PAGES_ORIGIN to the API's CORS allowlist, then re-run this workflow."
+            exit 1
+          fi
+
+      - run: flutter pub get
+
+      - name: Generate code
+        run: dart run build_runner build --delete-conflicting-outputs
+
+      - name: Analyze
+        # A deploy that ships analyzer errors to production is worse than a
+        # failed deploy. Warnings are not fatal — the repo carries some
+        # pre-existing ones unrelated to web.
+        run: flutter analyze --no-fatal-warnings --no-fatal-infos
+
+      - name: Build web
+        # `--base-href` is what makes every asset resolve under the repository
+        # sub-path. Without it the app loads at the root and 404s on Pages.
+        #
+        # `--no-web-resources-cdn` bundles CanvasKit into our own build output
+        # instead of loading it from `https://www.gstatic.com` at runtime. Three
+        # reasons, in order of importance:
+        #   1. It lets the CSP below keep `script-src 'self'`. With the CDN, the
+        #      renderer script is cross-origin and the app cannot start at all
+        #      under a strict policy.
+        #   2. It removes a third-party runtime dependency from an app whose
+        #      users are on unreliable Cambodian mobile connections — gstatic
+        #      being slow or blocked would mean a blank screen.
+        #   3. Fewer origins to trust is the whole point of the policy.
+        #
+        # `--wasm` is NOT used: `flutter_secure_storage_web` and `geolocator_web`
+        # still import legacy `dart:html`, which the wasm dry run rejects.
+        # Revisit when those plugins migrate to `package:web`.
+        run: |
+          flutter build web --release \
+            --base-href "$BASE_HREF" \
+            --no-web-resources-cdn
+
+      - name: Inject Content Security Policy
+        # ── Why this is a deploy step and not a <meta> tag in web/index.html ──
+        #
+        # `flutter run -d chrome` serves that same file, and the debug bootstrap
+        # (DDC module loader, hot-reload client) runs inline scripts that any
+        # policy worth having would block. Putting the CSP in the source file
+        # would mean trading a real security control against every developer's
+        # ability to run the app. Injecting here gives production the strict
+        # policy and leaves the debug workflow untouched.
+        #
+        # `'wasm-unsafe-eval'` is required: CanvasKit and `sqlite3.wasm` both
+        # instantiate WebAssembly. It permits WASM compilation only — it does
+        # NOT re-enable `eval()` for JavaScript.
+        #
+        # NOT included: `frame-ancestors`, which browsers ignore when delivered
+        # via <meta>. Clickjacking protection needs a real HTTP header, and
+        # GitHub Pages cannot send one — see `docs/blueprint/web-architecture.md` §6.
+        #
+        # Google Maps (enabled on web — see web/index.html) needs four exact
+        # origins, never a wildcard:
+        #   script-src  maps.googleapis.com  the loader + the API modules it
+        #               pulls in; maps.gstatic.com serves those module chunks.
+        #   style-src   fonts.googleapis.com — the API injects its own
+        #               stylesheet link for map controls.
+        #   font-src    fonts.gstatic.com — the faces that stylesheet points at.
+        # Map tiles and API calls need no new entry: `img-src ... https:` and
+        # `connect-src 'self' https:` already cover them.
+        run: |
+          set -e
+          CSP="default-src 'self'; script-src 'self' 'wasm-unsafe-eval' https://maps.googleapis.com https://maps.gstatic.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; img-src 'self' data: blob: https:; font-src 'self' data: https://fonts.gstatic.com; connect-src 'self' https:; worker-src 'self' blob:; object-src 'none'; base-uri 'self'"
+          TAG="<meta http-equiv=\"Content-Security-Policy\" content=\"$CSP\">"
+          # Inserted immediately after <head> so it applies to everything below.
+          sed -i "0,/<head>/s|<head>|<head>\n  $TAG|" build/web/index.html
+          grep -q "Content-Security-Policy" build/web/index.html \
+            || { echo "::error::CSP injection failed — refusing to deploy without it."; exit 1; }
+          echo "CSP injected."
+
+      - name: Add SPA fallback
+        # GitHub Pages serves static files only — it cannot rewrite unknown
+        # paths to index.html.
+        #
+        # The app uses Flutter's DEFAULT hash URL strategy (`/#/customers`), and
+        # a browser never sends the fragment to the server, so a refresh already
+        # requests the plain base path and works without this file.
+        #
+        # This is defence for the cases that strategy does not cover: a stale
+        # link from before, a hand-typed path, or a future switch to
+        # `usePathUrlStrategy()`. Pages serves 404.html for any unmatched path,
+        # so making it a copy of index.html turns those into a correct app load
+        # rather than a GitHub 404 page.
+        run: cp build/web/index.html build/web/404.html
+
+      - name: Disable Jekyll
+        # Pages runs Jekyll by default, which silently drops files and folders
+        # beginning with an underscore. Flutter emits none today, but a future
+        # asset or plugin output could hit this and the failure mode is a
+        # confusing missing-asset 404.
+        run: touch build/web/.nojekyll
+
+      - name: Verify web assets
+        # Cheap guard against the two failure modes that only show up in the
+        # browser, where they cost a full deploy cycle to diagnose.
+        run: |
+          set -e
+          test -f build/web/sqlite3.wasm \
+            || { echo "::error::sqlite3.wasm missing from build/web — Drift cannot start on web. It must be committed at web/sqlite3.wasm."; exit 1; }
+          grep -q 'base href="'"$BASE_HREF"'"' build/web/index.html \
+            || { echo "::error::base href was not substituted; assets will 404 under the repository sub-path."; exit 1; }
+          grep -q 'maps.googleapis.com/maps/api/js' build/web/index.html \
+            || { echo "::error::Google Maps JS loader missing from build/web/index.html — GoogleMap widgets render blank on web. It must stay in web/index.html <head>."; exit 1; }
+          echo "Web assets verified."
+
+      - uses: actions/configure-pages@v5
+
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: build/web
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4

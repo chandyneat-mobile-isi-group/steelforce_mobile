@@ -1,119 +1,63 @@
 import 'package:flutter/foundation.dart';
 
-/// A compact, aligned console tracer for following one flow while developing.
-///
-/// ## What this is, and is not
-///
-/// This is **not** [AppLogger]. That one is structured, redacting, and intended
-/// to survive into release telemetry. This is a developer's console view: it
-/// exists so a multi-step flow — open a draft, patch it, submit, upload
-/// evidence — reads as a legible sequence in `flutter run` instead of forty
-/// unaligned sentences.
-///
-/// ```text
-/// ─────── depot registration ───────
-///   ▸ DRAFT     resumed  id=01a0412a status=Draft fields=46
-///   ✓ STEP      1/5 identity
-///   ✗ STEP      2/5 address  missing: city · postalCode · geo
-///   ↑ HTTP      POST /draft → 200
-///   ✓ SUBMIT    depot=01a03189 queued=no
-///   ↑ PHOTOS    sent=2 retry=0 rejected=1
-///   ✗ ERROR     submit → DioException
-/// ```
-///
-/// ## Release safety
-///
-/// Every method returns immediately unless [kDebugMode], so the strings are
-/// never built and nothing reaches a release console (`feature-ui-standard.md`
-/// FS-SEC-3). Interpolation still happens at the call site, so keep arguments
-/// cheap — pass a count, not a joined list of a thousand rows.
-///
-/// ## What may be traced
-///
-/// Codes, counts, ids, status codes, durations, field *names*. **Never** field
-/// values, names, phone numbers, addresses, GPS positions or money
-/// (FS-SEC-2). A trace line ends up in screenshots and pasted bug reports.
+/// Development-only trace output. Do not pass phone numbers, OTPs, passwords,
+/// access tokens, Firebase ID tokens, or reset tokens as [message].
+void debugTrace(String scope, String message) {
+  if (!kDebugMode) return;
+  debugPrint('[$scope] $message');
+}
+
+/// Structured debug-only trace used by the depot registration and camera
+/// flows. Values are limited to the safe metadata supplied by call sites;
+/// identifiers must go through [id] and payloads must never be logged.
 class DebugTrace {
-  const DebugTrace(this.channel);
+  const DebugTrace(this.scope);
 
-  /// Short flow name, printed on every line so interleaved flows stay
-  /// separable.
-  final String channel;
+  final String scope;
 
-  static const int _verbWidth = 9;
+  void begin(String label) => _write('BEGIN', label, const {});
 
-  /// Opens a visually distinct block. Use once, when a flow starts.
-  void begin(String title) {
+  void step(String stage, String message,
+          [Map<String, Object?> fields = const {}]) =>
+      _write('STEP', '$stage: $message', fields);
+
+  void send(String stage, String message,
+          [Map<String, Object?> fields = const {}]) =>
+      _write('SEND', '$stage: $message', fields);
+
+  void ok(String stage, String message,
+          [Map<String, Object?> fields = const {}]) =>
+      _write('OK', '$stage: $message', fields);
+
+  void warn(String stage, String message,
+          [Map<String, Object?> fields = const {}]) =>
+      _write('WARN', '$stage: $message', fields);
+
+  void fail(String stage, String message,
+          [Map<String, Object?> fields = const {}]) =>
+      _write('FAIL', '$stage: $message', fields);
+
+  void _write(String level, String message, Map<String, Object?> fields) {
     if (!kDebugMode) return;
-    debugPrint('');
-    debugPrint('─────── $title ───────');
+    final metadata = fields.entries
+        .where((entry) => entry.value != null)
+        .map((entry) => '${entry.key}=${entry.value}')
+        .join(' ');
+    debugPrint(
+        '[$scope] $level $message${metadata.isEmpty ? '' : ' $metadata'}');
   }
 
-  /// A step happened. Neutral.
-  void step(String verb, String summary, [Map<String, Object?>? fields]) =>
-      _line('▸', verb, summary, fields);
-
-  /// A step completed as intended.
-  void ok(String verb, String summary, [Map<String, Object?>? fields]) =>
-      _line('✓', verb, summary, fields);
-
-  /// Something went out over the wire, or up to the server.
-  void send(String verb, String summary, [Map<String, Object?>? fields]) =>
-      _line('↑', verb, summary, fields);
-
-  /// Worth noticing but not a failure — a fallback taken, a value ignored.
-  void warn(String verb, String summary, [Map<String, Object?>? fields]) =>
-      _line('!', verb, summary, fields);
-
-  /// The step did not succeed.
-  void fail(String verb, String summary, [Map<String, Object?>? fields]) =>
-      _line('✗', verb, summary, fields);
-
-  void _line(
-    String glyph,
-    String verb,
-    String summary,
-    Map<String, Object?>? fields,
-  ) {
-    if (!kDebugMode) return;
-
-    final padded = verb.toUpperCase().padRight(_verbWidth);
-    final rendered = _fields(fields);
-    // debugPrint rather than print: it is rate-limited, so a burst during a
-    // page run is throttled instead of being dropped by the platform log.
-    debugPrint('[$channel] $glyph $padded $summary$rendered');
+  /// Returns a short one-way process hash for correlating an ID in a single
+  /// debug run without printing the original business identifier.
+  static String id(Object? value) {
+    if (value == null) return 'none';
+    final hash = value.toString().hashCode.toRadixString(16);
+    return '#${hash.length > 6 ? hash.substring(hash.length - 6) : hash}';
   }
 
-  static String _fields(Map<String, Object?>? fields) {
-    if (fields == null || fields.isEmpty) return '';
-    final parts = <String>[];
-    for (final entry in fields.entries) {
-      // A null field is absent, not the string "null" — it would otherwise
-      // read as a value the server actually sent.
-      if (entry.value == null) continue;
-      parts.add('${entry.key}=${entry.value}');
-    }
-    return parts.isEmpty ? '' : '  ${parts.join(' ')}';
-  }
+  /// Renders only field/key names, never the values associated with them.
+  static String names(Iterable<Object?> values) =>
+      '[${values.map((value) => value.toString()).join(',')}]';
 
-  /// Shortens an identifier to its leading segment.
-  ///
-  /// A UUID is 36 characters and only its head is useful for correlating lines
-  /// by eye; printing it whole pushes every following field off the screen.
-  static String id(String? value) {
-    if (value == null || value.isEmpty) return '—';
-    return value.length <= 10 ? value : '${value.substring(0, 8)}…';
-  }
-
-  /// Renders a list of names for a human — `city · postalCode · geo`.
-  ///
-  /// Field *names* only. Never their values.
-  static String names(Iterable<String> values) {
-    final list = values.toList();
-    if (list.isEmpty) return '—';
-    return list.join(' · ');
-  }
-
-  /// `yes` / `no`, which scan far better than `true` / `false` in a dense line.
   static String yesNo(bool value) => value ? 'yes' : 'no';
 }

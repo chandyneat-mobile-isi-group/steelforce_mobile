@@ -13,7 +13,7 @@ anything.
 
 1. `lib/core/network/` — `app_network.dart`, `api_envelope.dart`,
    `api_error.dart`, `api_log_interceptor.dart`, `network_info.dart`,
-   `connectivity/connectivity_service.dart`. There is **one** client; use it.
+   `connectivity_service.dart`. There is **one** client; use it.
 2. The feature's existing `data/datasources/` and `data/models/` for the
    established pattern.
 3. The contract: `docs/feature/<feature>/api.md` (or `api/mobile.md`), plus
@@ -39,7 +39,7 @@ anything.
 Read local-first; a failed request degrades to cached data with an honest
 indicator, it does not blank the screen. Writes go to the local database **and**
 the sync queue in the same Drift transaction (ADR-006) — never "call the API,
-then save on success". Check reachability via `core/network/connectivity/connectivity_service.dart`
+then save on success". Check reachability via `connectivity_service.dart`
 (ADR-005), not a raw `connectivity_plus` state.
 
 ## Report

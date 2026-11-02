@@ -6,7 +6,7 @@
 ///
 /// - `bool localFileExists(String path)`
 /// - `Uint8List? readLocalFileSync(String path)`
-/// - `Image localFileImage(String path, {fit, width, height})`
+/// - `Image localFileImage(String path, {fit, width, height, cacheWidth})`
 ///
 /// On Android/iOS these do the obvious thing. On web they report the file as
 /// absent, which is the truth (a browser has no such path) and which every

@@ -9,6 +9,8 @@ import 'package:steelforce/features/localization/domain/usecases/get_current_lan
 import 'package:steelforce/features/localization/domain/usecases/get_supported_languages.dart';
 import 'package:steelforce/features/localization/domain/usecases/restore_saved_language.dart';
 import 'package:steelforce/features/localization/presentation/bloc/language_cubit.dart';
+import 'package:steelforce/features/notification/domain/usecases/push_device_usecases.dart';
+import 'package:steelforce/core/usecase/usecase.dart';
 
 /// Registers the localization feature. Singleton cubit — there is exactly one
 /// app language, and it is provided by value above `MaterialApp` (app.dart) so
@@ -37,6 +39,9 @@ void registerLocalizationFeature(GetIt sl) {
       getSupportedLanguages: sl(),
       changeLanguage: sl(),
       restoreSavedLanguage: sl(),
+      onLanguageChanged: (_) async {
+        await sl<RegisterPushDevice>()(const NoParams());
+      },
     ),
   );
 }

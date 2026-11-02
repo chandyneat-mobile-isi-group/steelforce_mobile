@@ -1,5 +1,6 @@
 import 'package:steelforce/core/database/drift/daos/depot_dao.dart';
 import 'package:steelforce/core/error/exceptions.dart';
+import 'package:steelforce/features/depots/data/local/depot_page_reader.dart';
 import 'package:steelforce/features/depots/data/local/depot_drift_mappers.dart';
 import 'package:steelforce/features/depots/data/local/depot_local_data_source.dart';
 import 'package:steelforce/features/depots/data/models/depot_activity_model.dart';
@@ -24,16 +25,8 @@ class DepotDriftLocalDataSource implements DepotLocalDataSource {
     DepotFilter filter = const DepotFilter(),
   }) async {
     try {
-      final rows = await _dao.browse(
-        page: page,
-        pageSize: pageSize,
-        query: query,
-        territory: filter.territory,
-        status: filter.status?.name,
-        productCategory: filter.productCategory,
-        sort: filter.sortBy.toBrowseSort(),
-      );
-      return rows.map((r) => r.toModel()).toList();
+      return await _dao.browsePage(
+          page: page, pageSize: pageSize, query: query, filter: filter);
     } catch (e) {
       throw CacheException(message: 'Failed to browse depots: $e');
     }
@@ -142,6 +135,24 @@ class DepotDriftLocalDataSource implements DepotLocalDataSource {
       await _dao.markDeleted(ids);
     } catch (e) {
       throw CacheException(message: 'Failed to apply deletions: $e');
+    }
+  }
+
+  @override
+  Future<int> retainOnly(Set<String> ids) async {
+    try {
+      return await _dao.markDeletedExcept(ids);
+    } catch (e) {
+      throw CacheException(message: 'Failed to drop stale depots: $e');
+    }
+  }
+
+  @override
+  Future<bool> hasUntypedDepots() async {
+    try {
+      return await _dao.hasUntypedDepots();
+    } catch (e) {
+      throw CacheException(message: 'Failed to read depot types: $e');
     }
   }
 

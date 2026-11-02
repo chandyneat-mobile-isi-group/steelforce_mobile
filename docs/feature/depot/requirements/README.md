@@ -257,7 +257,7 @@ model and the screen that renders it.
 
 ## 16. Related
 
-- [`../api.md`](../api.md) — the existing Mobile Integration Guide (975 lines)
+- [`../api.md`](../mobile/api.md) — the existing Mobile Integration Guide (975 lines)
 - [`../registration/`](../registration/) — SAP BP registration deep-dive
 - [`../mobile/`](../mobile/) — per-endpoint contract notes
 - [`../ui-ux.md`](../ui-ux.md) — step design for the registration form

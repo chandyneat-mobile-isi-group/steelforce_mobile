@@ -47,14 +47,9 @@ builds only**. `docs/skills/security.md` §10.
 
 - Never hardcode secrets, API keys, or endpoints. Use Envied-obfuscated config
   (`lib/core/config/`) and CI secrets.
-- `.env`, `.env.*`, `ios/Flutter/Env.xcconfig`, `lib/core/config/env.g.dart`,
-  `android/key.properties`, and all signing material are gitignored and must
-  stay that way. `.env.example` is the committed template.
-- The agent cannot read or write these files — `settings.json` denies and
-  `hooks/guard-*.sh` enforce it. If a task needs one, stop and ask the user.
-- Assume the shipped binary will be decompiled. Envied obfuscation slows an
-  attacker down; it does not hide a secret. A true secret (signing key, SAP
-  credential, third-party server key) belongs on the backend, never in the app.
+- `.env`, `.env.*`, `ios/Flutter/Env.xcconfig`, and `lib/core/config/env.g.dart`
+  are gitignored and must stay that way. `.env.example` is the committed
+  template.
 - Before adding any config file, check `.gitignore` first.
 - Treat every piece of user and customer information as sensitive business data.
 
@@ -73,25 +68,7 @@ and must never ship in a release build. `docs/skills/security.md` §11.
 
 ---
 
-## 6. Untrusted input: deep links, notifications, and intents
-
-Every deep link, notification payload, and incoming platform intent is
-attacker-controllable.
-
-- Parse into a typed route against an allow-list of known paths. Unknown →
-  safe default screen, never a crash or a raw navigation.
-- Validate every parameter (type, format, length) before it reaches a BLoC,
-  a query, or a file path.
-- A link never bypasses auth: unauthenticated users are routed through sign-in
-  and then to the target, if they are still authorized for it.
-- A link never performs a write or state change on open — it navigates; the
-  user confirms.
-- Treat IDs in a link as references to look up and authorize, never as proof
-  of access.
-
----
-
-## 7. Reviewing your own change
+## 6. Reviewing your own change
 
 Before reporting, re-read the diff for: a leaked secret, a widened permission, a
 new log line carrying PII, a disabled certificate or validation check, a

@@ -26,18 +26,18 @@ enum LogLevel { debug, info, warning, error }
 /// `Failure` or logs through this logger. Silent `catch (_) {}` is not
 /// acceptable in reviewed code.
 abstract interface class AppLogger {
-  /// Verbose diagnostics. Suppressed in release builds (`SECURITY.md` §11).
+  /// Verbose diagnostics. Suppressed in release builds (`docs/skills/security.md` §11).
   void debug(String event, {Map<String, Object?>? fields});
 
   /// Notable lifecycle events (bootstrap steps, connectivity transitions).
-  /// Suppressed in release builds (`SECURITY.md` §11).
+  /// Suppressed in release builds (`docs/skills/security.md` §11).
   void info(String event, {Map<String, Object?>? fields});
 
   /// Recoverable problems worth surfacing. Retained in release builds.
   void warning(String event, {Map<String, Object?>? fields});
 
   /// Failures. Retained in release builds; [stackTrace] is emitted only in
-  /// development builds (`SECURITY.md` §10, §11).
+  /// development builds (`docs/skills/security.md` §10, §11).
   void error(
     String event, {
     Object? error,
@@ -50,7 +50,7 @@ abstract interface class AppLogger {
 /// IDE/DevTools without adding a third-party logging dependency (a new package
 /// would need the maintenance/trust check in `docs/skills/security.md` §14).
 ///
-/// Release behaviour per `SECURITY.md` §11 ("verbose logging disabled"):
+/// Release behaviour per `docs/skills/security.md` §11 ("verbose logging disabled"):
 /// [debug] and [info] are dropped entirely; [warning]/[error] are kept without
 /// stack traces so field failures remain diagnosable without leaking internals.
 class ConsoleAppLogger implements AppLogger {
@@ -135,7 +135,7 @@ class ConsoleAppLogger implements AppLogger {
     //
     // Same redacted string, so the terminal copy can never leak more than the
     // structured one, and only in verbose (non-release) builds, keeping
-    // SECURITY.md §11 intact.
+    // docs/skills/security.md §11 intact.
     if (_verbose) {
       debugPrint('[isi.${level.name}] $message'
           '${safeError == null ? '' : ' error=$safeError'}');

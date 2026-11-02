@@ -17,7 +17,6 @@ extension _CheckInPage on _RouteCheckInScreenState {
         scrolledUnderElevation: 0,
         backgroundColor: scheme.surface,
         iconTheme: IconThemeData(color: colors.textPrimary),
-        bottom: const VisitStepBar(current: VisitStep.checkIn),
         title: Text(
           'my_visits.flow.checkin_title'.tr,
           style: TextStyle(
@@ -240,11 +239,14 @@ extension _CheckInPage on _RouteCheckInScreenState {
                       begin: 0.35,
                       end: 1.0,
                       offset: 0.35,
-                      child: _CheckInBottomBar(
-                        enabled: !_submitting,
-                        submitting: _submitting,
-                        hint: blockedReason,
-                        onTap: () => unawaited(_submit(stop)),
+                      child: CoachKeys.wrap(
+                        CoachKeys.visitCheckIn,
+                        child: _CheckInBottomBar(
+                          enabled: !_submitting,
+                          submitting: _submitting,
+                          hint: blockedReason,
+                          onTap: () => unawaited(_submit(stop)),
+                        ),
                       ),
                     ),
                   ],

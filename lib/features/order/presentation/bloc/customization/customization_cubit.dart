@@ -1,7 +1,9 @@
+import 'package:flutter/foundation.dart';
 import 'package:steelforce/core/platform/storage/captured_media_store.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:steelforce/core/camera/image_capture_service.dart';
+import 'package:steelforce/core/localization/localization_services.dart';
 
 import 'package:steelforce/features/order/domain/entities/data_domain.dart';
 import 'package:steelforce/features/order/presentation/bloc/customization/customization_state.dart';
@@ -42,10 +44,12 @@ class CustomizationCubit extends Cubit<CustomizationState> {
       if (storedPath != null) {
         emit(previous.copyWith(drawingImagePath: storedPath));
       } else {
-        emit(const CustomizationError('Failed to save drawing file.'));
+        emit(CustomizationError('orders.customization.save_drawing_failed'.tr));
       }
     } catch (e) {
-      emit(CustomizationError('Error capturing drawing: ${e.toString()}'));
+      debugPrint('[CustomizationCubit] capture failed: $e');
+      emit(
+          CustomizationError('orders.customization.capture_drawing_failed'.tr));
     }
   }
 

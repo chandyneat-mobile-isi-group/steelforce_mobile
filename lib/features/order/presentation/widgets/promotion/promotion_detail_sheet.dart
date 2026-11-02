@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 import 'package:steelforce/core/localization/localization_services.dart';
 import 'package:steelforce/core/localization/localized_text_context.dart';
 import 'package:steelforce/core/responsive/responsive_sizing.dart';
@@ -167,8 +168,10 @@ class _PromotionDetailSheet extends StatelessWidget {
             ),
             SizedBox(height: context.rh(6)),
             Text(
-              'orders.promotion.valid_until'
-                  .trParams({'date': _formatDate(promotion.validUntil)}),
+              'orders.promotion.valid_until'.trParams({
+                'date': DateFormat('dd MMM yyyy', context.languageCode)
+                    .format(promotion.validUntil),
+              }),
               style: TextStyle(
                 color: colors.textHint,
                 fontSize: context.rsp(11),
@@ -187,22 +190,4 @@ class _PromotionDetailSheet extends StatelessWidget {
       ),
     );
   }
-}
-
-String _formatDate(DateTime d) {
-  const months = [
-    'Jan',
-    'Feb',
-    'Mar',
-    'Apr',
-    'May',
-    'Jun',
-    'Jul',
-    'Aug',
-    'Sep',
-    'Oct',
-    'Nov',
-    'Dec',
-  ];
-  return '${d.day.toString().padLeft(2, '0')} ${months[d.month - 1]} ${d.year}';
 }

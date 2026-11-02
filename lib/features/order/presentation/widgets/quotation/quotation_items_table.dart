@@ -42,7 +42,7 @@ class QuotationItemsTable extends StatelessWidget {
         child: Padding(
           padding: EdgeInsets.symmetric(vertical: context.rh(16)),
           child: Text(
-            'No items in quotation',
+            'orders.quotation_items.empty'.tr,
             style: TextStyle(
               fontSize: context.rsp(13),
               fontWeight: FontWeight.w500,
@@ -76,7 +76,8 @@ class QuotationItemsTable extends StatelessWidget {
               ),
               Expanded(
                 child: Text(
-                  'QUOTATION ITEMS (${items.length})',
+                  'orders.quotation_items.title'
+                      .trParams({'count': '${items.length}'}),
                   overflow: TextOverflow.ellipsis,
                   style: TextStyle(
                     fontSize: context.rsp(12),
@@ -87,12 +88,16 @@ class QuotationItemsTable extends StatelessWidget {
                 ),
               ),
               SizedBox(width: context.rw(8)),
-              Text(
-                'Currency: $currency',
-                style: TextStyle(
-                  fontSize: context.rsp(11),
-                  fontWeight: FontWeight.w600,
-                  color: colors.textSecondary,
+              Flexible(
+                child: Text(
+                  'orders.quotation_items.currency'
+                      .trParams({'currency': currency}),
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(
+                    fontSize: context.rsp(11),
+                    fontWeight: FontWeight.w600,
+                    color: colors.textSecondary,
+                  ),
                 ),
               ),
             ],
@@ -199,7 +204,8 @@ class _QuotationItemCard extends StatelessWidget {
                     borderRadius: BorderRadius.circular(context.rr(4)),
                   ),
                   child: Text(
-                    'NO. $index',
+                    'orders.quotation_items.line_no'
+                        .trParams({'index': '$index'}),
                     style: TextStyle(
                       fontSize: context.rsp(11),
                       fontWeight: FontWeight.w800,
@@ -211,8 +217,10 @@ class _QuotationItemCard extends StatelessWidget {
                 Expanded(
                   child: Text(
                     product.materialCode.isNotEmpty
-                        ? 'Material: ${product.materialCode}'
-                        : 'SKU: ${product.sku}',
+                        ? 'orders.quotation_items.material'
+                            .trParams({'code': product.materialCode})
+                        : 'orders.quotation_items.sku'
+                            .trParams({'sku': product.sku}),
                     style: TextStyle(
                       fontSize: context.rsp(11.5),
                       fontWeight: FontWeight.w700,
@@ -222,25 +230,29 @@ class _QuotationItemCard extends StatelessWidget {
                   ),
                 ),
                 if (isManualOverride)
-                  Container(
-                    margin: EdgeInsets.only(left: context.rw(6)),
-                    padding: EdgeInsets.symmetric(
-                      horizontal: context.rw(6),
-                      vertical: context.rh(2),
-                    ),
-                    decoration: BoxDecoration(
-                      color: scheme.primary.withValues(alpha: 0.12),
-                      borderRadius: BorderRadius.circular(context.rr(4)),
-                      border: Border.all(
-                        color: scheme.primary.withValues(alpha: 0.3),
+                  Flexible(
+                    child: Container(
+                      margin: EdgeInsets.only(left: context.rw(6)),
+                      padding: EdgeInsets.symmetric(
+                        horizontal: context.rw(6),
+                        vertical: context.rh(2),
                       ),
-                    ),
-                    child: Text(
-                      'Manual Price (USD)',
-                      style: TextStyle(
-                        fontSize: context.rsp(10),
-                        fontWeight: FontWeight.w700,
-                        color: scheme.primary,
+                      decoration: BoxDecoration(
+                        color: scheme.primary.withValues(alpha: 0.12),
+                        borderRadius: BorderRadius.circular(context.rr(4)),
+                        border: Border.all(
+                          color: scheme.primary.withValues(alpha: 0.3),
+                        ),
+                      ),
+                      child: Text(
+                        'orders.quotation_items.manual_price'.tr,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: TextStyle(
+                          fontSize: context.rsp(10),
+                          fontWeight: FontWeight.w700,
+                          color: scheme.primary,
+                        ),
                       ),
                     ),
                   )
@@ -269,7 +281,7 @@ class _QuotationItemCard extends StatelessWidget {
                         ),
                         SizedBox(width: context.rw(3)),
                         Text(
-                          "Material doesn't have price",
+                          'orders.pricing.material_no_price'.tr,
                           style: TextStyle(
                             fontSize: context.rsp(9.5),
                             fontWeight: FontWeight.w700,
@@ -355,7 +367,7 @@ class _QuotationItemCard extends StatelessWidget {
                     Expanded(
                       flex: 2,
                       child: _MetricColumn(
-                        label: 'Quantity',
+                        label: 'orders.quotation_extra.quantity'.tr,
                         value: '$qty ${item.unit}',
                         valueColor: colors.textPrimary,
                       ),
@@ -367,7 +379,7 @@ class _QuotationItemCard extends StatelessWidget {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            'Unit Price (USD)',
+                            'orders.quotation_items.unit_price'.tr,
                             style: TextStyle(
                               fontSize: context.rsp(10),
                               fontWeight: FontWeight.w600,
@@ -445,7 +457,7 @@ class _QuotationItemCard extends StatelessWidget {
                                     ),
                                     SizedBox(width: context.rw(2)),
                                     Text(
-                                      'Input Price (USD)',
+                                      'orders.pricing.input_price_usd'.tr,
                                       style: TextStyle(
                                         fontSize: context.rsp(10.5),
                                         fontWeight: FontWeight.w800,
@@ -458,7 +470,7 @@ class _QuotationItemCard extends StatelessWidget {
                             )
                           else
                             Text(
-                              'Waiting HQ',
+                              'orders.quotation_items.waiting_hq'.tr,
                               style: TextStyle(
                                 fontSize: context.rsp(11),
                                 fontStyle: FontStyle.italic,
@@ -472,7 +484,7 @@ class _QuotationItemCard extends StatelessWidget {
                     Expanded(
                       flex: 2,
                       child: _MetricColumn(
-                        label: 'Subtotal',
+                        label: 'orders.quotation_extra.subtotal'.tr,
                         value: subtotalFormatted ?? '—',
                         valueColor: colors.textPrimary,
                       ),
@@ -496,12 +508,16 @@ class _QuotationItemCard extends StatelessWidget {
                             Row(
                               mainAxisSize: MainAxisSize.min,
                               children: [
-                                Text(
-                                  'Discount',
-                                  style: TextStyle(
-                                    fontSize: context.rsp(10),
-                                    fontWeight: FontWeight.w600,
-                                    color: colors.textSecondary,
+                                Flexible(
+                                  child: Text(
+                                    'orders.quotation_extra.discount'.tr,
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                    style: TextStyle(
+                                      fontSize: context.rsp(10),
+                                      fontWeight: FontWeight.w600,
+                                      color: colors.textSecondary,
+                                    ),
                                   ),
                                 ),
                                 if (isEditable && onEditDiscount != null) ...[
@@ -537,8 +553,9 @@ class _QuotationItemCard extends StatelessWidget {
                     Expanded(
                       flex: 3,
                       child: _MetricColumn(
-                        label: 'Total ($currency)',
-                        value: totalFormatted ?? 'Pending',
+                        label: 'orders.quotation_items.total_currency'
+                            .trParams({'currency': currency}),
+                        value: totalFormatted ?? 'orders.status.pending'.tr,
                         valueColor: colors.brandNavy,
                         isBold: true,
                       ),

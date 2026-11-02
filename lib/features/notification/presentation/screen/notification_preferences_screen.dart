@@ -8,6 +8,7 @@ import 'package:steelforce/core/responsive/responsive_sizing.dart';
 import 'package:steelforce/core/theme/theme_extensions.dart';
 import 'package:steelforce/features/notification/domain/entities/notification_preferences.dart';
 import 'package:steelforce/features/notification/presentation/bloc/notification_preferences_cubit.dart';
+import 'package:steelforce/shared/widgets/brand_wallpaper_background.dart';
 
 /// The notification settings screen
 /// (`docs/feature/notification/README.md` §13).
@@ -51,13 +52,11 @@ class _NotificationPreferencesScreenState
 
   @override
   Widget build(BuildContext context) {
-    final colors = context.appColors;
-
     return BlocProvider.value(
       value: _cubit,
       child: LocalizedBuilder(
         builder: (context) => Scaffold(
-          backgroundColor: colors.canvas,
+          backgroundColor: context.appColors.canvas,
           appBar: AppBar(
             title: Text(
               'notifications.settings.title'.tr,
@@ -67,7 +66,8 @@ class _NotificationPreferencesScreenState
               ),
             ),
           ),
-          body: ResponsiveContentFrame(
+          body: BrandWallpaperBody(
+              child: ResponsiveContentFrame(
             child: BlocConsumer<NotificationPreferencesCubit,
                 NotificationPreferencesState>(
               listenWhen: (previous, current) =>
@@ -89,7 +89,7 @@ class _NotificationPreferencesScreenState
                 return _Content(state: state);
               },
             ),
-          ),
+          )),
         ),
       ),
     );

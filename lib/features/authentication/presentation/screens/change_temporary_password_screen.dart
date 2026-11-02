@@ -37,7 +37,7 @@ class ChangeTemporaryPasswordScreen extends StatefulWidget {
   final VoidCallback onSignOut;
 
   /// The documented server policy (`docs/feature/authentication/
-  /// integration-guide.md`, "Password management"). The server re-checks it.
+  /// backend-auth-guide.md`, "Password management"). The server re-checks it.
   static const minLength = 12;
 
   @override

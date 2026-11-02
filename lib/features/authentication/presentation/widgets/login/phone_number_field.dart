@@ -4,6 +4,7 @@ import 'package:steelforce/core/responsive/responsive_sizing.dart';
 import 'package:steelforce/core/theme/app_typography.dart';
 import 'package:steelforce/features/authentication/presentation/widgets/login/vibe_field.dart';
 import 'package:phone_form_field/phone_form_field.dart';
+import 'package:steelforce/features/authentication/presentation/widgets/auth_ink.dart';
 
 /// The sign-in identifier for the field sales app: a phone number with a
 /// country selector.
@@ -32,12 +33,17 @@ class PhoneNumberField extends StatefulWidget {
     this.defaultCountry = IsoCode.KH,
     this.textInputAction,
     this.required = true,
-    this.underline = false,
+    this.onPhoto = false,
+    this.showRequiredMark = false,
   });
 
-  /// Underline look with light ink, for a dark photo — see
-  /// [lineFieldDecoration].
-  final bool underline;
+  /// A red star after the label on the [onPhoto] pill. Off on sign-in, where
+  /// both fields are obviously needed.
+  final bool showRequiredMark;
+
+  /// The sign-in pill in navy ink, for the white auth backdrop — see
+  /// [photoFieldDecoration].
+  final bool onPhoto;
 
   final IsoCode defaultCountry;
   final TextInputAction? textInputAction;
@@ -49,6 +55,12 @@ class PhoneNumberField extends StatefulWidget {
 
 class PhoneNumberFieldState extends State<PhoneNumberField> {
   final _fieldKey = GlobalKey<FormFieldState<PhoneNumber>>();
+  final _stackKey = GlobalKey();
+
+  /// Where the hairline between the dial code and the number goes, in the
+  /// field's own coordinates. The package draws the country button itself
+  /// and offers no divider, so it is measured after layout.
+  Rect? _divider;
 
   late final PhoneController _controller = PhoneController(
     initialValue: PhoneNumber(isoCode: widget.defaultCountry, nsn: ''),
@@ -75,16 +87,40 @@ class PhoneNumberFieldState extends State<PhoneNumberField> {
     }
   }
 
-  /// Replaces whatever is typed with the national number [nsn] in the
-  /// default country. Unlike [prefill], an explicit request from the user.
-  void replace(String nsn) {
-    _controller.value = PhoneNumber(isoCode: widget.defaultCountry, nsn: nsn);
-  }
-
   @override
   void dispose() {
     _controller.dispose();
     super.dispose();
+  }
+
+  /// Places [_divider] just inside the country button's trailing edge.
+  void _measureDivider() {
+    if (!mounted) return;
+    final stack = _stackKey.currentContext?.findRenderObject() as RenderBox?;
+    RenderBox? chip;
+    void find(Element e) {
+      if (chip != null) return;
+      if (e.widget.key == const ValueKey('country-code-chip')) {
+        chip = e.findRenderObject() as RenderBox?;
+        return;
+      }
+      e.visitChildElements(find);
+    }
+
+    _stackKey.currentContext?.visitChildElements(find);
+    final button = chip;
+    if (stack == null || button == null || !button.hasSize) return;
+    final origin = button.localToGlobal(Offset.zero, ancestor: stack);
+    final h = button.size.height;
+    final next = Rect.fromLTWH(
+      origin.dx + button.size.width - context.rw(6),
+      origin.dy + h * 0.22,
+      1,
+      h * 0.56,
+    );
+    if (_divider == null || (next.topLeft - _divider!.topLeft).distance > 0.5) {
+      setState(() => _divider = next);
+    }
   }
 
   /// Deliberately only a presence check.
@@ -107,10 +143,10 @@ class PhoneNumberFieldState extends State<PhoneNumberField> {
     final scheme = Theme.of(context).colorScheme;
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
-    final underline = widget.underline;
+    final onPhoto = widget.onPhoto;
     final textStyle = TextStyle(
-      color: underline ? Colors.white : scheme.onSurface,
-      fontSize: context.rsp(underline ? 16 : 15),
+      color: onPhoto ? AuthInk.text : scheme.onSurface,
+      fontSize: context.rsp(onPhoto ? 16 : 15),
       // Khmer stacks diacritics above and below the baseline; without this the
       // label clips in the border gap. See AppTypography.compactLineHeight.
       height: AppTypography.compactLineHeight,
@@ -120,16 +156,14 @@ class PhoneNumberFieldState extends State<PhoneNumberField> {
     // this sits on; a second filter here was invisible, expensive, and the
     // cause of both the clipped label and the per-frame
     // `!semantics.parentDataDirty` assertions.
-    final fill = isDark
-        ? Colors.white.withValues(alpha: 0.06)
-        : Colors.white.withValues(alpha: 0.22);
+    final fill = isDark ? AuthInk.hairline : AuthInk.hairline;
 
-    return PhoneFormField(
+    final field = PhoneFormField(
       key: _fieldKey,
       controller: _controller,
       textInputAction: widget.textInputAction,
       style: textStyle,
-      cursorColor: underline ? Colors.white : scheme.secondary,
+      cursorColor: onPhoto ? AuthInk.text : scheme.secondary,
       autovalidateMode: AutovalidateMode.onUserInteraction,
       autofillHints: const [AutofillHints.telephoneNumber],
       countrySelectorNavigator: const CountrySelectorNavigator.bottomSheet(),
@@ -141,15 +175,24 @@ class PhoneNumberFieldState extends State<PhoneNumberField> {
         showDialCode: true,
         showIsoCode: false,
         showFlag: true,
-        flagSize: context.rr(16),
+        flagSize: context.rr(onPhoto ? 22 : 16),
         textStyle: textStyle,
+        // The chevron says the dial code can be changed; it is the only cue.
+        showDropdownIcon: onPhoto,
+        dropdownIconColor: AuthInk.muted,
+        padding: onPhoto
+            ? EdgeInsetsDirectional.only(
+                start: context.rw(16),
+                // Room for the hairline drawn after the chevron.
+                end: context.rw(16),
+              ).resolve(Directionality.of(context))
+            : null,
       ),
-      decoration: underline
-          ? lineFieldDecoration(
+      decoration: onPhoto
+          ? photoFieldDecoration(
               context,
               label: 'auth.phone_number'.tr,
-              hint: 'auth.phone_hint'.tr,
-              required: widget.required,
+              required: widget.required && widget.showRequiredMark,
               // No icon: the country button (flag + dial code) leads the
               // field and does that job.
             )
@@ -160,6 +203,23 @@ class PhoneNumberFieldState extends State<PhoneNumberField> {
               required: widget.required,
             ).copyWith(fillColor: fill),
       validator: _validator,
+    );
+    if (!onPhoto) return field;
+
+    WidgetsBinding.instance.addPostFrameCallback((_) => _measureDivider());
+    final divider = _divider;
+    return Stack(
+      key: _stackKey,
+      children: [
+        field,
+        if (divider != null)
+          Positioned.fromRect(
+            rect: divider,
+            child: IgnorePointer(
+              child: ColoredBox(color: AuthInk.hairline),
+            ),
+          ),
+      ],
     );
   }
 }

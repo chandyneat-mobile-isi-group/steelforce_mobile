@@ -4,17 +4,22 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:steelforce/features/depots/domain/entities/bp_depot_draft.dart';
-import 'package:steelforce/features/depots/domain/entities/bp_form_step.dart';
+import 'package:intl/intl.dart' show NumberFormat;
+import 'package:steelforce/features/depots/data/models/bp_depot_form_data.dart';
 import 'package:phone_form_field/phone_form_field.dart';
 
 import 'package:steelforce/core/platform/device/device_insets.dart';
+import 'package:steelforce/core/practice/practice_session.dart';
 import 'package:steelforce/core/di/injection_container.dart';
 import 'package:steelforce/core/localization/localization_services.dart';
 import 'package:steelforce/core/responsive/responsive_sizing.dart';
 import 'package:steelforce/core/logging/debug_trace.dart';
 import 'package:steelforce/core/theme/theme_extensions.dart';
+import 'package:steelforce/features/app_coach/presentation/services/app_coach.dart';
+import 'package:steelforce/features/app_coach/presentation/services/coach_keys.dart';
+import 'package:steelforce/features/app_coach/domain/entities/coach_module.dart';
 import 'package:steelforce/features/depots/presentation/bloc/add_depot_bloc.dart';
+import 'package:steelforce/features/depots/presentation/coach/depot_wizard_coach.dart';
 import 'package:steelforce/features/geo_location/domain/entities/geo_address.dart';
 import 'package:steelforce/features/geo_location/domain/usecases/resolve_geo_address.dart';
 import 'package:steelforce/features/geo_location/presentation/widgets/geo_location_selector.dart';
@@ -22,11 +27,7 @@ import 'package:image_picker/image_picker.dart';
 import 'package:steelforce/features/order/domain/services/order_location_service.dart';
 import 'package:steelforce/core/camera/image_capture_service.dart';
 import 'package:steelforce/features/depots/presentation/widgets/depot_submit_progress_dialog.dart';
-import 'package:steelforce/features/depots/domain/entities/bp_attachment.dart';
-import 'package:steelforce/features/depots/domain/entities/geo_fix.dart';
-import 'package:steelforce/features/depots/domain/entities/sap_bp_const.dart';
-import 'package:steelforce/features/depots/domain/entities/sap_master_data.dart';
-import 'package:steelforce/features/depots/domain/entities/sap_option.dart';
+import 'package:steelforce/features/depots/presentation/widgets/supplying_depot_picker_sheet.dart';
 
 part 'add_depot/shared_components.dart';
 part 'add_depot/shared_selectors.dart';
@@ -39,6 +40,8 @@ part 'add_depot/identity_step.dart';
 part 'add_depot/address_step.dart';
 part 'add_depot/contact_step.dart';
 part 'add_depot/sales_terms_step.dart';
+part 'add_depot/sales_performance_step.dart';
+part 'add_depot/sales_performance_fields.dart';
 part 'add_depot/documents_step.dart';
 part 'add_depot/review_step.dart';
 
@@ -54,7 +57,11 @@ class AddDepotBottomSheet extends StatelessWidget {
     super.key,
     this.isTablet = false,
     this.isFullScreen = false,
+    this.registrationType,
   });
+
+  /// Pre-picks step 1's "Register as" once the form has opened.
+  final DepotRegistrationType? registrationType;
 
   @override
   Widget build(BuildContext context) => BlocProvider<AddDepotBloc>(
@@ -62,6 +69,7 @@ class AddDepotBottomSheet extends StatelessWidget {
         child: _AddDepotForm(
           isTablet: isTablet,
           isFullScreen: isFullScreen,
+          registrationType: registrationType,
         ),
       );
 }
@@ -70,9 +78,11 @@ class _AddDepotForm extends StatefulWidget {
   const _AddDepotForm({
     required this.isTablet,
     required this.isFullScreen,
+    this.registrationType,
   });
   final bool isTablet;
   final bool isFullScreen;
+  final DepotRegistrationType? registrationType;
 
   @override
   State<_AddDepotForm> createState() => _AddDepotBottomSheetState();
@@ -103,6 +113,9 @@ class _AddDepotBottomSheetState extends State<_AddDepotForm> {
       initialValue: const PhoneNumber(isoCode: IsoCode.KH, nsn: ''));
   final _telCtrl = PhoneController(
       initialValue: const PhoneNumber(isoCode: IsoCode.KH, nsn: ''));
+
+  /// The sales & performance step's amount and share fields.
+  final _surveyCtrls = _SurveyControllers();
 
   /// Lets "Next" tell the address block to reveal its own field errors.
   ///
@@ -158,6 +171,7 @@ class _AddDepotBottomSheetState extends State<_AddDepotForm> {
     }
     _mobileCtrl.dispose();
     _telCtrl.dispose();
+    _surveyCtrls.dispose();
     super.dispose();
   }
 
@@ -172,7 +186,7 @@ class _AddDepotBottomSheetState extends State<_AddDepotForm> {
       context.responsive(compact: false, medium: true, expanded: true);
 
   int _tabletStage =
-      0; // 0: Identity+Address, 1: Contact+Terms, 2: Documents+Notes, 3: Preview
+      0; // 0: Identity+Address, 1: Contact+Terms+Survey, 2: Documents+Notes, 3: Preview
 
   AddDepotBloc get _bloc => context.read<AddDepotBloc>();
 
@@ -180,6 +194,19 @@ class _AddDepotBottomSheetState extends State<_AddDepotForm> {
   /// opens, not again on every later rebuild — the listener also fires on
   /// every edit.
   bool _resumeNoticeShown = false;
+  bool _practiceNamesSeeded = false;
+  bool _registrationTypeApplied = false;
+
+  /// Applied after opening, not before: opening may restore a saved draft,
+  /// which would otherwise overwrite the pick.
+  void _applyRegistrationType(BpDepotDraft draft) {
+    final type = widget.registrationType;
+    if (_registrationTypeApplied || type == null) return;
+    _registrationTypeApplied = true;
+    if (draft.registrationType != type) {
+      _edit((d) => d.registrationType = type);
+    }
+  }
 
   /// True while the submit progress dialog is on the navigator.
   ///
@@ -187,6 +214,10 @@ class _AddDepotBottomSheetState extends State<_AddDepotForm> {
   /// popped by route and pushing a second one — or popping the sheet itself by
   /// mistake — is exactly the failure this guards.
   bool _progressDialogVisible = false;
+
+  /// Reports confirmed wizard progress to the App Coach (a no-op outside a
+  /// lesson).
+  final _coach = DepotWizardCoachTracker();
 
   /// Single mutation entry point. Everything the rep touches goes through here.
   void _edit(void Function(BpDepotDraft d) mutate) =>
@@ -206,6 +237,26 @@ class _AddDepotBottomSheetState extends State<_AddDepotForm> {
     _contactNameCtrl.text = draft.contactPersonName;
     _vatTinCtrl.text = draft.vatTin;
     _remarkCtrl.text = draft.remark;
+    _surveyCtrls.sync(draft.salesSurvey);
+    // The phone fields hold a parsed number, not text, so they need their own
+    // copy — without it a resumed or pre-filled form shows an empty mobile
+    // field over a number the draft already has.
+    _syncPhone(_mobileCtrl, draft.mobilePhone);
+    if (!draft.telephoneSameAsMobile) _syncPhone(_telCtrl, draft.telephone);
+  }
+
+  /// Shows [value] in [controller] unless it already does — which is the case
+  /// while the rep is typing, since each keystroke writes the field's own
+  /// value to the draft.
+  void _syncPhone(PhoneController controller, String value) {
+    final number = value.trim();
+    if (number.isEmpty || controller.value.international == number) return;
+    try {
+      controller.value =
+          PhoneNumber.parse(number, destinationCountry: IsoCode.KH);
+    } on Object {
+      // Not parseable as a phone number: leave the field as the rep has it.
+    }
   }
 
   // ===========================================================================
@@ -215,6 +266,14 @@ class _AddDepotBottomSheetState extends State<_AddDepotForm> {
   Widget build(BuildContext context) {
     final bottomInset = MediaQuery.of(context).viewInsets.bottom;
 
+    return DepotWizardCoachListener(
+      tracker: _coach,
+      trackSteps: () => !_isTabletLayout,
+      child: _buildForm(bottomInset),
+    );
+  }
+
+  Widget _buildForm(double bottomInset) {
     return BlocConsumer<AddDepotBloc, AddDepotState>(
       listenWhen: (prev, curr) =>
           prev.status != curr.status ||
@@ -226,6 +285,8 @@ class _AddDepotBottomSheetState extends State<_AddDepotForm> {
         // editable from the first frame.
         if (state.status == AddDepotStatus.editing) {
           _syncTextControllers(state.draft);
+          _seedPracticeNames(state.draft);
+          _applyRegistrationType(state.draft);
 
           // Say why the form came back filled in. Without this the rep sees
           // their own earlier typing and cannot tell whether it is stale data
@@ -247,7 +308,8 @@ class _AddDepotBottomSheetState extends State<_AddDepotForm> {
               state.currentStep == BpFormStep.address) {
             setState(() => _tabletStage = 0);
           } else if (state.currentStep == BpFormStep.contact ||
-              state.currentStep == BpFormStep.salesTerms) {
+              state.currentStep == BpFormStep.salesTerms ||
+              state.currentStep == BpFormStep.salesPerformance) {
             setState(() => _tabletStage = 1);
           } else if (state.currentStep == BpFormStep.documents) {
             setState(() => _tabletStage = 2);
@@ -363,7 +425,7 @@ class _AddDepotBottomSheetState extends State<_AddDepotForm> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  // Header Area (Transparent, sits over the blue gradient)
+                  // Header Area (transparent, over the white brand wallpaper)
                   Padding(
                     padding: EdgeInsets.fromLTRB(
                       widget.isTablet ? 36 : context.rw(16),
@@ -405,6 +467,16 @@ class _AddDepotBottomSheetState extends State<_AddDepotForm> {
                       width: double.infinity,
                       decoration: BoxDecoration(
                         color: Theme.of(context).colorScheme.surface,
+                        // Lifts the sheet off the white wallpaper behind it.
+                        boxShadow: [
+                          BoxShadow(
+                            color: Theme.of(context)
+                                .shadowColor
+                                .withValues(alpha: 0.08),
+                            blurRadius: 16,
+                            offset: const Offset(0, -2),
+                          ),
+                        ],
                         borderRadius: widget.isFullScreen
                             ? const BorderRadius.vertical(
                                 top: Radius.circular(28))
@@ -447,7 +519,7 @@ class _AddDepotBottomSheetState extends State<_AddDepotForm> {
                                           child: CircularProgressIndicator(
                                             color: Theme.of(context)
                                                 .colorScheme
-                                                .secondary,
+                                                .primary,
                                           ),
                                         ),
                                       )
@@ -484,6 +556,23 @@ class _AddDepotBottomSheetState extends State<_AddDepotForm> {
     );
   }
 
+  /// Gives the depot lesson realistic values to work with, while keeping
+  /// sample data inside the in-memory practice session only.
+  void _seedPracticeNames(BpDepotDraft draft) {
+    if (_practiceNamesSeeded) return;
+    final practice = sl<PracticeSession>();
+    if (practice.lesson != CoachModuleIds.depots) return;
+    _practiceNamesSeeded = true;
+
+    if (draft.nameEn.trim().isNotEmpty || draft.nameKh.trim().isNotEmpty) {
+      return;
+    }
+    _edit((value) {
+      value.nameEn = 'Demo Depot';
+      value.nameKh = 'ដេប៉ូសាកល្បង';
+    });
+  }
+
   // ===========================================================================
   // Step router — mirrors BpFormStep exactly
   // ===========================================================================
@@ -493,6 +582,7 @@ class _AddDepotBottomSheetState extends State<_AddDepotForm> {
       BpFormStep.address => _buildAddressStep(errors),
       BpFormStep.contact => _buildContactStep(errors),
       BpFormStep.salesTerms => _buildSalesTermsStep(errors),
+      BpFormStep.salesPerformance => _buildSalesPerformanceStep(errors),
       BpFormStep.documents => _buildDocumentsStep(errors),
       BpFormStep.review => _buildReviewStep(errors),
     };

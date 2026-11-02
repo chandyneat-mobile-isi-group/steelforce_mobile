@@ -34,5 +34,5 @@ Runner/GeneratedPluginRegistrant.*
 !default.perspectivev3
 
 # Native-side secrets generated from .env by tool/generate_ios_env.dart.
-# Contains the Google Maps iOS key — never commit (docs/SECURITY.md §9).
+# Contains the Google Maps iOS key — never commit (docs/skills/security.md §9).
 Flutter/Env.xcconfig

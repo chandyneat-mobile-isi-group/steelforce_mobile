@@ -7,7 +7,19 @@
 **Audience:** Flutter engineers building the SteelForce Sales Rep app
 **Backend:** ISI SteelForce 360 · `ISI.Api` v1
 **Status:** Phase 1 (Foundation) complete — inbox, device registry, preferences, push, delivery log
-**Companion specs:** [Notification — Functional requirements](../../../requirement/notification/functional-requirements.md) · [Notification — Business requirements](../../../requirement/notification/business-requirements.md)
+**Companion specs:** Notification — Functional requirements (`functional-requirements.md` ⧉ backend repo) · Notification — Business requirements (`business-requirements.md` ⧉ backend repo)
+
+> **Inbox contract superseded (2026-10-29).** The backend serves the inbox at
+> `/api/v1/me/notifications`, not `/mobile/notifications`
+> (`Backend.Modules.Notifications.Api/InboxEndpoints.cs`):
+> `GET /` (keyset `cursor` = `data.nextCursor`, `limit` 1–50, `unreadOnly`;
+> items `{id, type, title{en,km}, body{en,km}, link{targetType,targetId}|null,
+> createdAt, readAt}`), `GET /unread-count` (`data.count`),
+> `POST /{id}/read` (204; 404 `NOTIFICATION_NOT_FOUND`) and `POST /read-all`
+> (`data.marked`). Bad cursors answer 400 `NOTIFICATION_CURSOR_INVALID`.
+> Push `data` carries `notificationId`, `type`, `targetType`, `targetId`.
+> The action, dismiss and preferences routes below are **not served**. The app
+> follows the `/me` contract; §5–§8 below describe the earlier design.
 
 ---
 

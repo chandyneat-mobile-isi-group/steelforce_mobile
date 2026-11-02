@@ -1,8 +1,7 @@
 import 'package:steelforce/core/session/session_manager.dart';
 import 'package:steelforce/features/authentication/domain/repositories/auth_repository.dart';
 import 'package:steelforce/features/depots/data/local/rep_sales_context_source.dart';
-import 'package:steelforce/features/depots/domain/entities/bp_depot_draft.dart';
-import 'package:steelforce/features/depots/domain/entities/rep_sales_context.dart';
+import 'package:steelforce/features/depots/data/models/bp_depot_form_data.dart';
 
 /// Reads the rep from the session and the cached `GET /auth/me` profile.
 ///

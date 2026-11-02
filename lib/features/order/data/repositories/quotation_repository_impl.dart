@@ -53,7 +53,8 @@ class QuotationRepositoryImpl implements QuotationRepository {
   }) async {
     try {
       if (items.isEmpty) {
-        return const Failed(CacheFailure(message: 'Quotation has no items.'));
+        return const Failed(
+            CacheFailure(message: 'orders.quotation.error.no_items'));
       }
       final now = DateTime.now();
       final calcSubtotal =
@@ -106,7 +107,8 @@ class QuotationRepositoryImpl implements QuotationRepository {
   }) async {
     try {
       if (items.isEmpty) {
-        return const Failed(CacheFailure(message: 'Quotation has no items.'));
+        return const Failed(
+            CacheFailure(message: 'orders.quotation.error.no_items'));
       }
       final calcSubtotal =
           subtotal ?? items.fold<double>(0, (sum, i) => sum + i.lineSubtotal);
@@ -138,7 +140,8 @@ class QuotationRepositoryImpl implements QuotationRepository {
     try {
       final row = await _local.getById(quotationId);
       if (row == null) {
-        return const Failed(CacheFailure(message: 'Quotation not found.'));
+        return const Failed(
+            CacheFailure(message: 'orders.quotation.error.not_found'));
       }
       final quotation = await _fromRow(row);
       final converted = quotation.copyWith(

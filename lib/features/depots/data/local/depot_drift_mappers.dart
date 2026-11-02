@@ -6,8 +6,9 @@ import 'package:steelforce/features/depots/data/models/depot_activity_model.dart
 import 'package:steelforce/features/depots/data/models/depot_contact_model.dart';
 import 'package:steelforce/features/depots/data/models/depot_model.dart';
 import 'package:steelforce/features/depots/data/models/depot_note_model.dart';
+import 'package:steelforce/features/depots/data/models/depot_profile_model.dart';
+import 'package:steelforce/features/depots/data/models/depot_sales_area_model.dart';
 import 'package:steelforce/features/depots/domain/entities/depot_activity_type.dart';
-import 'package:steelforce/features/depots/domain/entities/depot_filter.dart';
 import 'package:steelforce/features/depots/domain/entities/depot_status.dart';
 
 /// Bidirectional mapping between the encrypted Drift rows/companions and the
@@ -64,6 +65,12 @@ extension DepotRowMapper on db.Depot {
       currency: currency,
       totalOrders: totalOrders,
       createdAt: createdAt,
+      depotType: depotType,
+      createdBy: createdBy,
+      salesEmployees:
+          DepotProfileModel.decodeSalesEmployees(salesEmployeesJson),
+      profile: DepotProfileModel.decodeProfile(profileJson),
+      salesAreas: DepotSalesAreaModel.decode(salesAreasJson),
       deleted: deleted,
     );
   }
@@ -109,9 +116,20 @@ extension DepotModelMapper on DepotModel {
       currency: Value(currency),
       totalOrders: Value(totalOrders),
       createdAt: Value(createdAt),
+      // Absent, not null, when the answer did not carry them: an older-shape
+      // payload must not wipe what a newer one stored.
+      depotType: _ifSent(depotType),
+      createdBy: _ifSent(createdBy),
+      salesEmployeesJson:
+          _ifSent(DepotProfileModel.encodeSalesEmployees(salesEmployees)),
+      profileJson: _ifSent(DepotProfileModel.encodeProfile(profile)),
+      salesAreasJson: _ifSent(DepotSalesAreaModel.encode(salesAreas)),
       deleted: Value(deleted),
     );
   }
+
+  static Value<String?> _ifSent(String? value) =>
+      value == null ? const Value.absent() : Value(value);
 
   DepotWithContacts toRecord() {
     final contactCompanions = contacts
@@ -179,14 +197,4 @@ extension DepotActivityModelMapper on DepotActivityModel {
         createdAt: createdAt,
         synced: Value(synced),
       );
-}
-
-/// Maps the feature's sort enum onto the DAO's decoupled equivalent.
-extension DepotSortMapper on DepotSortBy {
-  DepotBrowseSort toBrowseSort() => switch (this) {
-        DepotSortBy.recentOrder => DepotBrowseSort.recentOrder,
-        DepotSortBy.nameAsc => DepotBrowseSort.nameAsc,
-        DepotSortBy.nearest => DepotBrowseSort.nearest,
-        DepotSortBy.valueDesc => DepotBrowseSort.valueDesc,
-      };
 }

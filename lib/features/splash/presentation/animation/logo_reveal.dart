@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_svg/flutter_svg.dart';
 import 'package:steelforce/core/localization/localization_services.dart';
+import 'package:steelforce/core/assets/app_assets.dart';
 
 /// Scene 6 — the mark the whole story has been assembling.
 ///
@@ -10,9 +10,8 @@ import 'package:steelforce/core/localization/localization_services.dart';
 /// are still arriving. Waiting for the field to settle first would read as two
 /// events instead of one.
 ///
-/// Uses the real brand assets — the SteelForce icon, then its wordmark. The
-/// brief is explicit that the logo is not to be redesigned, so nothing here
-/// draws it — this only scales, lights and holds it.
+/// Uses the real brand asset. The brief is explicit that the logo is not to be
+/// redesigned, so nothing here draws it — this only scales, lights and holds it.
 class LogoReveal extends StatelessWidget {
   const LogoReveal({
     super.key,
@@ -30,6 +29,13 @@ class LogoReveal extends StatelessWidget {
   final double settle;
 
   final Color highlight;
+
+  /// Side of the app-icon tile, in logical pixels.
+  static const double _tile = 132;
+
+  /// The artwork's corner radius as a fraction of its side
+  /// (`rx="229.4"` on a 1024 canvas).
+  static const double _tileCorner = 229.4 / 1024;
 
   @override
   Widget build(BuildContext context) {
@@ -56,11 +62,14 @@ class LogoReveal extends StatelessWidget {
             // Soft glow behind the mark, strongest as it lands.
             Container(
               decoration: BoxDecoration(
+                // Follows the tile's corner so the glow is a rounded halo,
+                // not a square one.
+                borderRadius: BorderRadius.circular(_tile * _tileCorner),
                 boxShadow: [
                   BoxShadow(
-                    // Restrained on white, where a wide bloom turns grey.
+                    // A light halo lifting the tile off the blue backdrop.
                     color: highlight.withValues(
-                        alpha: 0.16 * appear * (1 - settle)),
+                        alpha: 0.22 * appear * (1 - settle)),
                     blurRadius: 42,
                     spreadRadius: 2,
                   ),
@@ -74,9 +83,9 @@ class LogoReveal extends StatelessWidget {
                   return LinearGradient(
                     begin: Alignment(x - 0.45, -1),
                     end: Alignment(x + 0.45, 1),
-                    // White at low alpha over a navy mark on a white page:
-                    // the band lifts the logo rather than washing it out. A
-                    // darker sweep would read as a shadow crossing it.
+                    // White at low alpha: the band lifts the logo rather
+                    // than washing it out. A darker sweep would read as a
+                    // shadow crossing it.
                     colors: [
                       Colors.white.withValues(alpha: 0.0),
                       Colors.white.withValues(alpha: sweep > 0 ? 0.42 : 0.0),
@@ -85,22 +94,42 @@ class LogoReveal extends StatelessWidget {
                     stops: const [0.35, 0.5, 0.65],
                   ).createShader(rect);
                 },
-                child: SvgPicture.asset(
-                  'assets/logos/steelforce/steelforce_icon.svg',
-                  width: 124,
-                  height: 124,
-                  // Decorative: the wordmark below carries the label.
-                  excludeFromSemantics: true,
+                // The SteelForce app-icon tile in its light version — white,
+                // so it stands off the navy backdrop where the blue launcher
+                // tile would sink into it. The name is the text below it.
+                child: Image.asset(
+                  AppLogos.steelForceAppIconWhite,
+                  width: _tile,
+                  height: _tile,
+                  fit: BoxFit.contain,
+                  // A missing asset must not stall the boot path. Reserve the
+                  // space so the column below does not jump, and say so in
+                  // debug — the silent empty Container this replaced is how a
+                  // never-bundled asset once looked like "the image is broken".
+                  errorBuilder: (context, error, stack) {
+                    assert(() {
+                      debugPrint('[splash] logo failed to load: $error');
+                      return true;
+                    }());
+                    return const SizedBox(width: _tile, height: _tile);
+                  },
                 ),
               ),
             ),
             const SizedBox(height: 14),
             Opacity(
               opacity: _u((t - 0.45) / 0.35),
-              child: SvgPicture.asset(
-                'assets/logos/steelforce/steelforce_wordmark.svg',
-                width: 230,
-                semanticsLabel: 'splash.brand'.tr,
+              child: Text(
+                // Keyed, not literal. `splash.brand` resolves to "SteelForce"
+                // in both bundles; brand names are not translated, but keying
+                // them makes a rebrand a bundle edit rather than a code hunt.
+                'splash.brand'.tr,
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontSize: 15,
+                  fontWeight: FontWeight.w700,
+                  letterSpacing: 3.4,
+                ),
               ),
             ),
           ],

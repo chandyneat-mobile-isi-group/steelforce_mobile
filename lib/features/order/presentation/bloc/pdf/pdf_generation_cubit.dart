@@ -120,7 +120,7 @@ class PdfGenerationCubit extends Cubit<PdfGenerationState> {
         documentName: '${generator.documentName} $quotationNumber',
       );
     } catch (error, stackTrace) {
-      // No PII in the event name/fields per SECURITY.md §10; the exception is
+      // No PII in the event name/fields per docs/skills/security.md §10; the exception is
       // redacted by the logger. Never log depot names or prices.
       _logger?.error(
         'pdf_generation_failed',

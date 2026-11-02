@@ -32,7 +32,7 @@ confirming.** Do not guess a field name — that ships as a production bug.
 - Base URL and keys from Envied config only.
 - Local-first: read from the database, then refresh. Writes go to the database
   **and** the sync queue in the same Drift transaction (ADR-006).
-- Reachability via `core/network/connectivity/connectivity_service.dart` (ADR-005).
+- Reachability via `connectivity_service.dart` (ADR-005).
 - Never log tokens, PII, or full payloads.
 
 ## 3. Test

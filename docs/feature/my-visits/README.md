@@ -17,11 +17,11 @@ app working with no signal.
 | Document | What it covers |
 |---|---|
 | [architecture.md](architecture.md) | The architecture report and redesign plan — every screen, bloc, nav helper, and the `WorkflowSession` resume path, traced from source. |
-| [workflow.md](workflow.md) | Folder structure and the step-by-step visit workflow. |
-| [fix-log.md](fix-log.md) | Field-bug fix passes (check-in stuck, iOS lag): symptom, cause, fix. Moved here from `lib/features/my_visits/FIXES.md`. |
-| [backend-integration.md](backend-integration.md) | **Start here for integration work.** Which capabilities need an API, the endpoint inventory (5 total — **all 5 now live**), cross-team dependencies, which push lists actually carry data today, and the remaining client-side task list. |
-| [api.md](api.md) | Backend API specification for routes and visits. **Status: implemented** — no longer a proposal. Every **OPEN** item is decided; §10 records each resolution and which ones imply client work. |
+| [workflow.md](workflow.md) | Folder structure and the step-by-step visit workflow. **§0 tracks the staged rebuild on the Plans API** (`/api/v1/mobile/plans`). |
+| [api.md](api.md) | **Start here for integration work.** Backend API specification for routes and visits. **Status: implemented.** Every **OPEN** item is decided (§10). §12 holds the integration notes merged from the former `backend-integration.md`: device-only state, which push lists carry data today, and testing against the client. |
 | [check-in-check-out-api.md](check-in-check-out-api.md) | **Proposed** backend requirements for live check-in / check-out endpoints, and check-out **with order** or **without order**. Needs backend review; the decisions below are its open questions. |
+| [check-in-check-out-mobile.md](check-in-check-out-mobile.md) | Client how-to for check-in / check-out against the live endpoints. |
+| [ad-hoc-visits-mobile.md](ad-hoc-visits-mobile.md) | Build guide for ad-hoc (unplanned) visits. |
 
 ---
 
@@ -29,6 +29,7 @@ app working with no signal.
 
 | Screen | File |
 |---|---|
+| **Visit plans (Visits tab)** | `presentation/screens/visit_plans/visit_plans_screen.dart` |
 | Stops check-in | `presentation/screens/stops_check_in_screen.dart` |
 | Stop dashboard | `presentation/screens/stop_dashboard/stop_dashboard_screen.dart` |
 | Stop information | `presentation/screens/stop_information/stop_information_screen.dart` |

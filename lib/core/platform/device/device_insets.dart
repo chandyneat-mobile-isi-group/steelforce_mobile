@@ -99,6 +99,6 @@ class DeviceInsetsData {
   /// Android uses for large-screen behaviour, so an unfolded foldable reports
   /// true here without needing a foldable-specific API (`display_features`
   /// would be required for hinge/posture awareness, which nothing needs yet —
-  /// adding that dependency is a `SECURITY.md` §14 decision for when it does).
+  /// adding that dependency is a `docs/skills/security.md` §14 decision for when it does).
   bool get isTablet => screenSize.shortestSide >= 600;
 }

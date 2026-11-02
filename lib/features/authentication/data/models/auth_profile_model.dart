@@ -32,6 +32,8 @@ class AuthProfileModel extends AuthProfile {
     super.lineManagerName,
     super.lineManagerCode,
     super.avatarThumbnailUrl,
+    super.salesOrgCode,
+    super.salesOrgName,
   });
 
   /// [json] is the **unwrapped** payload — pass `envelope.data`, not the whole
@@ -94,6 +96,8 @@ class AuthProfileModel extends AuthProfile {
             parseUtc(json['temporaryPasswordExpiresAt']),
         lineManagerName: _lineManager(json, 'englishName'),
         lineManagerCode: _lineManager(json, 'empCode'),
+        salesOrgCode: _saleOrg(json, 'id'),
+        salesOrgName: _saleOrg(json, 'name'),
       );
 
   static String? _lineManager(DataMap json, String key) {
@@ -131,6 +135,8 @@ class AuthProfileModel extends AuthProfile {
         lineManagerName: lineManagerName,
         lineManagerCode: lineManagerCode,
         avatarThumbnailUrl: avatarThumbnailUrl,
+        salesOrgCode: salesOrgCode,
+        salesOrgName: salesOrgName,
         // Meaningless once the rep has chosen their own password.
         temporaryPasswordExpiresAt: value ? temporaryPasswordExpiresAt : null,
       );
@@ -165,7 +171,19 @@ class AuthProfileModel extends AuthProfile {
             'englishName': lineManagerName,
             'empCode': lineManagerCode,
           },
+        if (salesOrgCode != null || salesOrgName != null)
+          'saleOrg': {
+            'id': salesOrgCode,
+            'name': salesOrgName,
+          },
       };
+
+  static String? _saleOrg(DataMap json, String key) {
+    final saleOrg = json['saleOrg'];
+    if (saleOrg is! Map) return null;
+    final value = saleOrg[key];
+    return value is String && value.trim().isNotEmpty ? value.trim() : null;
+  }
 
   /// Roles arrive as **human-readable display names**, not enum identifiers:
   /// the live API sends `"Sales Representative"`, not `salesRep`.

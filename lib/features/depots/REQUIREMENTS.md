@@ -10,7 +10,7 @@ specification for this feature live in:
 | Overview, required APIs, business rules, open questions | [`requirements/README.md`](../../../docs/feature/depot/requirements/README.md) |
 | Use cases (request/response + mobile model mapping) | [`requirements/usecases/`](../../../docs/feature/depot/requirements/usecases/README.md) |
 | User stories | [`requirements/user-stories/`](../../../docs/feature/depot/requirements/user-stories/README.md) |
-| Existing mobile integration guide | [`docs/feature/depot/api.md`](../../../docs/feature/depot/api.md) |
+| Existing mobile integration guide | [`docs/feature/depot/mobile/api.md`](../../../docs/feature/depot/mobile/api.md) |
 
 Documentation lives under `docs/`, not `lib/`, per the conventions in
 [`docs/README.md`](../../../docs/README.md#conventions). This file is only a

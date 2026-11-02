@@ -1,8 +1,8 @@
 # API Integration — implementation notes
 
 How the Flutter client implements the contracts in
-[Authentication-guild-integratemobile.md](../feature/authentication/integration-guide.md)
-and [depots-guidline-integrateion-mobile.md](../feature/depot/api.md).
+[backend-auth-guide.md](../feature/authentication/backend-auth-guide.md)
+and [depots-guidline-integrateion-mobile.md](../feature/depot/mobile/api.md).
 
 Those two documents describe the server. This one describes **our side**: where
 each rule lives in the code, which decisions were compromises, and what is still

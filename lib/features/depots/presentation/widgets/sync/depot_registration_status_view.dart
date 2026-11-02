@@ -53,9 +53,15 @@ abstract final class DepotRegistrationStatusView {
         DepotRegistrationQueueStatus.needsReview =>
           'sync_center.depot.needs_review_hint'.tr,
         // SAP's own words are the actionable part; shown verbatim.
+        // A `sync_center.` key is the app's own reason, and a
+        // `depots.draft.error.` key the depot-draft route's refusal; both are
+        // translated.
         DepotRegistrationQueueStatus.rejected =>
           item.message?.isNotEmpty == true
-              ? item.message!
+              ? (item.message!.startsWith('sync_center.') ||
+                      item.message!.startsWith('depots.draft.error.')
+                  ? item.message!.tr
+                  : item.message!)
               : 'sync_center.depot.rejected_hint'.tr,
         DepotRegistrationQueueStatus.photosPending ||
         DepotRegistrationQueueStatus.uploadingPhotos =>

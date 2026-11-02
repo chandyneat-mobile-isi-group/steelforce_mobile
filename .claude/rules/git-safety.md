@@ -43,18 +43,15 @@ git reset --hard      git clean -fd / -fdx      git checkout -- <path>
 git rebase            git push --force          branch or tag deletion
 ```
 
-`settings.json` enforces this in three tiers: read-only git is **allowed**;
-`git add`, `commit`, `switch`, `checkout`, `stash`, and branch creation
-**ask**; `push`, `reset --hard`, `clean`, `rebase`, branch/tag deletion,
-`rm -r*`, `find -delete/-exec`, and `sudo` are **denied**. If a task seems to
-require a denied command, stop and explain why instead of finding a way around
-the deny list.
+`rm -rf`, `sudo`, and `chmod 777` are denied outright in
+`.claude/settings.json`. If a task seems to require one, stop and explain why
+instead of finding a way around the deny list.
 
 ---
 
 ## 5. What must not enter a commit
 
-Secrets, `.env*`, keystores, `key.properties`, certificates, Firebase private credentials, debug
+Secrets, `.env*`, keystores, certificates, Firebase private credentials, debug
 scaffolding, commented-out code, unrelated formatting churn, `.DS_Store`, build
 output, and generated files the project deliberately does not commit
 (`lib/core/config/env.g.dart`). Read the diff before you stage it —

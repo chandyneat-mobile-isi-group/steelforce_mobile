@@ -1,7 +1,7 @@
 # Flutter Web — Architecture, Deployment, Troubleshooting
 
 > ISI Steel Sales — Android · iOS · **Web**, one codebase.
-> Companion to `docs/blueprint/web-migration-plan.md` (the plan) and [ADR-010](../adr/ADR-0010-web-persistence.md) (the persistence decision). This document describes what was **built**.
+> Companion to `docs/blueprint/web-architecture.md` (the plan) and [ADR-010](../adr/ADR-0010-web-persistence.md) (the persistence decision). This document describes what was **built**.
 > Verified against Flutter `3.44.4`, 2026-07-29.
 
 ---
@@ -387,7 +387,7 @@ These have specific causes; do not "fix" them by adding `'unsafe-inline'`, which
 ## 10. Related documents
 
 - Decision and rejected alternatives for web storage: [ADR-010](../adr/ADR-0010-web-persistence.md)
-- The analysis and phased plan this implements: [`docs/blueprint/web-migration-plan.md`](web-migration-plan.md)
+- The pre-build plan this implemented: `docs/blueprint/web-migration-plan.md`, removed 2026-10-24 (in git history); this document is what shipped
 - Storage/crypto rules every option was measured against: [`docs/skills/security.md`](../skills/security.md)
 - Layer rules the seams preserve: [`docs/blueprint/system-architecture.md`](system-architecture.md), ADR-003, ADR-004
 - T1.5b's place in the roadmap: [`docs/blueprint/migration-plan.md`](migration-plan.md)

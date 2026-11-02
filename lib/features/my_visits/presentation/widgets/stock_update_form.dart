@@ -96,7 +96,7 @@ Future<VisitStockUpdate?> showStockUpdateSheet(
                     shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(14)),
                   ),
-                  child: const Text('Save'),
+                  child: Text('common.save'.tr),
                 ),
               ),
             ],

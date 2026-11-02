@@ -3,7 +3,7 @@ import 'package:equatable/equatable.dart';
 /// Backend `status` codes, as the contract names them. Kept as strings, not an
 /// enum: the contract warns that statuses past `Approved` are modelled but not
 /// reachable yet, and a client that throws on an unknown name breaks the day
-/// the next phase ships (`docs/feature/quotation-orders/api/mobile.md`).
+/// the next phase ships (`docs/feature/order/quotation/api/mobile.md`).
 abstract final class QuotationRemoteStatus {
   static const draft = 'Draft';
   static const returned = 'Returned';

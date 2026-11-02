@@ -3,6 +3,7 @@ import 'package:intl/intl.dart';
 
 import 'package:steelforce/core/theme/theme_extensions.dart';
 import 'package:steelforce/core/responsive/responsive_sizing.dart';
+import 'package:steelforce/core/localization/localized_text_context.dart';
 
 /// The calendar's compact header: today's date and a dot summary of today's stops.
 class CalendarToggleButton extends StatelessWidget {
@@ -76,7 +77,8 @@ class CalendarToggleButton extends StatelessWidget {
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   Text(
-                    DateFormat('EEEE, d MMMM yyyy').format(now),
+                    DateFormat('EEEE, d MMMM yyyy', context.languageCode)
+                        .format(now),
                     style: TextStyle(
                       color: colors.textPrimary,
                       fontSize: context.rsp(14),

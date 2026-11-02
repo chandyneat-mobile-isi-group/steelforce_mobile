@@ -4,10 +4,40 @@
 > its four tabs, the app bar, the KPI screen, the sync widgets, and the guest
 > surfaces.
 > **Code:** `lib/features/shell/`
-> **Verified:** 2026-08-27, branch `web` @ `142de9b`.
+> **Verified:** 2026-10-26, branch `feat/auth` (uncommitted restructure).
 
-Presentation-only by design: 1 screen, 17 widgets, no blocs, no domain or data
-layer. The shell composes other features rather than owning data.
+Presentation-only by design: no domain or data layer. The shell composes other
+features rather than owning data. Its one cubit, `WorkModeCubit`, wraps the
+app-wide `WorkModeService`.
+
+Every source file is kept **under 200 lines**, one widget or section per file,
+so a style lives in a file named after what it draws.
+
+## Folder map — where to change what
+
+```
+presentation/
+├── main_shell.dart          tab switching, sync start/stop, permission primer
+├── navigation/              ShellTabController + ShellTab indices
+├── bloc/                    WorkModeCubit
+├── screens/kpi_screen.dart  the KPI screen (composition only)
+└── widgets/
+    ├── shell_frame/         body layers, tab content, nav rail, app-bar layer, tab list
+    ├── app_bar/             MainAppBar and its logo, medallion buttons, bell, avatar
+    ├── home/                signed-in Home: welcome header, hero, Home tab
+    │   ├── monthly_target/  the monthly target card
+    │   └── my_work/         the My Work grid, its cards, badges and skeleton
+    ├── guest/               the signed-out landing
+    ├── kpi/                 one file per KPI card, tile, row and filter
+    └── sync/
+        ├── pending_sync/       Sync Center sheet pieces (entry: sync/pending_sync_sheet.dart)
+        ├── work_mode/          Online/Offline confirm dialog pieces (entry: sync/work_mode_confirm_dialog.dart)
+        └── continue_working/   Continue Working and Continue Visit cards
+```
+
+Gold accents come from `AppColors.goldLight / goldPrimary / goldDark / goldDeep
+/ goldBorder` (`lib/core/theme/app_colors.dart`). Do not re-declare them as
+private hex constants.
 
 ---
 
@@ -41,16 +71,20 @@ Switching to tab 0 refreshes `ResumableVisitCubit`, which is how a rep sees the
 
 ## Tests
 
-`test/features/shell/` — `pending_sync_sheet_l10n_test.dart`,
-`status_bar_tap_test.dart`.
+`test/features/shell/` — guest home, KPI screen, monthly target format, the
+three pending-sync sheet suites, status-bar tap, work-mode button and cubit.
+The Continue Working / Continue Visit cards have no widget test yet.
 
 ---
 
 ## Known gaps
 
-- The upgrade plan is **not started**, and its Phase 0 decision is still open.
-- Guest surfaces have uncommitted work in progress at the time of writing
-  (`widgets/guest/*`), including a removed `guest_feature_preview.dart`.
+- [ui-upgrade-plan.md](ui-upgrade-plan.md) predates the restructure: its file
+  table names old paths and files since removed (`continue_action_widget.dart`,
+  `data_syncing_widget.dart`). Phase 0.2 (gold tokens) and Phase 4 (file
+  splits) are done.
+- `docs/blueprint/navigation-architecture.md` still mentions a `HomeCubit`;
+  that cubit was never registered and has been removed.
 
 ---
 

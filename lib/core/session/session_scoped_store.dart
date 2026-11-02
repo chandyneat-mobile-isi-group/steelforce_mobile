@@ -34,7 +34,8 @@ class SessionResetService {
   final List<SessionScopedStore> _stores;
   final AppLogger _logger;
 
-  Future<void> clearAll() async {
+  Future<void> clearAll({bool rethrowOnFailure = false}) async {
+    final failedStores = <String>[];
     for (final store in _stores) {
       try {
         await store.clearForSignOut();
@@ -46,7 +47,13 @@ class SessionResetService {
           error: e,
           stackTrace: stack,
         );
+        failedStores.add(store.debugName);
       }
+    }
+    if (rethrowOnFailure && failedStores.isNotEmpty) {
+      throw StateError(
+        'Session cleanup failed for: ${failedStores.join(', ')}.',
+      );
     }
   }
 }

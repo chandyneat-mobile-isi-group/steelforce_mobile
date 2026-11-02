@@ -1,9 +1,11 @@
 import 'package:dio/dio.dart';
 import 'package:equatable/equatable.dart';
+import 'package:steelforce/core/network/interceptors/api_headers_interceptor.dart';
+import 'package:steelforce/core/network/transport/tls_failure.dart';
 
 /// The stable, machine-readable identity of a server error.
 ///
-/// **The API speaks two error dialects and which one you get depends on the
+/// **The API speaks three error dialects and which one you get depends on the
 /// endpoint.** This type is the single place that knows the difference, so no
 /// call site has to:
 ///
@@ -11,8 +13,11 @@ import 'package:equatable/equatable.dart';
 ///    endpoints and answer `{error, error_description, error_uri}` at HTTP
 ///    **400** — RFC 6749 §5.2 mandates 400 for a rejected grant, so a wrong
 ///    password does *not* arrive as 401.
-///  * Everything else answers an RFC 9457 problem document carrying
-///    `errorCode`, `title`, `detail` and a `correlationId`.
+///  * RFC 9457 problem documents carry `errorCode`, `title`, `detail` and a
+///    `correlationId`.
+///  * The wrapped envelope — what `/mobile/auth/login` actually answers on
+///    staging — nests everything: `{success: false, error: {code, message,
+///    traceId, details}}`, with SCREAMING_SNAKE codes (`AUTH_INVALID_CREDENTIALS`).
 ///
 /// [code] is normalised across both — `Auth.InvalidCredentials` reads the same
 /// whether it arrived as an `error_uri` path segment or an `errorCode` field.
@@ -26,6 +31,10 @@ class ApiError extends Equatable {
     this.fieldErrors = const {},
     this.correlationId,
     this.details,
+    this.serverCode,
+    this.causeType,
+    this.causeMessage,
+    this.retryAfter,
   });
 
   /// Stable platform code, e.g. `Auth.InvalidCredentials`, `Depot.NotFound`,
@@ -54,6 +63,24 @@ class ApiError extends Equatable {
   /// e.g. the server's current visit on a `409 Visit.AlreadyCheckedIn`, so
   /// the client can adopt it instead of retrying.
   final Map<String, dynamic>? details;
+
+  /// The code exactly as the server sent it, when it differs from [code] —
+  /// e.g. `AUTH_RESET_CODE_INVALID`, which has no app-side equivalent and so
+  /// keeps the status-derived [code]. **For logs only;** branch on [code].
+  final String? serverCode;
+
+  /// For a request that got no response: the runtime type of the underlying
+  /// error (`HandshakeException`, `SocketException`, …). Without it every
+  /// such failure logs as a bare `Client.Unknown`. **For logs only.**
+  final String? causeType;
+
+  /// The underlying error's own text, trimmed. Written for developers — it
+  /// can name the host or an OS error — so **never shown to the user**.
+  final String? causeMessage;
+
+  /// Server-calculated cooldown: the HTTP `Retry-After` header, else the
+  /// error's `details.retryAfterSeconds`.
+  final Duration? retryAfter;
 
   /// True when the caller may never perform this action, as opposed to
   /// holding a stale token. **A 403 must not sign the user out** — hide the
@@ -102,6 +129,31 @@ class ApiError extends Equatable {
       );
     }
 
+    // Wrapped envelope: `{success: false, error: {code, message, traceId}}`.
+    //
+    // Only codes with an exact app-side meaning are translated; every other
+    // code keeps the status-derived one, because call sites already branch on
+    // those (`General.Validation` for a 400, for one) and a raw server code
+    // they have never heard of would silently drop them into a default arm.
+    final nested = map['error'];
+    if (nested is Map) {
+      final error = nested.cast<String, dynamic>();
+      final raw = error['code'] as String?;
+      return ApiError(
+        code: _wrappedCodes[raw] ?? _codeFromStatus(statusCode),
+        message: error['message'] as String?,
+        statusCode: statusCode,
+        fieldErrors: _fieldErrors(error['errors']),
+        correlationId: (error['traceId'] ??
+            error['correlationId'] ??
+            map['traceId']) as String?,
+        details: error['details'] is Map
+            ? (error['details'] as Map).cast<String, dynamic>()
+            : null,
+        serverCode: raw,
+      );
+    }
+
     // RFC 9457 problem document.
     final status = (map['status'] as num?)?.toInt() ?? statusCode;
     final errorCode = map['errorCode'] as String? ??
@@ -124,7 +176,24 @@ class ApiError extends Equatable {
 
   /// Normalises any Dio failure — including a transport failure that never
   /// reached the server — into an [ApiError].
+  ///
+  /// Two things are carried through that used to be dropped:
+  ///
+  ///  * **The cause.** A request with no response keeps the underlying
+  ///    error's type and text ([causeType], [causeMessage]), so a TLS failure,
+  ///    a dropped connection and a client-side bug stop all logging as the
+  ///    same `Client.Unknown`.
+  ///  * **The correlation id.** The server's own id when it answered, else the
+  ///    one this app sent in `X-Correlation-Id` — the id support can search
+  ///    for even when the request never got a reply.
   factory ApiError.fromDio(DioException e) {
+    final sentId =
+        e.requestOptions.headers[ApiHeadersInterceptor.correlationHeader];
+    final requestId = sentId is String ? sentId : null;
+    final cause = e.response == null ? e.error : null;
+    final causeType = cause?.runtimeType.toString();
+    final causeMessage = cause == null ? null : _trim(cause.toString());
+
     final offline = switch (e.type) {
       DioExceptionType.connectionError ||
       DioExceptionType.connectionTimeout ||
@@ -134,11 +203,60 @@ class ApiError extends Equatable {
       _ => false,
     };
     if (offline) {
-      return const ApiError(code: ApiErrorCodes.network);
+      return ApiError(
+        code: ApiErrorCodes.network,
+        correlationId: requestId,
+        causeType: causeType,
+        causeMessage: causeMessage,
+      );
     }
-    return ApiError.fromBody(e.response?.data,
-        statusCode: e.response?.statusCode);
+
+    // No response, and the handshake is what failed. Kept apart from
+    // [ApiErrorCodes.network] on purpose: callers that queue and retry on
+    // `network` should not start retrying a failure a retry cannot fix.
+    if (e.response == null &&
+        (e.type == DioExceptionType.badCertificate || isTlsFailure(cause))) {
+      return ApiError(
+        code: ApiErrorCodes.secureConnection,
+        correlationId: requestId,
+        causeType: causeType,
+        causeMessage: causeMessage,
+      );
+    }
+
+    final parsed =
+        ApiError.fromBody(e.response?.data, statusCode: e.response?.statusCode);
+    return ApiError(
+      code: parsed.code,
+      message: parsed.message,
+      detail: parsed.detail,
+      statusCode: parsed.statusCode,
+      fieldErrors: parsed.fieldErrors,
+      correlationId: parsed.correlationId ?? requestId,
+      details: parsed.details,
+      serverCode: parsed.serverCode,
+      causeType: causeType,
+      causeMessage: causeMessage,
+      // The header is authoritative; the body's `retryAfterSeconds` covers a
+      // proxy that strips it.
+      retryAfter: _retryAfter(e.response?.headers.value('retry-after')) ??
+          _retryAfter('${parsed.details?['retryAfterSeconds'] ?? ''}'),
+    );
   }
+
+  /// Wrapped-envelope codes with an exact app-side equivalent. Taken from the
+  /// backend's `IdentityErrors.cs`; anything not listed keeps the
+  /// status-derived code (see [ApiError.fromBody]).
+  static const _wrappedCodes = {
+    'AUTH_INVALID_CREDENTIALS': ApiErrorCodes.invalidCredentials,
+    'AUTH_ACCOUNT_LOCKED': ApiErrorCodes.accountLocked,
+    'AUTH_ACCOUNT_DISABLED': ApiErrorCodes.accountInactive,
+    'AUTH_UNAUTHENTICATED': ApiErrorCodes.notAuthenticated,
+    'AUTH_FORBIDDEN': ApiErrorCodes.permissionDenied,
+  };
+
+  static String _trim(String text) =>
+      text.length <= 300 ? text : '${text.substring(0, 300)}…';
 
   /// `https://docs.isigroup.com.kh/errors/Auth.InvalidCredentials`
   /// → `Auth.InvalidCredentials`.
@@ -181,11 +299,17 @@ class ApiError extends Equatable {
   }
 
   @override
-  List<Object?> get props => [code, message, statusCode, fieldErrors];
+  List<Object?> get props =>
+      [code, message, statusCode, fieldErrors, retryAfter];
 
   @override
   String toString() => 'ApiError($code, status: $statusCode, '
       'correlationId: $correlationId)';
+}
+
+Duration? _retryAfter(String? value) {
+  final seconds = int.tryParse(value ?? '');
+  return seconds == null || seconds <= 0 ? null : Duration(seconds: seconds);
 }
 
 /// Thrown by data sources; repositories translate it into a `Failure`.
@@ -329,6 +453,12 @@ abstract final class ApiErrorCodes {
   // ── Client-side sentinels ────────────────────────────────────────
   /// The request never reached the server.
   static const network = 'Client.Network';
+
+  /// No response because the TLS handshake failed — a network answering for
+  /// the API host (a FortiGate DNS filter's block page, on 2026-10-19), a
+  /// TLS-intercepting proxy or antivirus, or a wrong clock. Not retried like
+  /// [network]: a retry on the same network fails the same way.
+  static const secureConnection = 'Client.SecureConnection';
   static const unknown = 'Client.Unknown';
 }
 

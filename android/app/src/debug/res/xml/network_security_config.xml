@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- DEBUG BUILDS ONLY — overrides `src/main/res/xml/network_security_config.xml`.
+
+     Allows cleartext (a LAN backend over http://) and user-installed CAs (a
+     debugging proxy). Never copy this into `src/main`: the release policy is
+     the main file. -->
+<network-security-config>
+    <base-config cleartextTrafficPermitted="true">
+        <trust-anchors>
+            <certificates src="system" />
+            <certificates src="user" />
+        </trust-anchors>
+    </base-config>
+</network-security-config>

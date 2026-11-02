@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Android 12+ (API 31) backup policy (docs/security/README.md §3).
+
+     `android:allowBackup="false"` stops cloud backup, but from Android 12 it no
+     longer stops device-to-device transfer. Without these rules a phone-to-
+     phone migration copies the encrypted database, the Hive boxes and the
+     encrypted shared preferences onto the new handset. Everything is excluded:
+     a rep's new phone signs in and syncs from the server instead. -->
+<data-extraction-rules>
+    <cloud-backup>
+        <exclude domain="root" />
+        <exclude domain="file" />
+        <exclude domain="database" />
+        <exclude domain="sharedpref" />
+        <exclude domain="external" />
+    </cloud-backup>
+    <device-transfer>
+        <exclude domain="root" />
+        <exclude domain="file" />
+        <exclude domain="database" />
+        <exclude domain="sharedpref" />
+        <exclude domain="external" />
+    </device-transfer>
+</data-extraction-rules>

@@ -70,4 +70,17 @@ class AppColorsDark {
   static const brandNavyDark = Color(0xFF1E293B);
   static const accentPurple = Color(0xFFA78BFA);
   static const slate = Color(0xFFCBD5E1);
+
+  // ── Home wallpaper (dark counterpart of AppColors.wallpaper*) ──────
+  // Apex Blue's dark tint (Brand Guide §07.02) settling into the dark canvas,
+  // so the brand blue sits behind the hero and content ends on near-black.
+  static const wallpaperTop = Color(0xFF00366E);
+  static const wallpaperBottom = canvas;
+  // The brand chevron, faint: on near-black a bright line reads as a grid.
+  static const wallpaperLine = Color(0x0FFFFFFF); // white, 6%
+  // The calm variant (profile): the dark surfaces' own blend with the lifted
+  // brand blue as a faint line, so long text stays the focus.
+  static const wallpaperSubtleTop = backgroundSoft;
+  static const wallpaperSubtleBottom = canvas;
+  static const wallpaperSubtleLine = Color(0x1460A5FA); // lifted blue, 8%
 }

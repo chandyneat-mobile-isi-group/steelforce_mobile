@@ -1,4 +1,3 @@
-import 'package:steelforce/core/config/data_source_mode.dart';
 import 'package:steelforce/core/platform/environment/vpn_probe.dart';
 
 import 'package:steelforce/features/my_visits/domain/entities/fraud_policy.dart';
@@ -113,9 +112,6 @@ class FraudDetectionService {
   /// this control does not exist there. See `core/platform/environment/vpn_probe_web.dart`
   /// — it carries a `TODO(release-gate)` for exactly this weakening.
   Future<bool> detectVpnHeuristic() async {
-    // TODO(release-gate): a demo build sends nothing off the device, and the
-    // web probe is a third-party HTTP lookup.
-    if (DataSourceMode.useMocks) return false;
     try {
       return await probeVpnInterfaces();
     } catch (_) {

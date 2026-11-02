@@ -5,6 +5,7 @@ import 'package:steelforce/core/di/injection_container.dart';
 import 'package:steelforce/core/theme/theme_extensions.dart';
 import 'package:steelforce/core/localization/localization_services.dart';
 import 'package:steelforce/core/localization/localized_builder.dart';
+import 'package:steelforce/features/app_coach/presentation/services/app_coach.dart';
 import 'package:steelforce/features/authentication/presentation/bloc/auth_bloc.dart';
 import 'package:steelforce/features/authentication/presentation/bloc/auth_event.dart';
 import 'package:steelforce/features/profile/presentation/bloc/profile_cubit.dart';
@@ -12,6 +13,7 @@ import 'package:steelforce/features/profile/presentation/bloc/profile_state.dart
 import 'package:steelforce/features/profile/presentation/widgets/edit_profile_sheet.dart';
 import 'package:steelforce/features/profile/presentation/widgets/profile_header.dart';
 import 'package:steelforce/features/profile/presentation/widgets/profile_info_section.dart';
+import 'package:steelforce/core/auth/logout_confirm_dialog.dart';
 import 'package:steelforce/features/profile/presentation/widgets/unsent_work_dialog.dart';
 import 'package:steelforce/features/localization/presentation/bloc/language_cubit.dart';
 import 'package:steelforce/features/localization/presentation/widgets/language_selector_sheet.dart';
@@ -24,6 +26,7 @@ import 'package:steelforce/features/settings/theme/presentation/widgets/theme_se
 import 'package:steelforce/features/shell/presentation/widgets/sync/pending_sync_sheet.dart';
 import 'package:steelforce/routes/app_routes.dart';
 import 'package:steelforce/core/responsive/responsive_sizing.dart';
+import 'package:steelforce/shared/widgets/brand_wallpaper_background.dart';
 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
@@ -72,26 +75,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
       if (left.isNotEmpty || !context.mounted) return;
     }
 
-    final confirmed = await showDialog<bool>(
-      context: context,
-      builder: (context) => AlertDialog(
-        backgroundColor: context.appColors.surfaceSoft,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        title: Text('profile.logout_confirm_title'.tr,
-            style: TextStyle(color: Theme.of(context).colorScheme.onSurface)),
-        content: Text('profile.logout_confirm_body'.tr,
-            style: TextStyle(color: context.appColors.textSecondary)),
-        actions: [
-          TextButton(
-              onPressed: () => Navigator.pop(context, false),
-              child: Text('profile.cancel'.tr)),
-          TextButton(
-              onPressed: () => Navigator.pop(context, true),
-              child: Text('profile.logout'.tr)),
-        ],
-      ),
-    );
-    if (confirmed != true || !context.mounted) return;
+    final confirmed = await LogoutConfirmDialog.show(context);
+    if (!confirmed || !context.mounted) return;
 
     context.read<AuthBloc>().add(const LogoutRequested());
   }
@@ -136,11 +121,21 @@ class _ProfileScreenState extends State<ProfileScreen> {
             );
           },
         ),
+        // The lessons' home once the rep has hidden the coach mascot.
+        ProfileMenuTile(
+          icon: Icons.school_outlined,
+          title: 'coach.lessons.title'.tr,
+          subtitle: 'profile.lessons_hint'.tr,
+          onTap: AppCoach.openLessons,
+        ),
         ProfileMenuTile(
           icon: Icons.lock_reset_rounded,
           title: 'profile.change_password'.tr,
           subtitle: 'profile.change_password_hint'.tr,
-          onTap: () => Navigator.of(context).pushNamed(Static.forgotPassword),
+          // Signed in, so the account's own number proves who they are: no
+          // current password, and no number to type.
+          onTap: () =>
+              Navigator.of(context).pushNamed(Static.changePasswordByPhone),
         ),
       ],
     );
@@ -154,54 +149,63 @@ class _ProfileScreenState extends State<ProfileScreen> {
         final screenWidth = MediaQuery.sizeOf(context).width;
         final isTablet = screenWidth >= 600;
 
-        return Scaffold(
-          // The shell's canvas, matching Home and the tabs.
-          backgroundColor: context.appColors.canvas,
-          appBar: AppBar(
-            backgroundColor: context.appColors.canvas,
-            iconTheme: IconThemeData(color: scheme.onSurface),
-            title: Text(
-              'profile.title'.tr,
-              style: TextStyle(
-                color: scheme.onSurface,
-                fontSize: context.rsp(17),
-                fontWeight: FontWeight.w800,
-                letterSpacing: -0.2,
+        // The calm brand wallpaper behind the whole page, app bar included,
+        // so the pattern runs under the title without a seam. The body sits
+        // below the app bar and clips its scrolling, so content never passes
+        // under the title.
+        return BrandWallpaperBackground(
+          style: BrandWallpaperStyle.subtle,
+          child: Scaffold(
+            backgroundColor: Colors.transparent,
+            appBar: AppBar(
+              backgroundColor: Colors.transparent,
+              // Material 3 re-tints a scrolled-under app bar; keep it clear.
+              surfaceTintColor: Colors.transparent,
+              scrolledUnderElevation: 0,
+              iconTheme: IconThemeData(color: scheme.onSurface),
+              title: Text(
+                'profile.title'.tr,
+                style: TextStyle(
+                  color: scheme.onSurface,
+                  fontSize: context.rsp(17),
+                  fontWeight: FontWeight.w800,
+                  letterSpacing: -0.2,
+                ),
               ),
             ),
-          ),
-          body: BlocConsumer<ProfileCubit, ProfileState>(
-            listener: (context, state) {
-              if (state is ProfileLoaded && state.actionError != null) {
-                ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-                    behavior: SnackBarBehavior.floating,
-                    shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12)),
-                    content: Text(state.actionError!)));
-              }
-            },
-            builder: (context, state) => switch (state) {
-              ProfileLoaded() => RefreshIndicator(
-                  color: scheme.primary,
-                  onRefresh: () => context.read<ProfileCubit>().load(),
-                  child: Center(
-                    child: ConstrainedBox(
-                      constraints: BoxConstraints(
-                        maxWidth: isTablet ? 960 : double.infinity,
+            body: BlocConsumer<ProfileCubit, ProfileState>(
+              listener: (context, state) {
+                if (state is ProfileLoaded && state.actionError != null) {
+                  ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                      behavior: SnackBarBehavior.floating,
+                      shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12)),
+                      content: Text(state.actionError!)));
+                }
+              },
+              builder: (context, state) => switch (state) {
+                ProfileLoaded() => RefreshIndicator(
+                    color: scheme.primary,
+                    onRefresh: () => context.read<ProfileCubit>().load(),
+                    child: Center(
+                      child: ConstrainedBox(
+                        constraints: BoxConstraints(
+                          maxWidth: isTablet ? 960 : double.infinity,
+                        ),
+                        child: isTablet
+                            ? _buildTabletLayout(context, state)
+                            : _buildPhoneLayout(context, state),
                       ),
-                      child: isTablet
-                          ? _buildTabletLayout(context, state)
-                          : _buildPhoneLayout(context, state),
                     ),
                   ),
-                ),
-              ProfileError(:final message) => Center(
-                  child: Text(message,
-                      style:
-                          TextStyle(color: context.appColors.textSecondary))),
-              _ =>
-                Center(child: CircularProgressIndicator(color: scheme.primary)),
-            },
+                ProfileError(:final message) => Center(
+                    child: Text(message,
+                        style:
+                            TextStyle(color: context.appColors.textSecondary))),
+                _ => Center(
+                    child: CircularProgressIndicator(color: scheme.primary)),
+              },
+            ),
           ),
         );
       },

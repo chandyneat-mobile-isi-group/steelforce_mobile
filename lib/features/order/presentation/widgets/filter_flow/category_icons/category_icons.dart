@@ -3,6 +3,7 @@
 // material master so a new code fails loudly instead of silently drawing a box.
 
 import 'category_icon_tokens.dart';
+import 'package:steelforce/core/assets/app_assets.dart';
 
 class CategoryIconSpec {
   const CategoryIconSpec(this.label, this.family, this.asset);
@@ -12,7 +13,7 @@ class CategoryIconSpec {
   String get activeAsset => asset.replaceFirst('.svg', '_active.svg');
 }
 
-const String _base = 'assets/images/icons/categories-icon/svg';
+const String _base = AppImages.productCategoryIconsFolder;
 
 const Map<String, CategoryIconSpec> categoryIcons = {
   'galvanized-coil-semi': CategoryIconSpec('Galvanized Coil (Semi-Finished)',

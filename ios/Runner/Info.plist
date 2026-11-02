@@ -29,6 +29,19 @@
 	<string>????</string>
 	<key>CFBundleVersion</key>
 	<string>$(FLUTTER_BUILD_NUMBER)</string>
+	<key>CFBundleURLTypes</key>
+	<array>
+		<dict>
+			<key>CFBundleTypeRole</key>
+			<string>Editor</string>
+			<key>CFBundleURLName</key>
+			<string>firebase-phone-auth</string>
+			<key>CFBundleURLSchemes</key>
+			<array>
+				<string>app-1-696334570059-ios-237039f985603918b0f3ce</string>
+			</array>
+		</dict>
+	</array>
 	<key>FirebaseAppDelegateProxyEnabled</key>
 	<true/>
 	<key>GoogleMapsApiKey</key>
@@ -86,6 +99,7 @@
 	<key>UIBackgroundModes</key>
 	<array>
 		<string>fetch</string>
+		<string>remote-notification</string>
 	</array>
 	<key>BGTaskSchedulerPermittedIdentifiers</key>
 	<array>
@@ -104,6 +118,8 @@
 	<array>
 		<string>UIInterfaceOrientationPortrait</string>
 		<string>UIInterfaceOrientationPortraitUpsideDown</string>
+		<string>UIInterfaceOrientationLandscapeLeft</string>
+		<string>UIInterfaceOrientationLandscapeRight</string>
 	</array>
 </dict>
 </plist>

@@ -118,8 +118,18 @@ class ApiLogInterceptor extends Interceptor {
       // The stable platform code — the thing to branch on and to quote in a
       // bug report, and explicitly allowed by §10.
       'errorCode': error.code,
+      // The server's raw code when the app has no equivalent for it.
+      if (error.serverCode != null && error.serverCode != error.code)
+        'serverCode': error.serverCode,
+      // The server's id when it answered, else the one this request was sent
+      // with — never null for a request that left the device.
       'correlationId': error.correlationId,
       'dioType': err.type.name,
+      // No response: what actually failed underneath dio. Without these an
+      // expired-looking certificate, a dropped connection and a client bug all
+      // logged as the same `dioType=unknown`.
+      if (error.causeType != null) 'cause': error.causeType,
+      if (error.causeMessage != null) 'causeMessage': error.causeMessage,
       if (error.fieldErrors.isNotEmpty)
         'invalidFields': error.fieldErrors.keys.toList(),
       if (logBodies) 'body': err.response?.data,

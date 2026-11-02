@@ -3,7 +3,7 @@
 - **Status**: Accepted
 - **Date**: 2026-08-24
 - **Supersedes**: the referential-integrity claim in ADR-001 (that ADR's other decisions stand)
-- **Related**: ADR-002 (offline-first), ADR-004 (DAO pattern), ADR-006 (sync engine), `docs/blueprint/local-storage-architecture.md` §3, `docs/feature/my-visits/api.md` §5, `docs/feature/depot/api.md`
+- **Related**: ADR-002 (offline-first), ADR-004 (DAO pattern), ADR-006 (sync engine), `docs/blueprint/local-storage-architecture.md` §3, `docs/feature/my-visits/api.md` §5, `docs/feature/depot/mobile/api.md`
 
 ---
 
@@ -37,7 +37,7 @@ endpoints**, paged independently, scoped differently — the route feed returns 
 depots on a rep's routes, the directory returns the depots assigned to that
 rep, and `GET /mobile/depots` pages at 200 rows. Nothing in
 `docs/feature/my-visits/api.md` promises an arrival order, and
-`docs/feature/depot/api.md` documents scoping that makes a
+`docs/feature/depot/mobile/api.md` documents scoping that makes a
 permanent mismatch legitimate. The schema demanded an ordering guarantee the
 server never offered.
 

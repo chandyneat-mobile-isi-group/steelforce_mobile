@@ -1,50 +1,46 @@
 part of '../check_in_confirmation_dialog.dart';
 
-/// TODO(i18n): move to en/km. Literals on purpose, same as
-/// `RemoteCheckInSheet`: a missing `.tr` key renders the key itself on a rep's
-/// screen, which is worse than untranslated English. Strings that already had
-/// keys still use them.
+/// Copy for the check-in confirmation dialog. Getters, not constants, so
+/// every string re-translates when the language changes.
 abstract final class _Copy {
-  static const searchingBody =
-      'Getting your position. This usually takes a few seconds.';
-  static const servicesOffTitle = 'Location is off';
-  static const servicesOffBody =
-      'Turn on Location to verify your check-in. We will pick it up '
-      'automatically when you come back.';
-  static const deniedTitle = 'Location permission needed';
-  static const deniedBody =
-      'Allow location access so your check-in can be verified.';
-  static const deniedForeverBody =
-      'Location access is blocked for this app. Enable it in Settings → '
-      'Permissions → Location.';
-  static const unavailableTitle = 'No GPS signal here';
-  static const unavailableBody =
-      'We could not get a position after a full search. You can try again, '
-      'or check in without GPS — you will be asked for a short reason and '
-      'the visit is marked unverified.';
-  static const weakTitle = 'Weak GPS signal';
-  static const weakBody =
-      'You look close enough, but the signal is too coarse to be sure. It '
-      'is still improving — wait a moment, or continue with a reason.';
-  static const accuracy = 'Accuracy';
-  static const strong = 'Strong';
-  static const fair = 'Fair';
-  static const weak = 'Weak';
-  static const searchingFor = 'Searching';
-  static const takingLonger = 'Taking longer than usual…';
-  static const tryAgain = 'Try again';
-  static const refresh = 'Refresh';
-  static const withoutGps = 'Check in without GPS';
-  static const turnOn = 'Turn on location';
-  static const allow = 'Allow location';
-  static const openSettings = 'Open settings';
-  static const locating = 'Locating…';
-  static const outlet = 'Outlet';
-  static const tips = <String>[
-    'Tip: step near a window or doorway.',
-    'Tip: keep Wi-Fi switched on — it speeds up location, even offline.',
-    'Tip: hold the phone still for a moment.',
-  ];
+  static String get searchingBody =>
+      'my_visits.check_in_dialog.searching_body'.tr;
+  static String get servicesOffTitle =>
+      'my_visits.check_in_dialog.services_off_title'.tr;
+  static String get servicesOffBody =>
+      'my_visits.check_in_dialog.services_off_body'.tr;
+  static String get deniedTitle => 'my_visits.check_in_dialog.denied_title'.tr;
+  static String get deniedBody => 'my_visits.check_in_dialog.denied_body'.tr;
+  static String get deniedForeverBody =>
+      'my_visits.check_in_dialog.denied_forever_body'.tr;
+  static String get unavailableTitle =>
+      'my_visits.check_in_dialog.unavailable_title'.tr;
+  static String get unavailableBody =>
+      'my_visits.check_in_dialog.unavailable_body'.tr;
+  static String get weakTitle => 'my_visits.check_in_dialog.weak_title'.tr;
+  static String get weakBody => 'my_visits.check_in_dialog.weak_body'.tr;
+  static String get accuracy => 'my_visits.check_in_dialog.accuracy'.tr;
+  static String get strong => 'my_visits.check_in_dialog.strong'.tr;
+  static String get fair => 'my_visits.check_in_dialog.fair'.tr;
+  static String get weak => 'my_visits.check_in_dialog.weak'.tr;
+  static String get searchingFor =>
+      'my_visits.check_in_dialog.searching_for'.tr;
+  static String get takingLonger =>
+      'my_visits.check_in_dialog.taking_longer'.tr;
+  static String get tryAgain => 'common.try_again'.tr;
+  static String get refresh => 'my_visits.check_in_dialog.refresh'.tr;
+  static String get withoutGps => 'my_visits.check_in_dialog.without_gps'.tr;
+  static String get turnOn => 'my_visits.check_in_dialog.turn_on'.tr;
+  static String get allow => 'my_visits.check_in_dialog.allow'.tr;
+  static String get openSettings =>
+      'my_visits.check_in_dialog.open_settings'.tr;
+  static String get locating => 'my_visits.check_in_gps.locating'.tr;
+  static String get outlet => 'my_visits.check_in_dialog.outlet'.tr;
+  static List<String> get tips => <String>[
+        'my_visits.check_in_dialog.tip_window'.tr,
+        'my_visits.check_in_dialog.tip_wifi'.tr,
+        'my_visits.check_in_dialog.tip_still'.tr,
+      ];
 }
 
 // ═════════════════════════════════════════════════════════════════════════════

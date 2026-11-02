@@ -44,7 +44,7 @@ representable, and a `status` of `adHoc` would have made it impossible.
 
 **Your current parser will throw on an ad hoc stop.**
 
-[`route_stop_model.dart`](../../../../frontend/lib/features/my_visits/data/models/route_stop_model.dart)
+`route_stop_model.dart` ⧉ backend repo
 does this:
 
 ```dart
@@ -471,7 +471,7 @@ Two things are outside the Flutter repo.
 | | |
 |---|---|
 | Endpoint contract | [api.md §5.3](api.md) |
-| Why it is built this way | [backend-integration.md §3.1](backend-integration.md) |
+| Why it is built this way | [backend-integration.md §3.1](api.md#12-integration-notes) |
 | Client-side behaviour notes | [workflow.md §8.1](workflow.md) |
 | House API pattern to copy | `lib/features/customers/data/remote/api_customer_remote_data_source.dart` |
 | Envelope / error helpers | `lib/core/network/api_envelope.dart`, `lib/core/network/api_error.dart` |

@@ -1,4 +1,5 @@
 import 'package:equatable/equatable.dart';
+import 'package:steelforce/core/localization/localization_services.dart';
 
 /// Where a line's discount came from.
 ///
@@ -19,20 +20,24 @@ import 'package:equatable/equatable.dart';
 /// got a number, not what they can rely on next time.
 enum DiscountSource {
   /// Granted by the representative on this quotation.
-  repDiscount('Rep discount'),
+  repDiscount('orders.discount_source.rep_discount'),
 
   /// Earned from a running campaign. Carries the campaign's name.
-  promotion('Promotion'),
+  promotion('orders.discount_source.promotion'),
 
   /// Volume break — the price falls at this quantity.
-  priceTier('Volume price'),
+  priceTier('orders.discount_source.price_tier'),
 
   /// A standing negotiated rate for this depot.
-  depotAgreement('Depot agreement');
+  depotAgreement('orders.discount_source.depot_agreement');
 
-  const DiscountSource(this.label);
+  const DiscountSource(this.labelKey);
 
-  final String label;
+  /// Translation key of the label; resolved on read so it follows the
+  /// active language.
+  final String labelKey;
+
+  String get label => labelKey.tr;
 }
 
 /// What was taken off one quotation line, and on whose authority.

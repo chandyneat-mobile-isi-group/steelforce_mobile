@@ -2,8 +2,11 @@
 
 > Guest-first, offline-first enterprise CRM for a field sales force. Flutter ·
 > Android · iOS · Web.
-> **Last reorganised:** 2026-08-27 · **Verified against:** Flutter 3.44.9,
-> branch `web`, commit `142de9b`.
+> **Last reorganised:** 2026-10-24 (duplicates removed, backend copies marked,
+> order sub-areas consolidated) · branch `feat/auth`.
+>
+> **Adding or changing a document?** Read [CONTRIBUTING-DOCS.md](CONTRIBUTING-DOCS.md)
+> and run `dart run tool/check_docs.dart` before committing.
 
 ---
 
@@ -15,9 +18,11 @@
 | Building or changing **any** UI | [skills/feature-ui-standard.md](skills/feature-ui-standard.md) — this is a merge gate, not advice |
 | An AI coding agent orienting in the repo | [blueprint/feature-architecture.md](blueprint/feature-architecture.md), then the feature's own `README.md` |
 | Working on one feature | [feature/](feature/) — pick the feature, read its `README.md` first |
+| Asking "how is the app protected today, and what is missing?" | [security/README.md](security/README.md) — current security posture and remaining work |
 | Touching persistence, sync, or crypto | [blueprint/local-storage-architecture.md](blueprint/local-storage-architecture.md) + [blueprint/sync-architecture.md](blueprint/sync-architecture.md) + [skills/security.md](skills/security.md), in full |
 | Asking "why is it built this way?" | [adr/](adr/) |
 | Shipping a build | [release/](release/) |
+| Adding, moving or deleting a document | [CONTRIBUTING-DOCS.md](CONTRIBUTING-DOCS.md) — where it goes, naming, how to retire one |
 
 ---
 
@@ -25,13 +30,22 @@
 
 ```
 docs/
+├── README.md              ← you are here: the map
+├── CONTRIBUTING-DOCS.md   ← the rules for keeping this tree clean
 ├── skills/       HOW to build — reusable engineering knowledge, not app-specific
-├── blueprint/    WHAT exists — this app's system architecture and roadmaps
+├── blueprint/    WHAT exists — this app's system architecture and roadmap
 ├── feature/      HOW ONE FEATURE works — per-feature implementation reference
 ├── requirement/  WHAT the app must do — business/functional requirements
 ├── adr/          WHY — architecture decision records
-└── release/      HOW IT SHIPS — build, environment, CI/CD, distribution
+├── release/      HOW IT SHIPS — build, environment, CI/CD, distribution
+├── security/     HOW THE APP IS PROTECTED — current posture, plain-language guide
+└── style-rule/   The brand guide (PDF)
 ```
+
+Security: [security/README.md](security/README.md) (current posture and
+remaining work) and [security/explained.md](security/explained.md)
+(plain-language guide). The engineering rules every change follows are
+[skills/security.md](skills/security.md).
 
 Each directory has a `README.md` that indexes and scopes it. One subject has one
 home: if two documents seem to cover the same ground, the more specific one is
@@ -61,41 +75,20 @@ Known divergences are listed in [blueprint/README.md](blueprint/README.md#known-
 
 ## Conventions
 
-- **File names**: lowercase `kebab-case.md`. Never `final.md`, `new.md`, `v2.md`.
-- **ADRs**: `ADR-000N-short-decision-name.md`, never renumbered once accepted.
-- **Feature directory names** match the `lib/features/` folder they document,
-  hyphenated: `lib/features/my_visits` → `docs/feature/my-visits/`.
-- **Every feature directory has a `README.md`** as its entry point.
-- **Cross-references** are relative markdown links. Backticked paths are
-  repo-relative (`docs/skills/security.md`), so they stay valid when quoted.
+All naming, placement and lifecycle rules are in
+[CONTRIBUTING-DOCS.md](CONTRIBUTING-DOCS.md). The two that matter most:
+
+- **One topic, one home.** Edit the existing document; never create a "v2".
 - **`⧉ backend repo`** marks a document that lives in the ISI API repository,
-  not here. Those are not broken links; they are deliberately not vendored.
-- **No secrets, tokens, keys, or certificates** appear anywhere in `docs/`.
+  not here. It is plain text on purpose: a copy goes stale, a link would break.
 
 ---
 
 ## Feature documentation coverage
 
-| Feature | `lib/features/` | Docs | Requirements |
-|---|---|---|---|
-| Authentication | `authentication` | [full package](feature/authentication/) (15 docs) | ✗ |
-| Depot | `depots` | [api, ui-ux, registration](feature/depot/) | ✗ |
-| My Visits (routes) | `my_visits` | [architecture, workflow, api](feature/my-visits/) | ✗ |
-| Order / Quotation | `order` | [workflow, product-selection](feature/order/) | ✗ |
-| Notification | `notification` | [integration guide](feature/notification/) | ✗ |
-| App Coach | `app_coach` | [README](feature/app-coach/) | ✗ |
-| Shell | `shell` | [ui-upgrade-plan](feature/shell/) | ✗ |
-| Localization | `localization` | [skills/localization.md](skills/localization.md) + [analysis](feature/localization/) | ✗ |
-| Geo location | `geo_location` | **none** | ✗ |
-| Home / KPI | `home`, `shell` | **none** | ✗ |
-| Profile | `profile` | **none** | ✗ |
-| Onboarding / Splash | `onboarding`, `splash` | in [blueprint/authentication-architecture.md](blueprint/authentication-architecture.md#boot--navigation-flow) | ✗ |
-| Settings / Theme | `settings` | **none** | ✗ |
-| About | `about` | **none** | ✗ |
-
-No `requirement/` documents exist yet for any feature — see
-[requirement/README.md](requirement/README.md) for what that costs and where
-business rules currently live instead.
+The one index of features and their docs is [feature/README.md](feature/README.md#index).
+Business requirements exist only for promotions so far — see
+[requirement/README.md](requirement/README.md).
 
 ---
 
@@ -107,6 +100,7 @@ business rules currently live instead.
 | [../.claude/CLAUDE.md](../.claude/CLAUDE.md) | Session router loaded into every AI agent session |
 | [../.claude/rules/](../.claude/rules/) | Agent behaviour rules — they point back into `docs/`, never restate it |
 | [../.claude/agents/](../.claude/agents/) | Subagents: flutter-developer, ui-ux-reviewer, api-integrator, code-reviewer |
+| [../tool/check_docs.dart](../tool/check_docs.dart) | Docs checker: broken links, naming, duplicates, junk files |
 | [../.claude/commands/](../.claude/commands/) | Slash commands: `/feature` `/screen` `/api` `/debug` `/test` `/review` |
 | `graphify-out/` | Queryable knowledge graph of `lib/` — see [skills/graphify.md](skills/graphify.md) |
 | `.env.example` | Config template. `.env` itself is never committed |

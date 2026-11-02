@@ -2,7 +2,7 @@
   "auth": {
     "welcome_back": "Welcome Back!",
     "title": "Sign In",
-    "sign_in_subtitle": "Please sign in to access your sales dashboard.",
+    "sign_in_subtitle": "Please sign in to access your sales workspace.",
     "username_or_phone": "Username or Phone Number",
     "username": "Username",
     "username_hint": "Employee ID, email or phone number",
@@ -22,15 +22,37 @@
     "verify_code_subtitle": "Enter the verification code we sent to {target}.",
     "verify": "Verify",
     "invalid_code": "That code isn't right. Please try again.",
+    "phone_code_expired": "This code has expired. Request a new one.",
+    "phone_too_many_requests": "Too many attempts. Please wait a while and try again.",
+    "phone_invalid_number": "Enter a valid mobile number.",
+    "phone_no_connection": "No internet connection. Connect and try again.",
+    "phone_verification_unavailable": "Phone verification is unavailable right now. Please try again later.",
+    "reset_phone_neutral": "If an account exists for this number, you can now request a verification code.",
     "otp_incomplete": "Please enter the full 6-digit code",
     "forgot_password_title": "Reset Password",
     "forgot_password_subtitle": "Enter your phone number to receive a verification code.",
-    "check_your_inbox": "Check Your Inbox",
+    "rate_limit_message": "Too many verification requests. Please wait before trying again.",
+    "tagline_simple": "SECURE  •  SIMPLE  •  TOGETHER",
+    "rate_limit_wait": "Too many requests. Try again in {seconds} seconds.",
+    "own_phone_title": "Verify it's you",
+    "own_phone_sending": "Sending a code to the phone number on your account…",
+    "own_phone_send_new_code": "Send a new code",
+    "own_phone_number_missing": "Your account has no phone number. Ask an administrator to add one.",
+    "own_phone_channel_disabled": "Phone verification is not available right now. Please try again later.",
+    "own_phone_proof_invalid": "Verification failed or expired. Request a new code.",
+    "own_password_outcome_unknown": "The connection dropped before the server answered, so your password may already have changed. Verify your phone again to try once more.",
+    "own_password_forbidden": "You're not allowed to change this password.",
+    "own_password_changed_title": "Password Changed",
+    "own_password_changed_subtitle": "Use your new password next time you sign in. Your other devices have been signed out.",
+    "reset_verifying_securely": "Verifying your request securely…",
+    "try_again_in": "Try again in {time}",
+    "check_your_inbox": "Check Your Phone",
     "reset_instructions_sent": "We've sent a verification code to {target}",
     "back_to_login": "Back to Login",
     "something_went_wrong": "Something went wrong. Please try again.",
     "create_new_password_title": "Create New Password",
-    "create_new_password_subtitle": "Your new password must be different from previously used passwords.",
+    "create_new_password_subtitle": "Use 12–128 characters with uppercase and lowercase letters, a number, a symbol, and at least 4 different characters.",
+    "password_needs_distinct_characters": "Use at least 4 different characters.",
     "new_password": "New Password",
     "confirm_new_password": "Confirm New Password",
     "passwords_dont_match": "Passwords do not match",
@@ -78,10 +100,14 @@
     "password_needs_lowercase": "Include at least one lowercase letter (a–z)",
     "password_needs_number": "Include at least one number (0–9)",
     "password_needs_special": "Include at least one symbol, such as ! @ # $",
-    "invalid_credentials": "Your ID or password is incorrect.",
-    "demo": {
-      "hint": "Demo mode — sign in with {phone} / {password}",
-      "fill": "Fill demo account"
+    "headline_grow": "Grow Together",
+    "headline_stronger": "Stronger",
+    "secure_trusted": "Secure & Trusted",
+    "data_priority": "Your Data, Our Priority",
+    "error": {
+      "no_access": "You do not have access to this action.",
+      "no_access_feature": "Your account does not have access to this.",
+      "sign_in_to_continue": "Sign in to continue."
     }
   },
   "common": {
@@ -96,6 +122,7 @@
     "generic_error": "Something went wrong. Please try again.",
     "no_connection": "No internet connection. Changes are saved on your device.",
     "server_unreachable": "Can't reach the ISI server. Check the API address, VPN, or whether the backend is running.",
+    "secure_connection_failed": "Couldn't connect securely to the server. This network may be blocking SteelForce — try mobile data or another Wi-Fi, and check that the phone's date and time are set automatically.",
     "view_details": "View Details",
     "cancel": "Cancel",
     "save": "Save",
@@ -136,10 +163,15 @@
     "done": "Done",
     "back_to_home": "Back to Home",
     "next": "Next",
-    "close": "Close"
+    "close": "Close",
+    "network_unavailable": "No internet connection. Check your connection and try again.",
+    "local_data_error": "Couldn't read the data saved on this device. Please try again.",
+    "outlet_details_unavailable": "These outlet details are not available.",
+    "starting_up": "Still starting up. Try again in a moment.",
+    "selected": "Selected"
   },
   "home": {
-    "title": "Home Dashboard",
+    "title": "Start Your Journey",
     "welcome": "Welcome Back",
     "view_kpi": "View Details",
     "achieved": "Achieved",
@@ -176,7 +208,42 @@
     "view_all_sales": "View all sales >",
     "low_stock": "Low Stock",
     "todays_visits": "Today's Visits",
-    "products": "Products"
+    "products": "Products",
+    "load_failed": "Couldn't load your dashboard"
+  },
+  "work_mode": {
+    "online": "Online",
+    "offline": "Offline",
+    "semantics": "Work mode: {mode}. Double-tap to change.",
+    "syncing_data": "Syncing Data",
+    "to_offline_title": "Switch to Offline Mode?",
+    "to_offline_body": "Screens open from what is saved on this device, without waiting for the network. Nothing is sent to the server — no refresh, no automatic or manual sync — until you switch back to Online. Use this when the signal is weak.",
+    "to_online_title": "Switch to Online Mode?",
+    "to_online_body": "The app refreshes from the server and sends your saved work automatically whenever the connection allows. Screens still open from this device first.",
+    "unsent_safe": "{count} item(s) saved on this device are waiting to send. Switching keeps them safe.",
+    "switch_offline": "Go Offline",
+    "switch_online": "Go Online",
+    "now_offline": "Offline Mode is on. Your work is saved on this device.",
+    "now_online": "Online Mode is on. Saved work is being sent.",
+    "now_online_no_connection": "Online Mode is on, but the server can't be reached yet. Saved work will send when the connection returns.",
+    "switch_failed": "Couldn't change the mode. You're still in the previous mode.",
+    "banner": "Offline Mode — working from this device. Switch to Online to send saved work.",
+    "go_online_to_sync": "Go Online to Sync",
+    "lost_title": "No internet connection",
+    "lost_body": "Switch to Offline Mode? Keep working — check-ins, photos, check-outs, new depots and quotations are saved on this phone and sent when you go back online.",
+    "back_title": "You're back online",
+    "back_body": "Switch to Online Mode? The work saved on this phone will be sent now."
+  },
+  "photo_gallery": {
+    "unavailable": "Photo not available",
+    "close": "Close",
+    "position": "{index} of {total}"
+  },
+  "coming_soon": {
+    "label": "COMING SOON",
+    "title": "Something Great Is Coming",
+    "message": "We're working on something new to make your SteelForce experience even better. This feature will be available in an upcoming app version.",
+    "action": "Got It"
   },
   "orders": {
     "sku_key_in": {
@@ -213,7 +280,8 @@
       "no_results_offline": "Showing products from your last sync.",
       "quick_add_title": "Quick add by SKU",
       "quick_add_subtitle": "Know the SKU? Search it here to check stock and price without browsing.",
-      "tap_to_add": "Tap a SKU to check stock and pricing"
+      "tap_to_add": "Tap a SKU to check stock and pricing",
+      "error_no_material": "No material number to check."
     },
     "title": "Orders",
     "new": "Create New Order",
@@ -244,7 +312,11 @@
       "out_of_stock": "Out of stock",
       "all_categories": "All",
       "load_more": "Load more",
-      "in_stock_short": "In stock"
+      "in_stock_short": "In stock",
+      "show_less": "Show Less",
+      "read_more": "Read More",
+      "products": "Products",
+      "sale_badge": "Sale"
     },
     "territory": {
       "title": "Select Territory",
@@ -264,11 +336,11 @@
     },
     "quotation": {
       "builder_title": "Quotation",
-      "save_to_sap": "Save Quotation to SAP",
+      "save_to_sap": "Save Quotation to Admin",
       "quotation_number": "Quotation Total",
       "details_title": "Quotation Details",
       "valid_until": "Valid Until",
-      "sap_draft_status": "SAP Draft Status",
+      "sap_draft_status": "Admin Draft Status",
       "convert_to_sales_order": "Convert to Sales Order",
       "edit_quotation": "Edit Quotation",
       "convert_disabled_lead": "Convert once this lead becomes an approved SAP customer.",
@@ -308,7 +380,63 @@
         "approved_by": "Approved by",
         "customer_signature": "Customer signature",
         "footer": "ISI Steel · Generated by SteelForce",
-        "page": "Page"
+        "page": "Page",
+        "tagline_full": "Industrial Steel & Construction Materials",
+        "quotation_no": "Quotation No",
+        "depot_name": "Depot Name",
+        "company_name": "Company Name",
+        "address": "Address",
+        "email": "Email",
+        "contact_person": "Contact Person",
+        "sales_representative": "Sales Representative",
+        "sales_territory": "Sales Territory",
+        "quotation_date": "Quotation Date",
+        "payment_terms": "Payment Terms",
+        "delivery_terms": "Delivery Terms",
+        "default_payment_terms": "30% Advance / Balance on Delivery",
+        "default_payment_terms_full": "30% advance payment upon confirmation. Remaining balance according to agreed terms.",
+        "default_delivery_terms": "Depot Site / Standard Lead Time",
+        "depot_info": "DEPOT INFORMATION",
+        "quotation_info": "QUOTATION INFORMATION",
+        "col_product_sketch": "PRODUCT / SKETCH",
+        "col_material_product": "MATERIAL / PRODUCT",
+        "col_specification": "SPECIFICATION",
+        "col_discount": "DISCOUNT",
+        "custom_spec": "📐 Custom Specification",
+        "free_qty": "Free {qty} {unit}",
+        "payment_terms_title": "PAYMENT TERMS",
+        "payment_terms_body": "30% advance payment upon confirmation.\nRemaining balance according to agreed terms.",
+        "delivery_title": "DELIVERY",
+        "delivery_location": "Delivery location: {location}",
+        "default_delivery_location": "Depot Site",
+        "estimated_delivery": "Estimated delivery: {eta}",
+        "default_eta": "3–5 business days",
+        "included": "Included",
+        "sku_discounts": "SKU Discounts",
+        "invoice_discount": "Invoice Discount",
+        "tax_exempt": "TAX (EXEMPT)",
+        "vat": "VAT 10%",
+        "total_amount": "TOTAL AMOUNT",
+        "terms_title": "TERMS & CONDITIONS",
+        "terms_body": "1. Quotation validity: 7 days from quotation date.\n2. Prices are subject to applicable taxes.\n3. Product availability is subject to confirmation upon order placement.\n4. Delivery schedule may vary depending on stock availability and production lead times.\n5. Any customized material is subject to approved engineering specifications.",
+        "special_notes": "Special Notes: {notes}",
+        "signature_name": "Name: {name}",
+        "signature": "Signature",
+        "prepared_by_title": "Prepared By",
+        "depot_approval": "Depot Approval",
+        "authorized_person": "Authorized Person",
+        "spec_width": "Width",
+        "spec_length": "Length",
+        "spec_thickness": "Thickness",
+        "spec_height": "Height",
+        "spec_grade": "Grade"
+      },
+      "error": {
+        "no_items": "Quotation has no items.",
+        "not_found": "Quotation not found.",
+        "not_editable": "This quotation can no longer be changed.",
+        "no_lines": "Add at least one line before submitting.",
+        "line_not_found": "Line not found."
       }
     },
     "sales_order": {
@@ -316,8 +444,8 @@
       "stock_in": "In stock",
       "stock_low": "Low stock",
       "stock_out": "Out of stock",
-      "create_in_sap": "Create Sales Order in SAP",
-      "sap_status": "SAP Status",
+      "create_in_sap": "Create Sales Order in Admin",
+      "sap_status": "Admin Status",
       "list_title": "Sales Orders",
       "detail_title": "Order Detail",
       "status_pending": "Pending",
@@ -332,12 +460,13 @@
       "section_totals": "TOTALS",
       "section_reference": "REFERENCE",
       "customized": "Customized",
-      "unnamed_party": "No customer on record",
+      "unnamed_party": "No depot on record",
       "no_lines": "This order has no line items.",
       "empty_pending": "No pending orders. Everything you have raised is confirmed.",
       "empty_confirmed": "No confirmed orders yet.",
       "load_failed": "Could not load your orders. Pull down or retry.",
-      "status_label": "Status"
+      "status_label": "Status",
+      "error_no_items": "Sales order has no items."
     },
     "success": {
       "title": "Order Complete",
@@ -449,7 +578,11 @@
       "cart_units": "{count} unit(s) total",
       "stock_location": "Stock location",
       "stock_location_any": "All locations",
-      "sku_count": "({count})"
+      "sku_count": "({count})",
+      "matching_materials": "Matching Materials",
+      "no_search_results_message": "Try another SKU or material name.",
+      "error_catalog_unavailable": "The material catalog on this device is not available.",
+      "error_materials_load": "Could not load materials."
     },
     "order_line": {
       "error_quantity_positive": "Enter a quantity of at least 1.",
@@ -483,7 +616,12 @@
       "tab_applied": "Applied",
       "none_available": "No promotions running for this customer",
       "none_upcoming": "No promotions scheduled",
-      "none_applied": "No promotions applied yet"
+      "none_applied": "No promotions applied yet",
+      "buy_free": "Buy {qty} Free {free}",
+      "see_detail": "See detail",
+      "see_all_count": "See all {count}",
+      "hide_preview": "Hide Preview",
+      "show_preview": "Quotation Format Preview"
     },
     "pricing": {
       "loading": "Loading current price…",
@@ -491,17 +629,178 @@
       "not_live": "Not live",
       "retry": "Retry",
       "unavailable": "Price unavailable",
-      "no_price": "No price for this customer",
+      "no_price": "No price for this depot",
       "no_customer": "Select a customer to see pricing",
       "not_priceable": "Customer not set up for pricing",
       "unauthorized": "Not allowed to see pricing",
       "backend_down": "Pricing service unavailable",
-      "offline": "Offline — price not available"
+      "offline": "Offline — price not available",
+      "no_depot": "Select a depot to see pricing",
+      "material_no_price": "Material doesn't have price",
+      "input_price_usd": "Input Price (USD)",
+      "manual_usd": "(Manual USD)"
     },
-    "coming_soon": {
-      "title": "Quotations & Orders are coming soon",
-      "subtitle": "Creating quotations and tracking orders will be available in a later version.",
-      "back_home": "Back to Home"
+    "customization": {
+      "save_drawing_failed": "Couldn't save the drawing. Please try again.",
+      "capture_drawing_failed": "Couldn't capture the drawing. Please try again."
+    },
+    "quotation_detail": {
+      "submitted": "Quotation submitted for approval.",
+      "repriced": "Prices updated from SAP.",
+      "cancelled": "Quotation cancelled.",
+      "conversion_next_phase": "Order conversion will be available in next phase.",
+      "price_changed_title": "Price Changed in SAP",
+      "price_changed_body": "{message}\n\nLive SAP prices have moved since this quotation was created. Please reprice to view the updated amounts before submitting.",
+      "reprice_and_review": "Reprice and Review",
+      "offline_draft": "Local Offline Draft: Saved on device (not yet on server).",
+      "revision": "Revision {number}",
+      "depot_fallback": "Depot #{id}",
+      "decision_reason": "Approver Decision Reason:",
+      "approval_trail": "Approval Trail",
+      "submit_for_approval": "Submit for Approval",
+      "withdraw": "Withdraw Quotation",
+      "withdraw_from_approval": "Withdraw from Approval",
+      "cancel_title": "Cancel Quotation?",
+      "cancel_body": "Are you sure you want to cancel this quotation? This action is permanent.",
+      "cancel_no": "No",
+      "cancel_yes": "Yes, Cancel",
+      "col_material": "Material",
+      "col_qty_price": "Qty & Price",
+      "col_net": "Net",
+      "discount_agreement": "Agreement: -{percent}%",
+      "discount_rep": "Rep: -{percent}%",
+      "subtotal_gross": "Subtotal (Gross)",
+      "discounts_total": "Discounts Total",
+      "tax_exempt": "Tax (Exempt)",
+      "total_net": "Total Net",
+      "by_actor": "By: {name}"
+    },
+    "shipment": {
+      "method": "Method of shipment",
+      "pick_up": "Pick up",
+      "pickup_location": "Pickup Location",
+      "select_factory": "Select Factory Location",
+      "select_branch": "Select Branch Location",
+      "default_address": "Default address (follow SAP)",
+      "new_address_option": "Input new address & phone number",
+      "new_address": "New Address",
+      "new_address_hint": "Enter new delivery address",
+      "phone_number": "Phone Number",
+      "phone_hint": "Enter contact phone number",
+      "cod": "Cash on Delivery (COD)",
+      "yes": "Yes",
+      "no": "No",
+      "invoice_type": "Type of Invoice",
+      "tax_invoice": "Tax Invoice",
+      "commercial_invoice": "Commercial Invoice"
+    },
+    "discount_summary": {
+      "rep_discount": "Rep Discount",
+      "free_rule": "Free {count}",
+      "free_goods_promotion": "Free Goods Promotion",
+      "unit_fallback": "unit",
+      "product_fallback": "Product",
+      "title": "Discount Summary",
+      "invoice_discounts": "Invoice Discounts",
+      "sku_discounts": "SKU Discounts",
+      "none": "None",
+      "total_discount": "Total Discount",
+      "total_free_units_one": "+{count} free unit",
+      "total_free_units_other": "+{count} free units",
+      "promotion_prefix": "Promotion: {name} — ",
+      "free_units_one": "{count} free {unit}",
+      "free_units_other": "{count} free {unit}s"
+    },
+    "quotation_list": {
+      "drafts": "Drafts",
+      "waiting": "Waiting",
+      "with_depot": "With Depot",
+      "won": "Won",
+      "closed": "Closed",
+      "items_one": "{count} item",
+      "items_other": "{count} items"
+    },
+    "quotation_items": {
+      "empty": "No items in quotation",
+      "title": "QUOTATION ITEMS ({count})",
+      "currency": "Currency: {currency}",
+      "line_no": "NO. {index}",
+      "material": "Material: {code}",
+      "sku": "SKU: {sku}",
+      "manual_price": "Manual Price (USD)",
+      "unit_price": "Unit Price (USD)",
+      "waiting_hq": "Waiting HQ",
+      "total_currency": "Total ({currency})"
+    },
+    "customize": {
+      "added": "Customized product added to quotation!",
+      "title": "Customize Product ✏️",
+      "section_drawing": "1. TECHNICAL DRAWING / SKETCH",
+      "section_specs": "2. SPECIFICATIONS FOR {category}",
+      "section_appearance": "3. APPEARANCE / FINISH",
+      "appearance_hint": "e.g. Galvanized, Powder-coated black, Raw/mill finish...",
+      "section_instructions": "{number}. ADDITIONAL INSTRUCTIONS",
+      "instructions_hint": "Specify steel grade, bending angles, or special instructions...",
+      "add_item": "Add Customized Item",
+      "field_length": "Length (mm)",
+      "field_width": "Width (mm)",
+      "field_height": "Height (mm)",
+      "field_thickness": "Thickness (mm)",
+      "field_diameter": "Diameter Ø (mm)",
+      "field_appearance": "Appearance",
+      "base_product": "Code: {code} • Base Unit: {unit}"
+    },
+    "promo_preview": {
+      "title": "QUOTATION FORMATTED PREVIEW"
+    },
+    "manual_discount": {
+      "title": "Line Manual Discount (%)",
+      "limit_note": "Your manual limit: {limit}%. Discounts above this require management approval.",
+      "standing_agreement": "Standing Agreement: -{percent}% ({category})",
+      "label": "Discount Percentage",
+      "hint": "e.g. 3.5",
+      "error_limit": "Limit is {limit}%",
+      "error_negative": "Must be positive",
+      "reset_chip": "0% (Reset)",
+      "max_chip": "{percent}% (Max)",
+      "apply": "Apply Discount"
+    },
+    "manual_price": {
+      "title": "Manual Unit Price (USD)",
+      "currency_per_unit": "Currency: USD (Default) · Per {unit}",
+      "save": "Save Price (USD)"
+    },
+    "drawing": {
+      "remove": "Remove Drawing",
+      "attached": "Custom Drawing Attached",
+      "replace": "Replace",
+      "attach_title": "Attach Product Drawing or Sketch",
+      "attach_subtitle": "Capture site measurements or technical sketches",
+      "camera": "Camera",
+      "gallery": "Gallery",
+      "take_photo": "Take Photo via Camera",
+      "choose_gallery": "Choose from Gallery"
+    },
+    "quotation_preview": {
+      "estimate_offline": "Estimate (SAP Offline)",
+      "approval_level": "Level {level} Approval Required",
+      "auto_approved": "Auto-Approved",
+      "agreement": "Agreement: {percent}% ({category})",
+      "exempt": "Exempt"
+    },
+    "quotation_item": {
+      "customized": "✏️ Customized",
+      "finish": "Finish: {finish}",
+      "note": "Note: {note}"
+    },
+    "discount_source": {
+      "rep_discount": "Rep discount",
+      "promotion": "Promotion",
+      "price_tier": "Volume price",
+      "depot_agreement": "Depot agreement"
+    },
+    "discount_section": {
+      "custom": "Custom"
     }
   },
   "leads": {
@@ -614,7 +913,7 @@
     },
     "won": {
       "title": "{company} — Won!",
-      "subtitle": "Nice work. One more step gets this to SAP so HQ can set up billing.",
+      "subtitle": "Nice work. One more step gets this to Admin so HQ can set up billing.",
       "final_value": "Final value ($)",
       "delivery_timeline": "Delivery timeline (optional)",
       "mark_as_won": "Mark as Won",
@@ -683,43 +982,108 @@
       "map": "Map",
       "capture": "Capture",
       "capture_failed": "Couldn't save the screenshot. Please try again.",
+      "document_saved": "Depot document saved to your photos",
+      "document_title": "Depot Information",
+      "document_generated": "Generated {date}",
       "tab_overview": "Overview",
       "tab_sales": "Sales",
       "tab_promos": "Promos",
       "sap_id": "SAP ID",
+      "null_value": "null",
+      "section_depot": "Depot",
+      "depot_id": "Depot ID",
+      "depot_code": "Depot Code",
+      "name_en": "Name (English)",
+      "name_kh": "Name (Khmer)",
+      "status": "Status",
+      "created_by": "Created By",
+      "created_at": "Created At",
+      "section_sales_team": "Sales Team",
+      "employee": "Employee",
+      "territory": "Territory",
+      "branch": "Branch",
+      "region": "Region",
+      "section_field_facts": "Field Facts",
+      "outlet_status": "Outlet Status",
+      "house_number": "House Number",
+      "address_line": "Address Line",
+      "section_suppliers": "Suppliers",
+      "supplier_primary": "Primary",
+      "supplier_secondary": "Secondary",
+      "supplier_tertiary": "Tertiary",
+      "section_management": "Management",
+      "tier": "Tier",
+      "distribution_channel": "Distribution Channel",
+      "sub_channel": "Sub-channel",
+      "key_account_id": "Key Account ID",
+      "coverage_type": "Coverage Type",
+      "visit": "Visit",
       "depot_type": "Depot Type",
       "action_tag": "Action Tag",
       "contact_person": "Contact Person",
       "phone_number": "Phone Number",
       "telegram": "Telegram",
       "address": "Address",
-      "coordinates": "Coordinates"
+      "coordinates": "Coordinates",
+      "closed_cannot_edit": "This depot is closed and cannot be edited.",
+      "updated_success": "Depot \"{name}\" updated successfully.",
+      "edit_depot": "Edit Depot",
+      "payment_status": "Payment Status",
+      "good_standing": "Good Standing",
+      "payment_term": "Payment Term",
+      "avg_rev_per_order": "Avg Rev per Order",
+      "latest_order": "Latest Order",
+      "view_order_history": "View Complete Order History",
+      "active_promotions": "Active Promotions",
+      "promos_available": "{count} Available",
+      "promo_on_invoice": "ON-INVOICE ({count})",
+      "promo_off_invoice": "OFF-INVOICE ({count})",
+      "promo_contract": "CONTRACT ({count})",
+      "browse_promotions": "Browse All Promotions",
+      "credit_term": "Credit Term",
+      "credit_term_days": "{n} days",
+      "no_sales_area": "No SAP sales area yet. Credit terms appear once SAP sets them up.",
+      "section_sales_areas": "Sales Area",
+      "division_label": "Division",
+      "credit_limit_date": "Credit Limit Date",
+      "depot_not_found": "No depot found with this code. It may be a branch or factory.",
+      "contact_phone": "Contact phone",
+      "section_contacts": "Contacts",
+      "position": "Position",
+      "section_general": "General Information",
+      "section_sales": "Sales",
+      "section_financial": "Financial",
+      "section_business_profile": "Business Profile",
+      "section_contact_audit": "Contact & Audit",
+      "section_audit": "Audit",
+      "group_depot_info": "Depot Info",
+      "group_sales_contacts": "Sales & Contacts"
     },
-    "list": "Customer List",
-    "add": "Register Customer",
+    "list": "Depot List",
+    "add": "Register Depot",
     "credit_limit": "Credit Limit",
-    "no_depots": "No customers found",
+    "no_depots": "No depots found",
     "nothing_here": "Nothing here yet",
     "all": "All",
     "recent": "Recent",
     "favorites": "Favorites",
     "unassigned": "Unassigned",
     "group": {
-      "depot": "Customer",
+      "depot": "Depot",
       "sales_org": "Sales Org",
       "division": "Division"
     },
     "search_hint": "Search shop, code, owner, phone…",
     "calling": "Calling {phone}…",
     "visit_logged": "Visit logged",
-    "customer_fallback": "Customer",
+    "customer_fallback": "Depot",
     "overview": "Overview",
     "contacts": "Contacts",
     "sales_history": "Sales History",
     "sap_info": "SAP Information",
     "timeline": "Timeline",
     "no_activity": "No activity yet",
-    "customer_code": "Customer Code",
+    "customer_code": "Depot Code",
     "phone": "Phone",
     "email": "Email",
     "address": "Address",
@@ -728,10 +1092,10 @@
     "lifetime_value": "Lifetime Value",
     "last_order": "Last Order",
     "no_orders": "No orders yet",
-    "sap_customer_id": "SAP Customer ID",
+    "sap_customer_id": "SAP Depot ID",
     "last_synced": "Last Synced",
     "add_note": "Add Note",
-    "note_hint": "Write a note about this customer…",
+    "note_hint": "Write a note about this depot…",
     "save_note": "Save Note",
     "new_opportunity": "New Opportunity for {shop}",
     "new_opportunity_label": "New Opportunity",
@@ -750,13 +1114,15 @@
     "reset": "Reset",
     "search_filter_hint": "Search…",
     "no_matches": "No matches",
-    "downloading": "Downloading customer directory…",
+    "downloading": "Downloading depots directory…",
     "syncing": "Syncing latest changes…",
     "sync_updated": "{count} updated",
     "sync_removed": ", {count} removed",
     "status": {
       "draft": "Draft",
       "pending_approval": "Pending approval",
+      "approved": "Approved",
+      "rejected": "Rejected",
       "active": "Active",
       "suspended": "Suspended",
       "closed": "Closed",
@@ -776,8 +1142,88 @@
     "creating_opportunity": "Creating opportunity for {product}…",
     "lookup_code": "Look up {code} on the server",
     "lookup_searching": "Checking with the server…",
-    "lookup_absent": "No customer with that code exists. You can register the shop.",
-    "lookup_unavailable": "Cannot check right now. Try again later."
+    "lookup_absent": "No depot with that code exists. You can register it.",
+    "lookup_unavailable": "Cannot check right now. Try again later.",
+    "error": {
+      "not_found": "Depot not found.",
+      "no_reference": "The server accepted the registration but returned no reference for it. Check the depot list before submitting again."
+    },
+    "hc_visit": {
+      "title": "Add HC Visit",
+      "question": "Do you want to add this depot to your HC (Ad-hoc) visits for today?",
+      "closed_warning": "This depot is closed (terminal status). HC visits cannot be scheduled for closed depots.",
+      "today": "Today: {date}",
+      "note_label": "Visit Objective / Note (Optional)",
+      "note_hint": "e.g. Follow-up on quotation, collect payment, inspect stock...",
+      "confirm": "Add Visit"
+    },
+    "edit": {
+      "title": "Edit Depot Details",
+      "profile_fallback": "Depot Profile",
+      "closed_notice": "This depot is Closed and immutable. Changes cannot be submitted (Depot.Closed).",
+      "section_identity": "Outlet Identity",
+      "shop_name": "Shop / Outlet Name (EN)*",
+      "shop_name_hint": "e.g. Sok Heng Hardware",
+      "shop_name_required": "Shop name is required",
+      "shop_name_km": "Shop Name (Khmer)",
+      "shop_name_km_hint": "e.g. ហាង សុខ ហេង",
+      "owner": "Owner / Contact Person",
+      "owner_hint": "e.g. Sok Heng",
+      "section_contact": "Contact Information",
+      "phone": "Primary Phone Number*",
+      "phone_hint": "e.g. 012 345 678",
+      "phone_required": "Phone number is required",
+      "messaging_hint": "e.g. +85512345678 or @handle",
+      "section_location": "Location & Address",
+      "street": "Street Address",
+      "street_hint": "e.g. Street 271, Sangkat Phsar Deum Thkov",
+      "district": "District / Khan",
+      "district_hint": "e.g. Chamkarmon",
+      "province": "Province / City",
+      "province_hint": "e.g. Phnom Penh",
+      "gps": "GPS: {lat}, {lng}",
+      "sap_managed": "SAP ERP Managed Fields (Read-Only)",
+      "sap_depot_code": "SAP Depot Code",
+      "pending": "Pending",
+      "depot_group": "Depot Group",
+      "standard": "Standard",
+      "sales_org_division": "Sales Org / Division"
+    },
+    "awaiting": {
+      "audience": "Waiting approval"
+    },
+    "non_bp": {
+      "audience": "Non-BP Depots",
+      "empty_title": "No Non-BP depots to show yet",
+      "empty_hint": "They will be listed here once the server keeps them apart from depots.",
+      "register_button": "Register Non-BP depot"
+    },
+    "draft": {
+      "error": {
+        "validation": "Some details need fixing. Check the highlighted fields.",
+        "invalid_file": "This file can't be used. Choose a JPG, PNG, WebP, PDF or DOCX file that isn't password-protected.",
+        "limit_reached": "This depot already has the most files allowed (20 files or 100 MB).",
+        "id_in_use": "This depot was already saved from another account or with different details. Start a new registration.",
+        "not_found": "This depot draft could not be found. It may have been removed.",
+        "forbidden": "You don't have permission to change this depot draft.",
+        "too_large": "This file is too large. Choose one under 10 MB.",
+        "rate_limited": "Too many requests. Wait a moment, then try again.",
+        "conflict": "This depot draft was changed elsewhere. Reload it and try again.",
+        "session": "Your session has ended. Sign in again to continue.",
+        "server": "The server couldn't complete this. Try again shortly.",
+        "unreadable": "The server's answer couldn't be read. Try again shortly."
+      }
+    },
+    "filters": {
+      "advanced": "Advanced Filters",
+      "status": "Status",
+      "region": "Region",
+      "type": "Type",
+      "any": "All",
+      "apply": "Apply Filters",
+      "clear": "Clear"
+    },
+    "register_fab": "Register Depot"
   },
   "my_visits": {
     "title": "My Visits",
@@ -786,7 +1232,14 @@
     "add_my_visits": "Add My Visits",
     "details": "Visit Details",
     "calendar": {
-      "todays_stops": "Today's routes"
+      "todays_stops": "Today's routes",
+      "weekday_mo": "Mo",
+      "weekday_tu": "Tu",
+      "weekday_we": "We",
+      "weekday_th": "Th",
+      "weekday_fr": "Fr",
+      "weekday_sa": "Sa",
+      "visits_count": "{count} Visits"
     },
     "flow": {
       "dispatch_title": "Visit Route",
@@ -827,6 +1280,7 @@
       "back": "Back",
       "no_stop": "No stop selected",
       "offline_saved": "Offline — changes are saved on your device",
+      "offline_saved_web": "Offline — keep this tab open. Closing it loses changes not yet synced.",
       "today": "Today",
       "no_routes_today": "No routes assigned for today",
       "stops_today": "Stops today",
@@ -954,7 +1408,10 @@
       "product_name": "Product name",
       "quantity_returned": "Quantity returned",
       "update_stock": "Update Stock Status",
-      "stock_status": "Stock status"
+      "stock_status": "Stock status",
+      "quantity": "Quantity",
+      "reason": "Reason",
+      "amount": "Amount"
     },
     "timeline": {
       "order": "Order: {product}",
@@ -1098,7 +1555,12 @@
       "photo_failed": "Could not take the photo. Please try again.",
       "details_loading": "Loading outlet details…",
       "details_offline": "You are offline. Showing what the route sync already knows.",
-      "details_unavailable": "Outlet details could not be loaded. Showing what the route sync already knows."
+      "details_unavailable": "Outlet details could not be loaded. Showing what the route sync already knows.",
+      "example_outlet_action": "Attack",
+      "example_payment_status": "Good Standing",
+      "promo_on_invoice": "ON-INVOICE ({count})",
+      "promo_off_invoice": "OFF-INVOICE ({count})",
+      "promo_contract": "CONTRACT ({count})"
     },
     "stop_dashboard": {
       "search_hint": "Search shop, code, route, address",
@@ -1132,21 +1594,33 @@
     "inventory": {
       "title": "Inventory Availability",
       "required": "Required",
-      "instruction": "Take one photo that shows the depot's stock.",
+      "instruction": "Capture three views of the stock: a wide overview, the storage area, and the products up close.",
       "take_photo": "Take photo",
+      "upload_photo": "Upload",
       "retake": "Retake photo",
+      "photos_needed": "Add all 3 photos to continue",
+      "photo_progress": "{count} of {total} photos added",
+      "guide": {
+        "overview_title": "Wide stock overview",
+        "overview_hint": "Step back and show the full stock area.",
+        "storage_title": "Storage and racks",
+        "storage_hint": "Capture the shelves, racks, or storage layout.",
+        "product_title": "Products up close",
+        "product_hint": "Show the steel products clearly in the frame."
+      },
       "photo_empty": "No photo yet. Open the camera to take one.",
       "camera_unavailable": "The camera isn't available on this device.",
       "photo_label": "Inventory photo",
       "photo_needed": "Take a photo to continue",
-      "submit": "Submit photo",
-      "save_failed": "Couldn't save the photo. Try again.",
+      "submit": "Submit photos",
+      "save_failed": "Couldn't save all photos. Try again.",
       "completion": {
-        "title": "Inventory photo submitted",
-        "subtitle": "The stock photo for {outlet} is saved and will sync with this visit.",
+        "title": "Inventory photos submitted",
+        "subtitle": "All three stock photos for {outlet} are saved and will sync with this visit.",
         "next_question": "What would you like to do next?",
         "complete_visit": "Complete visit"
-      }
+      },
+      "view_full_screen_hint": "Open image full screen and zoom"
     },
     "check_in_verification": {
       "title": "Location Verification",
@@ -1197,7 +1671,8 @@
         "ambiguous": "That depot needs to be fixed in the system. Please contact support.",
         "reference": "Reference: {id}"
       },
-      "not_in_sap": "Not in SAP yet — can't be added to today."
+      "not_in_sap": "Not in SAP yet — can't be added to today.",
+      "already_visited_today": "{name} already had its ad hoc visit today. It can be added again tomorrow."
     },
     "stops_map": {
       "open": "View stops on map",
@@ -1252,38 +1727,279 @@
       "other": "Other",
       "confirm": "Check out"
     },
-    "survey": {
-      "hero_title": "Show us the stock at the depot",
-      "hero_body": "Take or upload at least {min} photos of the depot's visible stock. You can add up to {max} photos.",
-      "hero_tip": "You can choose several photos at once, or take new ones with the camera.",
-      "photos_title": "Photos ({count}/{max})",
-      "photos_rule": "At least {min} photos · Up to {max}",
-      "add_photos": "Take or upload photos",
-      "add_more": "Add more",
-      "add_more_hint": "(up to {max})",
-      "still_add": "You can still take or upload more photos. Tap Add more.",
-      "upload": "Upload from gallery",
-      "upload_hint": "Select several photos",
-      "tips_title": "Photo tips",
-      "tip_light": "Take clear, well-lit photos",
-      "tip_stock": "Show the actual stock at the depot",
-      "tip_angles": "Include different angles if you can",
-      "limit": "Up to {max} photos.",
-      "photo_number": "Photo {number}",
-      "remove": "Remove photo",
-      "photo_failed": "Couldn't get the photo. Try again.",
-      "photos_needed": "Add {count} more photo(s) to continue",
-      "submit_hint": "{count} photos ready",
-      "submit": "Submit"
+    "order_history": {
+      "title": "Order History (SAP)",
+      "search_hint": "Search Order ID or SAP Doc No...",
+      "filter_all": "All ({count})",
+      "status_completed": "Completed",
+      "status_in_delivery": "In Delivery",
+      "status_pending": "Pending",
+      "status_cancelled": "Cancelled",
+      "empty": "No orders found",
+      "total_orders": "Total Orders",
+      "orders_count": "{count} Orders",
+      "total_sales": "Total Sales Value",
+      "sap_doc": "SAP DOC: {number}",
+      "reordering": "Re-ordering items from {order}...",
+      "reorder": "Re-order"
     },
-    "steps": {
-      "stop": "Stop",
-      "details": "Details",
-      "check_in": "Check in",
-      "inventory": "Inventory",
-      "check_out": "Check out",
-      "semantics": "Visit step {index} of {total}: {name}",
-      "all_done": "Visit complete: all steps done"
+    "tier": {
+      "silver": "Silver",
+      "diamond": "Diamond"
+    },
+    "progress_card": {
+      "title": "Today's visit progress",
+      "planned_visits": "planned visits",
+      "in_plan": "{count} In Plan",
+      "skipped": "{count} skipped",
+      "remaining": "{count} Remaining"
+    },
+    "check_in_messages": {
+      "outside_geofence": "You're outside the depot's geofence.",
+      "low_accuracy": "GPS accuracy too low (±{accuracy}m) — move to open sky and retry.",
+      "mock_location": "Mock/fake location detected.",
+      "simulated_location": "Simulated location detected (allowed in this build).",
+      "disable_vpn": "Disable your VPN to check in.",
+      "vpn_warning": "VPN or proxy detected — location verification may be unreliable.",
+      "no_fix_unverified": "No GPS fix yet — this check-in is recorded as unverified.",
+      "no_depot_location": "This depot has no recorded location — the geofence could not be checked.",
+      "no_stop_selected": "No stop selected — go back and open the stop again.",
+      "unverified_with_reason": "Checked in without location verification. Reason: {reason}",
+      "outside_with_reason": "Checked in outside the geofence. Reason: {reason}"
+    },
+    "remote_check_in": {
+      "title": "Check in from here?",
+      "body": "You're not at the recorded location for this stop. You can still check in, but you need to say why.",
+      "field_label": "Reason (required)",
+      "hint": "e.g. depot gate is 200 m from the pin on the map",
+      "confirm": "Check in anyway",
+      "cancel": "Go back",
+      "preset_far_entrance": "Depot entrance is far from the recorded pin",
+      "preset_no_signal_warehouse": "No GPS signal inside the warehouse",
+      "preset_wrong_pin": "Depot pin on the map is wrong",
+      "preset_other_location": "Met the depot at a different location",
+      "no_gps_preset_building": "No GPS signal inside the building",
+      "no_gps_preset_searching": "Location stayed on \"searching\" for a long time",
+      "no_gps_preset_metal_roof": "Inside a warehouse with a metal roof",
+      "no_gps_preset_phone": "Phone GPS not working today",
+      "distance_from_pin": "{distance} m from the recorded location.",
+      "more_chars": "{count} more characters needed"
+    },
+    "check_in_dialog": {
+      "searching_body": "Getting your position. This usually takes a few seconds.",
+      "services_off_title": "Location is off",
+      "services_off_body": "Turn on Location to verify your check-in. We will pick it up automatically when you come back.",
+      "denied_title": "Location permission needed",
+      "denied_body": "Allow location access so your check-in can be verified.",
+      "denied_forever_body": "Location access is blocked for this app. Enable it in Settings → Permissions → Location.",
+      "unavailable_title": "No GPS signal here",
+      "unavailable_body": "We could not get a position after a full search. You can try again, or check in without GPS — you will be asked for a short reason and the visit is marked unverified.",
+      "weak_title": "Weak GPS signal",
+      "weak_body": "You look close enough, but the signal is too coarse to be sure. It is still improving — wait a moment, or continue with a reason.",
+      "accuracy": "Accuracy",
+      "strong": "Strong",
+      "fair": "Fair",
+      "weak": "Weak",
+      "searching_for": "Searching",
+      "taking_longer": "Taking longer than usual…",
+      "refresh": "Refresh",
+      "without_gps": "Check in without GPS",
+      "turn_on": "Turn on location",
+      "allow": "Allow location",
+      "open_settings": "Open settings",
+      "outlet": "Outlet",
+      "tip_window": "Tip: step near a window or doorway.",
+      "tip_wifi": "Tip: keep Wi-Fi switched on — it speeds up location, even offline.",
+      "tip_still": "Tip: hold the phone still for a moment."
+    },
+    "check_in_submit": {
+      "no_response": "Check-in did not respond. Please check your connection and try again.",
+      "route_loading": "Route is still loading. Please wait a moment and try again.",
+      "accuracy_too_low": "GPS accuracy too low (±{accuracy} m).",
+      "no_gps_title": "Check in without GPS?",
+      "no_gps_intro": "Your position could not be found here. You can still check in — the visit is marked unverified and your reason is sent with it.",
+      "no_gps_blocked": "No GPS position after a full search."
+    },
+    "skip_visit": {
+      "title": "Skip Visit",
+      "reason": "Reason",
+      "photo_optional": "Photo (optional)",
+      "submit": "Submit Skip",
+      "reason_depot_unavailable": "Depot not available",
+      "reason_no_stock_needed": "No stock needed",
+      "reason_access_denied": "Access denied"
+    },
+    "plans": {
+      "title": "My visits",
+      "loading": "Loading your visits",
+      "today": "Today",
+      "no_date": "Date not set",
+      "unnamed_outlet": "Unnamed outlet",
+      "visit_count": "{count} visits",
+      "summary": {
+        "total": "planned visits",
+        "completed": "Completed",
+        "remaining": "Remaining",
+        "skipped": "Skipped",
+        "missed": "Missed",
+        "ad_hoc": "Ad hoc visits: {count}",
+        "progress": "Visits completed",
+        "completed_of": "{done} of {total} completed"
+      },
+      "status": {
+        "active": "Active",
+        "planned": "Planned",
+        "checked_in": "Checked in",
+        "completed": "Completed",
+        "skipped": "Skipped",
+        "missed": "Missed",
+        "draft": "Draft",
+        "cancelled": "Cancelled",
+        "expired": "Expired",
+        "unknown": "Unknown",
+        "ad_hoc": "Hoc Visit"
+      },
+      "empty": {
+        "title": "No visits today",
+        "hint": "You have no visits planned for today. Pull down to check again."
+      },
+      "error": {
+        "title": "Couldn't load your visits",
+        "load_failed": "Something went wrong while loading your visits. Try again.",
+        "unreadable": "The server sent a response the app couldn't read. Try again later.",
+        "session": "Your session has ended. Sign in again to see your visits.",
+        "forbidden": "Visit plans are only available to sales employees.",
+        "visit_in_progress": "Finish or skip your visit at {name} before starting another."
+      },
+      "empty_day": {
+        "title": "No visits on this day",
+        "hint": "Pick a day with a dot on the calendar to see its visits."
+      },
+      "map": {
+        "title": "Visits on map",
+        "pending_title": "Visit locations are coming soon",
+        "pending_hint": "Pins will appear here once the server sends each outlet's location. Your visits for the day are listed below."
+      },
+      "field": {
+        "null_value": "Null"
+      },
+      "action": {
+        "open_map": "Open in Maps",
+        "no_location": "No location for this visit yet",
+        "skip": "Skip visit",
+        "start_visit": "Start visit",
+        "continue_visit": "Continue visit"
+      },
+      "skip": {
+        "done": "Visit skipped",
+        "error": {
+          "not_today": "This visit can only be skipped on its own date.",
+          "conflict": "This visit can no longer be skipped. Pull to refresh.",
+          "not_found": "This visit is no longer in your plan. Pull to refresh.",
+          "invalid_reason": "That reason wasn't accepted. Pick another and try again.",
+          "failed": "Couldn't skip this visit. Try again."
+        }
+      },
+      "depot_unavailable": "This depot's details aren't available yet. Sync depots or try again online.",
+      "check_in": {
+        "title": "Visit Plan Check-in",
+        "done": "Checked in",
+        "reason": {
+          "title": "Reason for checking in here",
+          "hint": "You're more than 100 m from the depot. Pick a reason to check in anyway.",
+          "description": "Describe what happened",
+          "traffic": "Traffic",
+          "customerRequest": "Customer request",
+          "depotMoved": "Depot moved",
+          "gpsAccuracy": "GPS accuracy",
+          "roadBlocked": "Road blocked",
+          "other": "Other"
+        },
+        "error": {
+          "load": "Couldn't open this visit",
+          "reason": "You're outside the depot's zone. Add a reason, then check in again.",
+          "not_today": "This visit can only be checked in on its own date.",
+          "conflict": "This visit is already checked in, finished or skipped. Pull to refresh.",
+          "not_found": "This visit is no longer in your plan. Pull to refresh.",
+          "no_fix": "Your location wasn't found. Refresh it and try again.",
+          "photo": "A photo was refused. Use a JPG or PNG under 10 MB and try again.",
+          "busy": "Too many check-ins just now. Wait a minute and try again.",
+          "invalid": "The check-in wasn't accepted. Check the photos and reason and try again.",
+          "failed": "Couldn't check in. Try again.",
+          "server": "The server had a problem. Your photos are kept — try again in a moment."
+        },
+        "notes": {
+          "label": "Notes (optional)",
+          "hint": "Anything worth noting about this visit"
+        },
+        "hint": {
+          "location": "Waiting for your location…",
+          "photo": "Take a shop photo to check in.",
+          "reason": "Pick a reason and describe it — you're outside the depot's zone."
+        },
+        "queued": "Checked in on this phone — it will be sent when you're back online.",
+        "reason_sheet": {
+          "title": "You're {distance} from the depot",
+          "title_unknown": "You're outside the depot's zone",
+          "body": "Checking in more than {radius} m away needs a reason. Pick one to continue.",
+          "confirm": "Check in"
+        }
+      },
+      "saved_copy": "Offline — showing your plan as saved at {time}.",
+      "ad_hoc": {
+        "error": {
+          "not_found": "This outlet can't be visited — it isn't in your list any more. Refresh depots and try again.",
+          "limit": "You've reached today's limit for ad hoc visits.",
+          "retry": "Couldn't start the visit. Try again.",
+          "busy": "Too many visits started just now. Wait a minute and try again.",
+          "invalid": "The visit wasn't accepted. Refresh depots and try again.",
+          "server": "The server had a problem. Try again in a moment.",
+          "failed": "Couldn't start the visit. Try again.",
+          "offline": "Ad hoc visits need an internet connection. Connect and try again."
+        }
+      },
+      "inventory": {
+        "uploaded": "All three stock photos for {outlet} are saved to this visit. They're sent as soon as you're online.",
+        "error": {
+          "full": "This visit already holds the most photos it can.",
+          "conflict": "This visit isn't checked in any more, so photos can't be added. Pull to refresh.",
+          "again": "Another upload for this visit landed first. Tap Submit again.",
+          "busy": "Too many uploads just now. Wait a minute and try again.",
+          "server": "The server had a problem. Your photos are kept — try again in a moment.",
+          "failed": "Couldn't upload the photos. Try again."
+        }
+      },
+      "check_out": {
+        "action": "Check out",
+        "locating": "Finding your location…",
+        "done": "Visit checked out",
+        "error": {
+          "no_fix": "Your location wasn't found. Turn on location and try again.",
+          "photo_required": "Upload at least one stock photo before checking out.",
+          "conflict": "This visit isn't checked in, or is already closed. Pull to refresh.",
+          "busy": "Too many requests just now. Wait a minute and try again.",
+          "invalid": "The check-out wasn't accepted. Try again.",
+          "server": "The server had a problem. Try again in a moment.",
+          "failed": "Couldn't check out. Try again."
+        },
+        "queued": "Visit checked out on this phone — it will be sent when you're back online.",
+        "complete": "Complete the visit",
+        "notes": {
+          "label": "Visit notes (optional)",
+          "hint": "Anything worth noting about this visit"
+        }
+      },
+      "sync": {
+        "pending": "Waiting to sync",
+        "needs_attention": "Needs attention",
+        "held": "The server didn't accept this visit's offline work.",
+        "held_title": "This visit wasn't sent",
+        "held_hint": "Nothing is lost: the check-in, photos and check-out are kept on this phone. Fix the problem (for a missing reason, start the visit again and add one), then resend.",
+        "resend": "Resend",
+        "discard": "Discard",
+        "discard_title": "Discard this visit's offline work?",
+        "discard_body": "The check-in, photos and check-out saved on this phone for this visit will be deleted. This can't be undone."
+      }
     }
   },
   "completed": {
@@ -1342,7 +2058,8 @@
     },
     "filter": {
       "all": "All",
-      "no_results": "No notifications match this filter."
+      "no_results": "No notifications match this filter.",
+      "unread": "Unread"
     },
     "time": {
       "now": "now",
@@ -1445,10 +2162,20 @@
       "set": "Set"
     },
     "needs_ack": "Needs your acknowledgement",
-    "coming_soon": {
-      "title": "Notifications are coming soon",
-      "subtitle": "Route updates, approvals and reminders will appear here in the next version."
-    }
+    "error": {
+      "update_failed": "Could not update your notifications.",
+      "already_dealt_with": "This has already been dealt with.",
+      "ack_before_clear": "This needs to be acknowledged before it can be cleared.",
+      "unreachable": "Could not reach your notifications.",
+      "sign_in_for_settings": "Sign in to change your notification settings.",
+      "save_settings_failed": "Could not save your notification settings."
+    },
+    "empty_unread": "You're all caught up. No unread notifications.",
+    "load_failed": "Couldn't load notifications. Check your connection and try again.",
+    "end_of_list": "No more notifications",
+    "marked_read": "Marked {n} as read",
+    "all_read_already": "Everything is already read",
+    "link_unsupported": "There's nothing to open for this notification in this version of the app."
   },
   "add_depot": {
     "compliance": "Compliance Documents",
@@ -1456,23 +2183,27 @@
     "mobile_belongs_to": "This mobile number is filed against {name}",
     "mobile_is_personal": "The contact person's own mobile, not the shop line",
     "contact_name": "Contact Name",
-    "review_title": "Review Customer Information",
+    "review_title": "Review Depot Information",
     "language": "Language",
     "price_group": "Price Group",
     "contact_name_hint": "Enter contact person's name",
-    "credit_notice": "Customer will be eligible for credit once this information is approved by HQ.",
+    "credit_notice": "This depot will be eligible for credit once its information is approved by HQ.",
     "error": {
       "required": "This field is required",
       "invalid_phone": "Invalid phone number",
       "max_40": "Maximum 40 characters",
+      "max_20_depots": "Choose at most 20 depots",
       "must_be_khmer": "Enter a Khmer name",
       "gps_required": "GPS location is required",
       "gps_outside_kh": "GPS location must be in Cambodia",
       "photo_required": "This photo is required",
       "vat_tin_required": "VAT/TIN is required",
-      "submit": "Unable to submit customer",
+      "submit": "Unable to submit depot",
       "postal_code": "Enter a valid postal code",
-      "rep_identity_unavailable": "Your employee number could not be confirmed, so the depot was not sent. Your form is saved — sign in again, then send."
+      "rep_identity_unavailable": "Your employee number could not be confirmed, so the depot was not sent. Your form is saved — sign in again, then send.",
+      "pick_at_least_one": "Pick at least one",
+      "share_total_100": "The two shares must add up to 100%",
+      "invalid_amount": "Enter a valid amount"
     },
     "gps_hint": "Tap to capture current location",
     "gps_save": "Save GPS Location",
@@ -1501,16 +2232,17 @@
       "address": "Address & location",
       "contact": "Contact details",
       "sales_terms": "Sales terms",
-      "documents": "Documents & review"
+      "documents": "Documents & review",
+      "sales_performance": "Sales & performance"
     },
-    "subtitle": "Fill in the new customer information",
-    "success": "Customer added successfully!",
+    "subtitle": "Fill in the new depot information",
+    "success": "Depot added successfully!",
     "tax_paper": "Tax Patent / Certificate",
     "tax_paper_attached": "Tax document attached",
     "tax_paper_hint": "Attach tax document",
     "telemetry": "GPS Location",
-    "title": "Add customer",
-    "customer_code": "Customer code",
+    "title": "Register depot",
+    "customer_code": "Depot code",
     "customer_code_hint": "e.g. ISI-PP0099",
     "address": "Address",
     "address_hint": "Street and sangkat",
@@ -1525,7 +2257,7 @@
     "name_kh_hint": "Enter Khmer business name",
     "name2": "Additional name",
     "name2_hint": "Optional additional name",
-    "code_assigned_by_sap": "Customer code will be assigned by SAP",
+    "code_assigned_by_sap": "Depot code will be assigned by SAP",
     "more_details": "More details",
     "show_less": "Show less",
     "street": "Street",
@@ -1545,7 +2277,7 @@
     "sales_office": "Sales office",
     "sales_group": "Sales group",
     "division": "Division",
-    "depot_group": "Customer group (trade type)",
+    "depot_group": "Depot group (trade type)",
     "price_group_auto": "Price group is set automatically",
     "delivery_priority": "Delivery priority",
     "shipping_condition": "Shipping condition",
@@ -1574,13 +2306,13 @@
     "review": "Review",
     "queued_offline": "Saved locally and awaiting sync",
     "queued_needs_review": "Sent, but no reply came back. It is in the Sync Center — check the depot list before sending it again.",
-    "documents_partially_sent": "Customer saved. {count} photo(s) did not upload — reopen the customer to retry.",
+    "documents_partially_sent": "Depot saved. {count} photo(s) did not upload — reopen the depot to retry.",
     "draft_resumed": "Resumed your unfinished registration",
     "send_for_credit_approval": "Send for credit approval",
     "commune": "Commune / Sangkat",
     "unrecognised_code": "{code} (not in the current list)",
     "submit_progress": {
-      "title": "Registering customer",
+      "title": "Registering depot",
       "validating": "Checking the form",
       "registering": "Saving to the server",
       "uploading_photos": "Uploading photos",
@@ -1596,7 +2328,104 @@
     "search_term2_hint": "e.g. shop short name",
     "search_term2_note": "Optional second search key.",
     "success_pending_approval": "Sent for approval. The depot cannot be ordered against yet.",
-    "success_with_code": "Depot {code} created."
+    "success_with_code": "Depot {code} created.",
+    "country_kh": "KH - Cambodia",
+    "region_r01": "R01 - Central Area",
+    "verified": "Verified",
+    "gps_captured": "GPS Captured",
+    "search_or_select_location": "Search or select location",
+    "section_hint": {
+      "identity": "Please provide depot identity details",
+      "address": "Please provide the depot's address information",
+      "contact": "Please provide depot contact details",
+      "sales_terms": "Please configure business and payment terms",
+      "documents": "Please provide required verification documents",
+      "review": "Please review all information before submission",
+      "sales_performance": "What the depot sells and how much"
+    },
+    "documents_attached": "{count} document(s) attached",
+    "remark_line": "Remark: {remark}",
+    "tablet": {
+      "stage_general": "Identity & address",
+      "stage_contact": "Contact details & sales terms",
+      "stage_review": "Review & send to Headquarters",
+      "stage_contact_subtitle": "Configure contact details, commercial pricing & tax classification",
+      "stage_documents_subtitle": "Upload required verification photos and internal remarks",
+      "stage_review_subtitle": "Verify all registered depot information before final submission",
+      "progress_general": "1. General & Location",
+      "progress_contact": "2. Contact & Terms",
+      "progress_documents": "3. Documents & Notes",
+      "progress_preview": "4. Preview & Submit",
+      "identity_subtitle": "Who is the depot (BP header & names)",
+      "address_subtitle": "Where are they located (Address & GPS)",
+      "contact_subtitle": "How do we reach them (Phones & Contact person)",
+      "sales_terms_subtitle": "Commercial setup (Pricing, Payment & Tax)",
+      "documents_subtitle": "Verification documents & business license photos",
+      "remark_subtitle": "Internal notes & instructions for Sales HQ",
+      "back_to_edit": "Back to Edit",
+      "previous": "Previous",
+      "preview_review": "Preview & Review"
+    },
+    "preview": {
+      "new_depot": "New Depot",
+      "credit_required": "Credit Approval Required",
+      "ready": "Ready for Admin",
+      "account_group": "Account Group",
+      "trade_name": "Trade Name (Name 2)",
+      "co_name": "c/o Name (to SAP)",
+      "full_address": "Full Address",
+      "gps_coordinates": "GPS Coordinates",
+      "postal": "Postal: {code}",
+      "taxable": "1 - Taxable",
+      "non_taxable": "0 - Non-taxable",
+      "attachments": "Attachments",
+      "attachments_value": "{count} attached ({kinds})"
+    },
+    "registration_type": {
+      "label": "Register as",
+      "depot": "Depot",
+      "non_bp": "Non-BP depot"
+    },
+    "supplying_depots": {
+      "label": "Buys from depots",
+      "placeholder": "Tap to choose the depots it buys from",
+      "title": "Supplying depots",
+      "hint": "Choose 1 to 20 of your depots that have an SAP number.",
+      "search": "Search name or depot number",
+      "empty": "No depots with an SAP number. Sync your depots and try again.",
+      "done": "Done ({count})"
+    },
+    "survey": {
+      "q1": "Which product lines does the depot sell?",
+      "q1_1": "Which steel products does the depot sell?",
+      "q2": "How much does the depot sell per month in each product line? (2026 average, USD)",
+      "q2_note": "Construction materials include boards, wall and ceiling frames, electrical and cementitious products.",
+      "q3": "Who does the depot sell its steel to?",
+      "q3_note": "Share of total sales value, not the number of customers.",
+      "q4": "How much steel does the depot buy per month from each company? (yearly average, USD)",
+      "share_depots": "Sold to depots",
+      "share_end_users": "Sold to end users (contractors and home owners)",
+      "total": "Total",
+      "optional": "Optional",
+      "per_month": "{amount} / month",
+      "saved_on_device": "Saved on this device only — not sent with the registration yet",
+      "line": {
+        "steel": "Steel products",
+        "construction": "Construction materials"
+      },
+      "steel_type": {
+        "tube": "Steel tube",
+        "zincSheet": "Zinc roofing sheet",
+        "rebar": "Steel bar"
+      },
+      "supplier": {
+        "isi": "ISI",
+        "gi": "GI",
+        "kbs": "KBS",
+        "chipMong": "Chip Mong",
+        "others": "Others"
+      }
+    }
   },
   "add_depot.shop_types": {
     "hardware_shop": "Hardware Shop",
@@ -1624,6 +2453,7 @@
     "inactive": "Inactive",
     "edit_profile": "Edit Profile",
     "change_password": "Change Password",
+    "lessons_hint": "Practice lessons and the app tour",
     "logout": "Log Out",
     "logout_confirm_title": "Log out?",
     "logout_confirm_body": "Everything stored on this device will be removed. You will need to sign in again to continue.",
@@ -1647,6 +2477,7 @@
     "section_account": "Account",
     "employee_id": "Employee ID",
     "department": "Department",
+    "sales_org": "Sales organization",
     "job_title": "Job title",
     "depot": "Depot",
     "preferred_language": "Preferred language",
@@ -1658,7 +2489,7 @@
     "not_set": "Not set",
     "lang_km": "Khmer",
     "lang_en": "English",
-    "managed_note": "Email, phone, territory and depot are managed by your administrator.",
+    "managed_note": "Email, phone, sales organization, territory and depot are managed by your administrator.",
     "change_photo": "Change photo",
     "take_photo": "Take photo",
     "choose_photo": "Choose from gallery",
@@ -1751,8 +2582,8 @@
       "message": "Tap “My Visits” to plan and track site visits."
     },
     "customers": {
-      "title": "My Customers",
-      "message": "Tap “My Customers” to view your accounts."
+      "title": "My Depots",
+      "message": "Tap “My Depots” to view your depots."
     },
     "orders": {
       "title": "Quotes & Orders",
@@ -1768,7 +2599,7 @@
     },
     "done": {
       "title": "You're all set 🎉",
-      "message": "That's the tour. Time to close some deals!"
+      "message": "That's the tour. Tap the assistant on Home any time for hands-on practice lessons."
     },
     "cta": {
       "start": "Start tour",
@@ -1776,9 +2607,227 @@
       "skip_step": "Skip",
       "skip_tour": "Skip tour",
       "finish": "Done",
-      "dismiss": "Dismiss"
+      "dismiss": "Dismiss",
+      "start_lesson": "Start practice",
+      "got_it": "Got it",
+      "exit_lesson": "Exit lesson",
+      "minimize": "Minimise guide"
     },
-    "resume_hint": "Resume tour"
+    "resume_hint": "Resume tour",
+    "lesson_step": "Step {n} of {total}",
+    "depots": {
+      "title": "Depots",
+      "message": "Tap “Depots” to find and manage the shops you sell to."
+    },
+    "lessons": {
+      "title": "Learning center",
+      "subtitle": "Practise real workflows on the real screens with demo data. Nothing you do in a lesson is saved or sent.",
+      "open_hint": "Open practice lessons",
+      "start": "Start",
+      "continue": "Continue",
+      "restart": "Restart",
+      "again": "Practise again",
+      "start_again": "Start again",
+      "status": {
+        "done": "Completed",
+        "in_progress": "In progress",
+        "interrupted": "Interrupted",
+        "new": "New"
+      },
+      "tour": {
+        "title": "App tour",
+        "summary": "A quick walk around the Home screen."
+      },
+      "depots": {
+        "title": "Learn how to manage depots",
+        "summary": "Register a depot step by step, then find it and see what you can do with it."
+      },
+      "quotation": {
+        "title": "Create a quotation without a visit",
+        "summary": "Price products for a depot remotely and send the quotation for approval."
+      },
+      "order": {
+        "title": "Create an order remotely",
+        "summary": "Turn an approved quotation into a sales order — no check-in needed."
+      },
+      "visit": {
+        "title": "Learn how to complete a visit",
+        "summary": "Check in at a stop, capture three inventory views and complete the visit."
+      }
+    },
+    "practice": {
+      "badge": "PRACTICE — NOT SAVED",
+      "badge_paused": "PRACTICE PAUSED",
+      "menu_hint": "Opens the practice menu",
+      "menu_title": "You're in practice mode",
+      "menu_body": "The depots, visits and quotations you see are demo data. Nothing is saved, synced or sent to Admin. Exit to get back to your real work.",
+      "pause": "Pause guide",
+      "resume": "Resume guide",
+      "restart": "Restart this lesson",
+      "all_lessons": "All lessons",
+      "exit": "Exit practice"
+    },
+    "lesson": {
+      "depots": {
+        "intro": {
+          "title": "Manage depots",
+          "message": "A depot is a shop or outlet you sell to. In this practice you'll register one, then find it and see what you can do with it. Nothing you enter is saved."
+        },
+        "open": {
+          "title": "Open Depots",
+          "message": "Tap Depots on the Home screen."
+        },
+        "add": {
+          "title": "Register a depot",
+          "message": "This is your depot list. Tap + to register a new depot."
+        },
+        "identity": {
+          "title": "Who is the depot?",
+          "message": "Pick the grouping and title, then enter the depot's name in English and in Khmer — both are required. Tap Next Step when you're done."
+        },
+        "address": {
+          "title": "Where is it?",
+          "message": "Choose the city, district and commune, and enter the 5–6 digit postal code. Capture the GPS location while standing at the shop — it must be inside Cambodia."
+        },
+        "contact": {
+          "title": "How to reach them",
+          "message": "Enter the mobile phone, the telephone (or tick that it's the same as the mobile), and the contact person's name and role."
+        },
+        "sales_terms": {
+          "title": "Sales terms",
+          "message": "These set how SAP sells to the depot: sales org, office, group, channel, division, depot group, delivery priority, shipping, payment term and tax class. VAT-registered depots also need a VAT TIN."
+        },
+        "documents": {
+          "title": "Photos and documents",
+          "message": "Take photos of the outlet front, the outlet inside and the owner's ID card. VAT-registered depots also need the VAT certificate."
+        },
+        "submit": {
+          "title": "Review and submit",
+          "message": "Check every section, then tap Send to Headquarters. In real use HQ approves it; in practice it isn't sent anywhere."
+        },
+        "find": {
+          "title": "Find your depot",
+          "message": "Your new depot is in the list. Tap it to open its details."
+        },
+        "manage": {
+          "title": "Manage the depot",
+          "message": "From here you can call the owner, open it in Maps, add photos, and see its sales and promotions."
+        },
+        "done": {
+          "title": "Lesson complete 🎉",
+          "message": "You can now register and manage depots. The practice data has been cleared."
+        },
+        "form_invalid": "Some fields need attention — they're marked in red. Fix them, then tap Next Step again.",
+        "submit_failed": "The depot wasn't submitted. Read the message, fix what it names, and tap Send to Headquarters again."
+      },
+      "quotation": {
+        "intro": {
+          "title": "Quote without a visit",
+          "message": "A quotation prices products for a depot. You can prepare one from anywhere — no check-in needed. This practice uses a demo depot; nothing is sent."
+        },
+        "open_depots": {
+          "title": "Open Depots",
+          "message": "Tap Depots on the Home screen."
+        },
+        "start": {
+          "title": "Start a quotation",
+          "message": "Tap Create Quotation on the demo depot's card."
+        },
+        "add_items": {
+          "title": "Add products",
+          "message": "Choose a category and narrow it down, then set a quantity on each product you need."
+        },
+        "review": {
+          "title": "Review the quotation",
+          "message": "Check the depot, the items and quantities, the prices and the total. Change a quantity to update it."
+        },
+        "save": {
+          "title": "Save it",
+          "message": "Tap Save Quotation to Admin to keep the quotation."
+        },
+        "submit": {
+          "title": "Send for approval",
+          "message": "Saved. Tap Submit for Approval to send it to your manager."
+        },
+        "done": {
+          "title": "Lesson complete 🎉",
+          "message": "Your quotation is waiting for approval — and you never checked in anywhere. Once approved it can become a sales order. The practice data has been cleared."
+        },
+        "save_failed": "The quotation wasn't saved. Make sure it has at least one product, then save again.",
+        "submit_failed": "Submitting didn't go through. Read the message, then tap Submit for Approval again."
+      },
+      "order": {
+        "intro": {
+          "title": "Order without a visit",
+          "message": "A sales order is made from an approved quotation — no visit needed. Open the ready-to-use demo quotation with five sample steel materials and convert it into an order."
+        },
+        "open": {
+          "title": "Open Quotes & Orders",
+          "message": "Tap Quotes & Orders on the Home screen."
+        },
+        "open_quotation": {
+          "title": "Open the quotation",
+          "message": "Tap the approved demo quotation."
+        },
+        "convert": {
+          "title": "Convert it",
+          "message": "It's approved, so it can become an order. Tap Convert to Sales Order."
+        },
+        "create": {
+          "title": "Place the order",
+          "message": "Check the items and the total, then tap Create Sales Order in Admin."
+        },
+        "done": {
+          "title": "Lesson complete 🎉",
+          "message": "Order created and confirmed, with its pricing locked. Your orders are listed under Quotes & Orders. The practice data has been cleared."
+        },
+        "create_failed": "The order wasn't created. Read the message and try again."
+      },
+      "visit": {
+        "intro": {
+          "title": "Complete a visit",
+          "message": "A visit is a stop on your route: check in at the shop, capture three inventory views, then complete it. This practice uses a demo stop for today."
+        },
+        "open": {
+          "title": "Open My Visits",
+          "message": "Tap My Visits on the Home screen."
+        },
+        "select": {
+          "title": "Your stops",
+          "message": "Each card shows the depot, the planned time and the status. Tap the demo stop."
+        },
+        "start": {
+          "title": "Start the visit",
+          "message": "This is the stop's profile. Tap Start Visit."
+        },
+        "check_in": {
+          "title": "Check in",
+          "message": "Check-in records where you are. Allow location, wait for a GPS fix, then tap Check-in & Continue."
+        },
+        "survey": {
+          "title": "Inventory photos",
+          "message": "Capture three clear views: the full stock area, the storage racks, and the steel products up close. Then tap Submit photos."
+        },
+        "complete": {
+          "title": "Complete the visit",
+          "message": "Tap Complete visit and choose how it ended — with an order or without."
+        },
+        "done": {
+          "title": "Lesson complete 🎉",
+          "message": "Visit completed. In real use the stop then shows as Completed in My Visits. The practice data has been cleared."
+        },
+        "check_in_failed": "Check-in didn't go through. Read the message — usually GPS accuracy or distance from the depot — and try again.",
+        "survey_failed": "The photo wasn't saved. Take it again and tap Submit photo.",
+        "complete_failed": "The visit wasn't completed. Tap Complete visit again."
+      }
+    },
+    "autoplay": {
+      "watch": "Watch demo",
+      "take_over": "Take over",
+      "resume": "Auto-play",
+      "playing": "AUTO-PLAYING",
+      "stuck": "I couldn't finish this step by myself. Please do it yourself, or tap Auto-play to try again."
+    }
   },
   "app": {
     "name": "SteelForce",
@@ -1804,9 +2853,14 @@
       "no_stock": "No stock",
       "blocked": "Blocked",
       "checking_stock": "Checking stock…",
-      "stock_unknown": "Stock not checked"
+      "stock_unknown": "Stock not checked",
+      "none_on_hand": "None on hand"
     },
-    "price_unavailable": "Price not available"
+    "price_unavailable": "Price not available",
+    "error": {
+      "not_found": "Product not found.",
+      "barcode_not_found": "No product matches that barcode."
+    }
   },
   "shell": {
     "my_work": "MY WORK",
@@ -1835,13 +2889,18 @@
       "crm_leads_desc": "Manage customers and move deals to won",
       "analytics": "Analytics & reports",
       "analytics_desc": "Trends, forecasts and exportable reports",
-      "subtitle": "Sales & Distribution",
-      "tagline": "Manage your sales visits, depots, quotations & orders.",
       "visits": "Visits",
       "depots": "Depots",
       "quotations": "Quotations",
       "orders": "Orders",
-      "version": "Version {version}"
+      "version": "Version {version}",
+      "app_line": "Sales visit & ordering app",
+      "headline_visit": "Visit depots.",
+      "headline_order": "Take orders.",
+      "headline_target": "Hit your target.",
+      "area_visits": "My Visits",
+      "area_quotes_orders": "Quotes & Orders",
+      "member_of": "A member of"
     },
     "add_visit": {
       "title": "Add My Visit",
@@ -1858,17 +2917,7 @@
       "added": "Visit to {shop} added to today's route"
     },
     "select_won_lead": "Select Won Lead",
-    "target_progress": "{achieved} of {target}",
-    "demo": {
-      "badge": "DEMO",
-      "badge_label_online": "Demo mode, network online",
-      "badge_label_offline": "Demo mode, network offline",
-      "badge_hint": "Switches the demo network online or offline",
-      "network_online": "Demo network: online",
-      "network_offline": "Demo network: offline",
-      "state_online": "online",
-      "state_offline": "offline"
-    }
+    "target_progress": "{achieved} of {target}"
   },
   "sync": {
     "center_title": "Sync Center",
@@ -1911,9 +2960,9 @@
       "Returned": "Returned",
       "PendingApproval": "Admin Review",
       "Approved": "Approved",
-      "SubmittingToSap": "Submitting to SAP",
-      "SapFailed": "SAP submission failed",
-      "Quoted": "Submitted to SAP",
+      "SubmittingToSap": "Submitting to Admin",
+      "SapFailed": "Admin submission failed",
+      "Quoted": "Submitted to Admin",
       "Rejected": "Rejected",
       "Cancelled": "Cancelled"
     },
@@ -1965,11 +3014,30 @@
     "stage_contacted": "Contacted",
     "stage_quotation": "Quotation",
     "stage_won": "Won",
-    "coming_soon": {
-      "title": "My KPI is coming soon",
-      "subtitle": "Targets, incentives and sales performance will be available in the next version.",
-      "back_home": "Back to Home"
-    }
+    "month": "Month",
+    "year": "Year",
+    "select_month": "Select Month",
+    "select_year": "Select Year",
+    "months_selected": "{count} Months",
+    "years_selected": "{count} Years",
+    "payment_collection": "Payment Collection",
+    "product_mix": "Product Mix",
+    "categories_count": "{count} Categories",
+    "target_of": "/ {count} Target",
+    "call_compliance": "Call Compliance",
+    "call_compliance_formula": "Visited / (Target - Skipped)",
+    "compliance_percent": "{percent}% COMPLIANCE",
+    "target_count": "Target {count}",
+    "active_outlets": "# of Active Outlets",
+    "active_outlets_hint": "PO within 3 months",
+    "inactive_outlets": "# of Inactive Outlets",
+    "aso_count": "# of ASO",
+    "strike_rate": "Strike Rate",
+    "leads_total": "{count} Leads",
+    "stage_leads_count": "{count} leads",
+    "in_visit_vs_ad_hoc": "In-visit vs Ad-hoc Orders",
+    "in_visit": "In-visit",
+    "ad_hoc": "Ad-hoc"
   },
   "onboarding": {
     "skip": "Skip",
@@ -1989,8 +3057,19 @@
       },
       "success": {
         "title": "Confirm the order",
-        "body": "Stock is checked and the order is confirmed. It syncs to SAP as soon as you are back online."
+        "body": "Stock is checked and the order is confirmed. It syncs to Admin as soon as you are back online."
       }
+    },
+    "story": {
+      "selected_route": "SELECTED ROUTE",
+      "route_summary": "Phnom Penh · {count} stops",
+      "depot_visit": "DEPOT VISIT",
+      "location_verified": "Location verified",
+      "start_visit": "START VISIT",
+      "create_quotation": "CREATE QUOTATION",
+      "discount": "Discount {percent}%",
+      "approved": "Approved",
+      "order_created": "ORDER CREATED"
     }
   },
   "about": {
@@ -2123,6 +3202,26 @@
           "b3": "If prices or stock look out of date, allow the application to synchronise while connected."
         }
       }
+    },
+    "version": "Version {version}",
+    "support": {
+      "heading": "Contact & Support",
+      "phone_title": "Phone Hotline",
+      "phone_hours": "{phone} (Mon-Fri, 8AM - 5PM)",
+      "calling": "Calling {phone}…",
+      "email_title": "Email Support",
+      "opening_mail": "Opening mail client…",
+      "telegram_title": "Telegram Support",
+      "opening_telegram": "Opening Telegram channel…"
+    },
+    "feedback": {
+      "entry_title": "Give App Feedback",
+      "entry_subtitle": "Rate your experience and share thoughts",
+      "thanks": "Thank you for your feedback! ({rating} ★)",
+      "title": "Send Us Feedback",
+      "prompt": "How was your experience using the app?",
+      "hint": "Describe any technical issues or suggestions…",
+      "submit": "Submit Feedback"
     }
   },
   "geo": {
@@ -2165,7 +3264,9 @@
       "broken_hierarchy": "This location combination is not valid. Please re-select.",
       "postal_unavailable": "Postal code is unavailable for this location",
       "load_failed": "Unable to load locations.",
-      "seed_failed": "Unable to prepare location data."
+      "seed_failed": "Unable to prepare location data.",
+      "search_failed": "Unable to search location data.",
+      "resolve_failed": "Unable to resolve the saved location."
     }
   },
   "promotions": {
@@ -2261,6 +3362,22 @@
     }
   },
   "sync_center": {
+    "detail": {
+      "information": "Information",
+      "documents": "Documents",
+      "visit": "Visit",
+      "signature": "Signature",
+      "photo_n": "Photo {n}"
+    },
+    "summary": {
+      "waiting": "{count} item(s) saved on this device, waiting to send"
+    },
+    "filter": {
+      "all": "All",
+      "depots": "Depots",
+      "visits": "Visits",
+      "quotations": "Quotations"
+    },
     "depot": {
       "section_title": "Depot registrations",
       "unnamed": "Unnamed depot",
@@ -2268,15 +3385,15 @@
         "queued": "Waiting to send",
         "photos": "Uploading photos",
         "needs_review": "Check needed",
-        "rejected": "Refused by SAP"
+        "rejected": "Refused by Admin"
       },
       "queued_hint": "Saved on this phone. It sends automatically when the server is reachable.",
       "photos_hint": "Registered. {count} photo(s) still uploading.",
-      "needs_review_hint": "Sent, but no reply came back, so SAP may already have it. Check the depot list: if it is there, discard this; if not, retry.",
-      "rejected_hint": "SAP refused this registration. Fix the form and submit again.",
+      "needs_review_hint": "Sent, but no reply came back, so Admin may already have it. Check the depot list: if it is there, discard this; if not, retry.",
+      "rejected_hint": "Admin refused this registration. Fix the form and submit again.",
       "fix": "Fix",
       "retry_confirm_title": "Send again?",
-      "retry_confirm_body": "Only retry if this depot is not already in the depot list. Sending it twice creates a duplicate in SAP.",
+      "retry_confirm_body": "Only retry if this depot is not already in the depot list. Sending it twice creates a duplicate in Admin.",
       "discard_confirm_title": "Discard registration?",
       "discard_confirm_body": "This registration and its photos will be removed from this phone.",
       "reopened": "Opened as a draft. Open Add depot to fix it and submit again.",
@@ -2300,7 +3417,8 @@
         "saved_at": "Saved",
         "last_attempt": "Last attempt",
         "attempts": "Attempts"
-      }
+      },
+      "resend_new_form": "This was saved by an older version of the app. Open it as a draft and send it again."
     },
     "visit": {
       "section_title": "Visits",
@@ -2333,9 +3451,43 @@
       "sync_offline": "Can't reach the server right now. Your visits are saved and will send when you're back online."
     },
     "quotation": {
+      "detail": {
+        "title": "Quotation waiting to sync",
+        "saved_at": "Saved",
+        "valid_until": "Valid until",
+        "admin_number": "Admin number",
+        "items": "Items",
+        "no_items": "No items on this quotation.",
+        "totals": "Totals",
+        "subtotal": "Subtotal",
+        "discount": "Discount",
+        "tax": "Tax",
+        "total": "Total",
+        "price_pending": "Price pending",
+        "not_on_device": "This quotation is no longer saved on this device.",
+        "load_failed": "Couldn't open this quotation. Try again."
+      },
       "section_title": "Orders & quotations"
     },
-    "sync": "Sync"
+    "sync": "Sync",
+    "plan": {
+      "section_title": "Planned visits",
+      "check_in": "Check-in waiting to send",
+      "photos": "{count} inventory photos waiting to send",
+      "check_out": "Check-out waiting to send",
+      "needs_attention": "Needs attention",
+      "send_again": "Send again",
+      "discard_confirm_body": "The check-in, inventory photos and check-out saved for {shop} will be deleted from this device and not sent. This cannot be undone.",
+      "resent": "Sending the visit again.",
+      "discarded": "The visit's unsent steps were discarded.",
+      "action_failed": "That didn't work. Please try again.",
+      "step": {
+        "check_in": "Check-in",
+        "inventory": "Inventory photos",
+        "check_out": "Check-out"
+      },
+      "saved_at": "Saved {time}"
+    }
   },
   "sync_kind": {
     "depot_registrations": "Depot registrations",
@@ -2353,5 +3505,38 @@
     "synced": "Back online. All {count} item(s) synced.",
     "partial": "{sent} item(s) synced, {left} still waiting. They will retry automatically.",
     "not_yet": "Back online, but {left} item(s) couldn't sync yet. They will retry automatically."
+  },
+  "outlet_info": {
+    "customer_code": "CUS CODE",
+    "outlet_id": "Outlet ID (BP SAP)",
+    "outlet_type": "Outlet Type",
+    "outlet_tier": "Outlet Tier",
+    "outlet_action": "Outlet Action",
+    "contact_person": "Owner / Contact Person (SAP)",
+    "assigned_rep": "Assigned Rep",
+    "phone": "Phone Number (SAP)",
+    "telegram": "Telegram",
+    "email": "Email",
+    "address": "Address Line (SAP)",
+    "tax_number": "Tax / VAT No.",
+    "coordinates": "Lat & Long (SAP)",
+    "distance": "Distance",
+    "details_section": "Outlet Details & Location",
+    "payment_status": "Payment/Credit Status",
+    "credit_limit": "Credit Limit (SAP)",
+    "payment_term": "Payment Term (SAP)",
+    "lifetime_value": "Lifetime Value",
+    "total_orders": "Total Orders",
+    "avg_revenue": "Avg Rev per Order",
+    "latest_order_date": "Latest Order Date (SAP)",
+    "open_opportunities": "Open Opportunities",
+    "last_synced": "Last Synced (SAP)",
+    "order_history": "Order History (SAP)",
+    "order_history_hint": "Tap to view outlet orders history",
+    "sales_section": "Sales History Detail",
+    "promotions": "Promotions",
+    "promo_on_invoice": "ON-INVOICE ({count})",
+    "promo_off_invoice": "OFF-INVOICE ({count})",
+    "promo_contract": "CONTRACT ({count})"
   }
 }

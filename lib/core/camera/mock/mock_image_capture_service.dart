@@ -83,19 +83,6 @@ class MockImageCaptureService implements ImageCaptureService {
           {int? maxWidth, int? maxHeight, int? imageQuality}) =>
       _run(ImageCaptureSource.gallery);
 
-  /// The stand-in picks one image per visit to its screen; that is enough
-  /// to exercise a multi-select caller.
-  @override
-  Future<List<XFile>> pickMultipleFromGallery({
-    int? maxWidth,
-    int? maxHeight,
-    int? imageQuality,
-    int? limit,
-  }) async {
-    final file = await _run(ImageCaptureSource.gallery);
-    return file == null ? const [] : [file];
-  }
-
   @override
   Future<XFile?> pick(
     ImageCaptureSource source, {

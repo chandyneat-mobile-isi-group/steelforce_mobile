@@ -39,15 +39,8 @@ graphify affected <changed file>
 **Tests** — the tiers `.claude/rules/testing.md` requires, covering failure
 paths, not only the happy path.
 
-**Untrusted input** — deep links, notification payloads, intents validated
-against an allow-list; no auth bypass or write-on-open (`security.md` §6).
-
 **Performance** — work in `build()`, unbounded lists, unnarrowed rebuilds,
-repeated calls, unsized images, main-isolate blocking; claims backed by a
-measurement (`performance.md`).
-
-**Dependencies** — for any `pubspec.yaml` change, the `dependencies.md` §1
-answers are present and the package is isolated from `domain/`.
+repeated calls, unsized images.
 
 **UI** — if the diff touches UI, apply
 `docs/skills/feature-ui-standard.md` §14 and delegate to the **ui-ux-reviewer**

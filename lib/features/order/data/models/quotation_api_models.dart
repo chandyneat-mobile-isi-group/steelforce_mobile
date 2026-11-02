@@ -21,8 +21,10 @@ class QuotationSummaryModel extends QuotationSummary {
     return QuotationSummaryModel(
       id: json['id'] as String? ?? '',
       number: json['number'] as String? ?? '',
-      depotId: json['customerId'] as String? ?? '',
-      depotName: json['customerName'] as String? ?? '',
+      // docs/feature/order/quotation/api/mobile.md names these `depot*`;
+      // the `customer*` keys are read only as a fallback for older payloads.
+      depotId: (json['depotId'] ?? json['customerId']) as String? ?? '',
+      depotName: (json['depotName'] ?? json['customerName']) as String? ?? '',
       status: json['status'] as String? ?? 'Draft',
       statusGroup:
           QuotationStatusGroup.fromWire(json['statusGroup'] as String?),
@@ -209,8 +211,8 @@ class QuotationDetailModel extends QuotationDetail {
     return QuotationDetailModel(
       id: json['id'] as String? ?? '',
       number: json['number'] as String? ?? '',
-      depotId: json['customerId'] as String? ?? '',
-      depotName: json['customerName'] as String?,
+      depotId: (json['depotId'] ?? json['customerId']) as String? ?? '',
+      depotName: (json['depotName'] ?? json['customerName']) as String?,
       status: json['status'] as String? ?? 'Draft',
       statusGroup:
           QuotationStatusGroup.fromWire(json['statusGroup'] as String?),
@@ -218,7 +220,8 @@ class QuotationDetailModel extends QuotationDetail {
       shipmentType: json['shipmentType'] as String? ?? 'Pickup',
       shipTo: json['shipTo'] as String?,
       paymentTerm: json['paymentTerm'] as String?,
-      depotReference: json['customerReference'] as String?,
+      depotReference:
+          (json['depotReference'] ?? json['customerReference']) as String?,
       remarks: json['remarks'] as String?,
       lines: linesList,
       totals: QuotationTotalsModel.fromJson(totalsMap),

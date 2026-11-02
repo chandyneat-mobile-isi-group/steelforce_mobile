@@ -1,5 +1,4 @@
 import 'dart:async';
-import 'package:steelforce/core/config/feature_flags.dart';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -29,13 +28,15 @@ import 'package:steelforce/features/my_visits/presentation/screens/stops_map_scr
 import 'package:steelforce/features/my_visits/presentation/widgets/calendar/calendar_widget_section.dart';
 import 'package:steelforce/features/my_visits/presentation/widgets/pending_ad_hoc_card.dart';
 import 'package:steelforce/features/my_visits/presentation/widgets/stop_card.dart';
+import 'package:steelforce/shared/widgets/brand_wallpaper_background.dart';
+import 'package:steelforce/features/app_coach/presentation/services/coach_keys.dart';
 import 'package:steelforce/features/my_visits/presentation/widgets/stop_card_skeleton.dart';
 import 'package:steelforce/features/my_visits/presentation/widgets/today_visits_progress_cart.dart';
 import 'package:steelforce/features/my_visits/presentation/navigation/add_depot_to_today.dart';
 import 'package:steelforce/core/animations/fade_slide_transition.dart';
 import 'package:steelforce/core/animations/page_transition.dart';
 import 'package:steelforce/core/responsive/responsive_sizing.dart';
-import 'package:steelforce/features/shell/presentation/bloc/home_cubit.dart';
+import 'package:steelforce/features/shell/presentation/navigation/shell_tab_controller.dart';
 
 /// The primary My Visits entry point: today's stops, sorted nearest-first by
 /// live location. Replaces the route-centric dashboard.
@@ -265,65 +266,71 @@ class _StopDashboardScreenState extends State<StopDashboardScreen> {
   Widget build(BuildContext context) {
     final colors = context.appColors;
     return Scaffold(
-      backgroundColor: colors.canvas,
-      body: SafeArea(
-        child: BlocListener<RouteSyncCubit, RouteSyncState>(
-          listenWhen: (p, c) => c is RouteSyncFailed || c is RouteSyncSucceeded,
-          listener: (context, state) {
-            // A pull that lands after the cubit took its opening snapshot is
-            // otherwise invisible to it — sync writes through the local data
-            // source, not the repository whose stream this screen watches. See
-            // `StopDashboardCubit.reload`.
-            if (state is RouteSyncSucceeded) {
-              context.read<StopDashboardCubit>().reload();
-              return;
-            }
-            if (state is RouteSyncFailed) {
-              ScaffoldMessenger.of(context)
-                ..hideCurrentSnackBar()
-                ..showSnackBar(SnackBar(
-                  content: Text(state.message,
-                      maxLines: 3, overflow: TextOverflow.ellipsis),
-                  action: SnackBarAction(
-                    label: 'common.retry'.tr,
-                    onPressed: () =>
-                        context.read<RouteSyncCubit>().syncIfNeeded(),
-                  ),
-                ));
-            }
-          },
-          // Nested rather than merged into the sync listener above: the two
-          // watch different cubits and fire on different conditions.
-          child: BlocListener<AdHocVisitCubit, AdHocVisitState>(
-            listenWhen: (p, c) => c.effect != null && p.effect != c.effect,
-            listener: (context, state) {
-              final effect = state.effect;
-              if (effect != null) unawaited(_onAdHocEffect(context, effect));
-            },
-            child: BlocBuilder<StopDashboardCubit, StopDashboardState>(
-              builder: (context, state) => switch (state) {
-                StopDashboardError(:final message) => Center(
-                    child: Text(message,
-                        style: TextStyle(color: colors.textSecondary))),
-                StopDashboardLoaded() => _LoadedView(
-                    state: state,
-                    onRefresh: () => _refresh(context),
-                    onTapStop: (s) => _openStop(context, s, state.visibleStops),
-                    onQuotationStop: (s) => _openQuotation(context, s),
-                    onSkipStop: (s, reason, photoPath) =>
-                        _skipStop(context, s, reason, photoPath),
-                    onFilter: (f) =>
-                        context.read<StopDashboardCubit>().setFilter(f),
-                    onQuery: (q) =>
-                        context.read<StopDashboardCubit>().setQuery(q),
-                    onOpenMap: () => _openMap(context, state),
-                  ),
-                _ => const StopDashboardSkeleton(),
+      backgroundColor: Colors.transparent,
+      body: BrandWallpaperBody(
+          style: BrandWallpaperStyle.vivid,
+          child: SafeArea(
+            child: BlocListener<RouteSyncCubit, RouteSyncState>(
+              listenWhen: (p, c) =>
+                  c is RouteSyncFailed || c is RouteSyncSucceeded,
+              listener: (context, state) {
+                // A pull that lands after the cubit took its opening snapshot is
+                // otherwise invisible to it — sync writes through the local data
+                // source, not the repository whose stream this screen watches. See
+                // `StopDashboardCubit.reload`.
+                if (state is RouteSyncSucceeded) {
+                  context.read<StopDashboardCubit>().reload();
+                  return;
+                }
+                if (state is RouteSyncFailed) {
+                  ScaffoldMessenger.of(context)
+                    ..hideCurrentSnackBar()
+                    ..showSnackBar(SnackBar(
+                      content: Text(state.message,
+                          maxLines: 3, overflow: TextOverflow.ellipsis),
+                      action: SnackBarAction(
+                        label: 'common.retry'.tr,
+                        onPressed: () =>
+                            context.read<RouteSyncCubit>().syncIfNeeded(),
+                      ),
+                    ));
+                }
               },
+              // Nested rather than merged into the sync listener above: the two
+              // watch different cubits and fire on different conditions.
+              child: BlocListener<AdHocVisitCubit, AdHocVisitState>(
+                listenWhen: (p, c) => c.effect != null && p.effect != c.effect,
+                listener: (context, state) {
+                  final effect = state.effect;
+                  if (effect != null) {
+                    unawaited(_onAdHocEffect(context, effect));
+                  }
+                },
+                child: BlocBuilder<StopDashboardCubit, StopDashboardState>(
+                  builder: (context, state) => switch (state) {
+                    StopDashboardError(:final message) => Center(
+                        child: Text(message,
+                            style: TextStyle(color: colors.textSecondary))),
+                    StopDashboardLoaded() => _LoadedView(
+                        state: state,
+                        onRefresh: () => _refresh(context),
+                        onTapStop: (s) =>
+                            _openStop(context, s, state.visibleStops),
+                        onQuotationStop: (s) => _openQuotation(context, s),
+                        onSkipStop: (s, reason, photoPath) =>
+                            _skipStop(context, s, reason, photoPath),
+                        onFilter: (f) =>
+                            context.read<StopDashboardCubit>().setFilter(f),
+                        onQuery: (q) =>
+                            context.read<StopDashboardCubit>().setQuery(q),
+                        onOpenMap: () => _openMap(context, state),
+                      ),
+                    _ => const StopDashboardSkeleton(),
+                  },
+                ),
+              ),
             ),
-          ),
-        ),
-      ),
+          )),
     );
   }
 }
@@ -458,6 +465,14 @@ class _LoadedViewState extends State<_LoadedView> {
                   itemCount: visible.length,
                   itemBuilder: (context, index) {
                     final todayStop = visible[index];
+                    final card = StopCard(
+                      todayStop: todayStop,
+                      isToday: isSelectedToday,
+                      onTap: () => widget.onTapStop(todayStop),
+                      onQuotationTap: () => widget.onQuotationStop(todayStop),
+                      onSkipSubmitted: (reason, photoPath) =>
+                          widget.onSkipStop(todayStop, reason, photoPath),
+                    );
                     return FadeSlideIn(
                       // Keyed by stop, so a card that survives a filter or a
                       // status change is not torn down and re-entered. Without
@@ -470,16 +485,11 @@ class _LoadedViewState extends State<_LoadedView> {
                       // everything past the visible handful arrives together.
                       delay: FadeSlideIn.staggerDelay(
                           index < _kStaggerLimit ? index : _kStaggerLimit),
-                      child: StopCard(
-                        todayStop: todayStop,
-                        isToday: isSelectedToday,
-                        onTap: () => widget.onTapStop(todayStop),
-                        onQuotationTap: FeatureFlags.quotesAndOrders
-                            ? () => widget.onQuotationStop(todayStop)
-                            : null,
-                        onSkipSubmitted: (reason, photoPath) =>
-                            widget.onSkipStop(todayStop, reason, photoPath),
-                      ),
+                      // The visit lesson points at the first card.
+                      child: index == 0
+                          ? CoachKeys.wrap(CoachKeys.visitFirstStop,
+                              child: card)
+                          : card,
                     );
                   },
                 ),

@@ -25,7 +25,7 @@ class ProfileRepositoryImpl implements ProfileRepository {
     // trip and gives the same answer.
     if (update.isEmpty) {
       return const Failed(ServerFailure(
-        message: 'Nothing to save.',
+        message: 'profile.no_changes',
         statusCode: 400,
         code: ApiErrorCodes.profileUpdateEmpty,
       ));
@@ -52,13 +52,13 @@ class ProfileRepositoryImpl implements ProfileRepository {
         return const Failed(NetworkFailure());
       }
       return Failed(ServerFailure(
-        message: e.error.message ?? 'Something went wrong. Please try again.',
+        message: e.error.message ?? 'common.generic_error',
         statusCode: e.error.statusCode,
         code: e.error.code,
       ));
     } on AvatarUnreadableException {
       return const Failed(ServerFailure(
-        message: 'That picture could not be read.',
+        message: 'profile.error_photo_unreadable',
         code: ProfileFailureCodes.avatarUnreadable,
       ));
     } on ServerException catch (e) {

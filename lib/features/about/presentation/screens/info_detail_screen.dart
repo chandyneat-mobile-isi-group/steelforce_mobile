@@ -3,6 +3,7 @@ import 'package:steelforce/core/localization/localization_services.dart';
 import 'package:steelforce/core/responsive/responsive_sizing.dart';
 import 'package:steelforce/core/theme/theme_extensions.dart';
 import 'package:steelforce/features/about/domain/info_topic.dart';
+import 'package:steelforce/shared/widgets/brand_wallpaper_background.dart';
 
 /// The detail page behind every card on the About hub.
 class InfoDetailScreen extends StatelessWidget {
@@ -22,7 +23,7 @@ class InfoDetailScreen extends StatelessWidget {
     final scheme = Theme.of(context).colorScheme;
 
     return Scaffold(
-      backgroundColor: colors.canvas,
+      backgroundColor: context.appColors.canvas,
       appBar: AppBar(
         backgroundColor: colors.canvas,
         elevation: 0,
@@ -37,7 +38,8 @@ class InfoDetailScreen extends StatelessWidget {
           ),
         ),
       ),
-      body: SafeArea(
+      body: BrandWallpaperBody(
+          child: SafeArea(
         top: false,
         child: Center(
           child: ConstrainedBox(
@@ -86,7 +88,7 @@ class InfoDetailScreen extends StatelessWidget {
             ),
           ),
         ),
-      ),
+      )),
     );
   }
 }
@@ -234,7 +236,7 @@ class _SupportContactSection extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          'Contact & Support',
+          'about.support.heading'.tr,
           style: TextStyle(
             color: colors.textPrimary,
             fontSize: context.rsp(16),
@@ -247,11 +249,17 @@ class _SupportContactSection extends StatelessWidget {
         // Mock Phone Call
         _ContactMethodCard(
           icon: Icons.phone_in_talk_rounded,
-          title: 'Phone Hotline',
-          subtitle: '+855 23 888 888 (Mon-Fri, 8AM - 5PM)',
+          title: 'about.support.phone_title'.tr,
+          subtitle: 'about.support.phone_hours'
+              .trParams({'phone': '+855 23 888 888'}),
           onTap: () {
             ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(content: Text('Calling +855 23 888 888...')),
+              SnackBar(
+                content: Text(
+                  'about.support.calling'
+                      .trParams({'phone': '+855 23 888 888'}),
+                ),
+              ),
             );
           },
         ),
@@ -260,11 +268,11 @@ class _SupportContactSection extends StatelessWidget {
         // Mock Email
         _ContactMethodCard(
           icon: Icons.alternate_email_rounded,
-          title: 'Email Support',
+          title: 'about.support.email_title'.tr,
           subtitle: 'support@isisteel.com.kh',
           onTap: () {
             ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(content: Text('Opening mail client...')),
+              SnackBar(content: Text('about.support.opening_mail'.tr)),
             );
           },
         ),
@@ -273,11 +281,11 @@ class _SupportContactSection extends StatelessWidget {
         // Mock Telegram
         _ContactMethodCard(
           icon: Icons.send_rounded,
-          title: 'Telegram Support',
+          title: 'about.support.telegram_title'.tr,
           subtitle: '@isisteel_support',
           onTap: () {
             ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(content: Text('Opening Telegram channel...')),
+              SnackBar(content: Text('about.support.opening_telegram'.tr)),
             );
           },
         ),
@@ -286,8 +294,8 @@ class _SupportContactSection extends StatelessWidget {
         // Feedback Form Launcher
         _ContactMethodCard(
           icon: Icons.rate_review_outlined,
-          title: 'Give App Feedback',
-          subtitle: 'Rate your experience and share thoughts',
+          title: 'about.feedback.entry_title'.tr,
+          subtitle: 'about.feedback.entry_subtitle'.tr,
           onTap: () => _openFeedbackSheet(context),
         ),
       ],
@@ -407,7 +415,9 @@ class _FeedbackBottomSheetState extends State<_FeedbackBottomSheet> {
     Navigator.of(context).pop();
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-        content: Text('Thank you for your feedback! ($_rating ★)'),
+        content: Text(
+          'about.feedback.thanks'.trParams({'rating': _rating}),
+        ),
         backgroundColor: Theme.of(context).colorScheme.primary,
         behavior: SnackBarBehavior.floating,
       ),
@@ -448,7 +458,7 @@ class _FeedbackBottomSheetState extends State<_FeedbackBottomSheet> {
               ),
               SizedBox(height: context.rh(16)),
               Text(
-                'Send Us Feedback',
+                'about.feedback.title'.tr,
                 style: TextStyle(
                   color: colors.textPrimary,
                   fontSize: context.rsp(18),
@@ -457,7 +467,7 @@ class _FeedbackBottomSheetState extends State<_FeedbackBottomSheet> {
               ),
               SizedBox(height: context.rh(4)),
               Text(
-                'How was your experience using the app?',
+                'about.feedback.prompt'.tr,
                 style: TextStyle(
                   color: colors.textSecondary,
                   fontSize: context.rsp(13),
@@ -495,7 +505,7 @@ class _FeedbackBottomSheetState extends State<_FeedbackBottomSheet> {
                   fontSize: context.rsp(14),
                 ),
                 decoration: InputDecoration(
-                  hintText: 'Describe any technical issues or suggestions...',
+                  hintText: 'about.feedback.hint'.tr,
                   hintStyle: TextStyle(
                     color: colors.textHint,
                     fontSize: context.rsp(13.5),
@@ -533,7 +543,7 @@ class _FeedbackBottomSheetState extends State<_FeedbackBottomSheet> {
                     elevation: 0,
                   ),
                   child: Text(
-                    'Submit Feedback',
+                    'about.feedback.submit'.tr,
                     style: TextStyle(
                       fontSize: context.rsp(15),
                       fontWeight: FontWeight.w700,

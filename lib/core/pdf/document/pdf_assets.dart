@@ -1,5 +1,6 @@
 import 'package:flutter/services.dart' show rootBundle;
 import 'package:pdf/widgets.dart' as pw;
+import 'package:steelforce/core/assets/app_assets.dart';
 
 /// Loads and **caches** the fonts and imagery every ISI PDF needs, so the
 /// (relatively expensive) asset-bundle reads happen once per app session
@@ -53,23 +54,23 @@ class PdfAssets {
 
     _base = pw.Font.ttf(
       await rootBundle.load(
-        'assets/fonts/english/Source_Sans_3/static/SourceSans3-Regular.ttf',
+        AppFontFiles.sourceSansRegular,
       ),
     );
     _bold = pw.Font.ttf(
       await rootBundle.load(
-        'assets/fonts/english/Source_Sans_3/static/SourceSans3-Bold.ttf',
+        AppFontFiles.sourceSansBold,
       ),
     );
     _khmer = pw.Font.ttf(
-      await rootBundle.load('assets/fonts/khmer/MiSansKhmer-Regular.ttf'),
+      await rootBundle.load(AppFontFiles.miSansKhmerRegular),
     );
     _khmerBold = pw.Font.ttf(
-      await rootBundle.load('assets/fonts/khmer/MiSansKhmer-Bold.ttf'),
+      await rootBundle.load(AppFontFiles.miSansKhmerBold),
     );
 
     try {
-      _logoSvg = await rootBundle.loadString('assets/logos/isi-steel-dark.svg');
+      _logoSvg = await rootBundle.loadString(AppLogos.isiSteel);
     } catch (_) {
       // Missing/renamed logo must never fail an export — fall back to wordmark.
       _logoSvg = null;

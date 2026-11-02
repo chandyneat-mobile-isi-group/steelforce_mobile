@@ -23,15 +23,19 @@ class _SignalRow extends StatelessWidget {
       children: [
         SignalBars(level: level, color: color),
         SizedBox(width: context.rw(8)),
-        Text(
-          '${_Copy.accuracy} ±${accuracyMeters.round()} m',
-          style: TextStyle(
-            color: colors.textSecondary,
-            fontSize: context.rsp(11),
-            fontWeight: FontWeight.w600,
+        // Takes the free space and wraps, so the chip stays on screen in
+        // Khmer or at a large text scale.
+        Expanded(
+          child: Text(
+            '${_Copy.accuracy} ±${accuracyMeters.round()} m',
+            style: TextStyle(
+              color: colors.textSecondary,
+              fontSize: context.rsp(11),
+              fontWeight: FontWeight.w600,
+            ),
           ),
         ),
-        const Spacer(),
+        SizedBox(width: context.rw(8)),
         AnimatedContainer(
           duration: const Duration(milliseconds: 300),
           padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),

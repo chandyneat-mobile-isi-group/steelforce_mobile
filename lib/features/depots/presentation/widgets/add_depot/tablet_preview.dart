@@ -99,8 +99,8 @@ extension _TabletPreviewExtension on _AddDepotBottomSheetState {
                   ),
                   onPressed: onEdit,
                   icon: const Icon(Icons.edit_outlined, size: 14),
-                  label:
-                      Text('Edit', style: TextStyle(fontSize: _fontSize(12))),
+                  label: Text('common.edit'.tr,
+                      style: TextStyle(fontSize: _fontSize(12))),
                 ),
               ],
             ),
@@ -124,7 +124,8 @@ extension _TabletPreviewExtension on _AddDepotBottomSheetState {
         if (draft.districtCode != null) draft.districtCode!,
         if (draft.cityCode != null) draft.cityCode!,
       ],
-      if (draft.postalCode.isNotEmpty) 'Postal: ${draft.postalCode}',
+      if (draft.postalCode.isNotEmpty)
+        'add_depot.preview.postal'.trParams({'code': draft.postalCode}),
     ].where((s) => s.isNotEmpty).join(', ');
 
     return Column(
@@ -163,7 +164,9 @@ extension _TabletPreviewExtension on _AddDepotBottomSheetState {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      draft.nameEn.isNotEmpty ? draft.nameEn : 'New Depot',
+                      draft.nameEn.isNotEmpty
+                          ? draft.nameEn
+                          : 'add_depot.preview.new_depot'.tr,
                       style: TextStyle(
                         fontSize: _fontSize(18),
                         fontWeight: FontWeight.w900,
@@ -208,8 +211,8 @@ extension _TabletPreviewExtension on _AddDepotBottomSheetState {
                     const SizedBox(width: 6),
                     Text(
                       needsCredit
-                          ? 'Credit Approval Required'
-                          : 'Ready for SAP HQ',
+                          ? 'add_depot.preview.credit_required'.tr
+                          : 'add_depot.preview.ready'.tr,
                       style: TextStyle(
                         fontSize: _fontSize(12),
                         fontWeight: FontWeight.w800,
@@ -238,17 +241,23 @@ extension _TabletPreviewExtension on _AddDepotBottomSheetState {
                     icon: Icons.person_outline_rounded,
                     onEdit: () => _editFromPreview(0, BpFormStep.identity),
                     children: [
-                      previewItem('Account Group', draft.grouping,
-                          isCode: true),
+                      previewItem('add_depot.registration_type.label'.tr,
+                          draft.registrationType.labelKey.tr),
                       previewItem(
-                          'Title', draft.title.isNotEmpty ? draft.title : '—'),
-                      previewItem('Name (EN)', draft.nameEn),
+                          'add_depot.preview.account_group'.tr, draft.grouping,
+                          isCode: true),
+                      previewItem('add_depot.title_field'.tr,
+                          draft.title.isNotEmpty ? draft.title : '—'),
+                      previewItem('add_depot.name_en'.tr, draft.nameEn),
                       if (draft.name2.isNotEmpty)
-                        previewItem('Trade Name (Name 2)', draft.name2),
-                      previewItem('Name (KH)', draft.nameKh),
-                      previewItem('Search Term 1', draft.searchTerm),
+                        previewItem(
+                            'add_depot.preview.trade_name'.tr, draft.name2),
+                      previewItem('add_depot.name_kh'.tr, draft.nameKh),
+                      previewItem(
+                          'add_depot.search_term1'.tr, draft.searchTerm),
                       if (draft.searchTerm2.isNotEmpty)
-                        previewItem('Search Term 2', draft.searchTerm2),
+                        previewItem(
+                            'add_depot.search_term2'.tr, draft.searchTerm2),
                     ],
                   ),
                   SizedBox(height: _spacing(20)),
@@ -261,18 +270,21 @@ extension _TabletPreviewExtension on _AddDepotBottomSheetState {
                       // Listing the mobile first put it next to the landline
                       // and two rows away from the person it belongs to, which
                       // reads as two shop numbers rather than one of each.
-                      previewItem('Contact Person', draft.contactPersonName),
+                      previewItem('add_depot.contact_person'.tr,
+                          draft.contactPersonName),
                       previewItem(
-                          'Contact Role', draft.contactPersonRole ?? '—'),
+                          'add_depot.role'.tr, draft.contactPersonRole ?? '—'),
                       if (draft.contactCoName.isNotEmpty)
-                        previewItem('c/o Name (to SAP)', draft.contactCoName),
-                      previewItem('Mobile Phone', draft.mobilePhone),
+                        previewItem('add_depot.preview.co_name'.tr,
+                            draft.contactCoName),
                       previewItem(
-                          'Telephone',
+                          'add_depot.mobile_phone'.tr, draft.mobilePhone),
+                      previewItem(
+                          'add_depot.telephone'.tr,
                           draft.telephoneSameAsMobile
-                              ? 'Same as mobile'
+                              ? 'add_depot.same_as_mobile'.tr
                               : draft.telephone),
-                      previewItem('Language', draft.language),
+                      previewItem('add_depot.language'.tr, draft.language),
                     ],
                   ),
                 ],
@@ -287,10 +299,11 @@ extension _TabletPreviewExtension on _AddDepotBottomSheetState {
                     icon: Icons.location_on_outlined,
                     onEdit: () => _editFromPreview(0, BpFormStep.address),
                     children: [
-                      previewItem('Full Address', formattedAddress),
+                      previewItem('add_depot.preview.full_address'.tr,
+                          formattedAddress),
                       if (draft.geoFix != null)
                         previewItem(
-                          'GPS Coordinates',
+                          'add_depot.preview.gps_coordinates'.tr,
                           '${draft.geoFix!.latitude.toStringAsFixed(5)}, ${draft.geoFix!.longitude.toStringAsFixed(5)}',
                           isCode: true,
                         ),
@@ -302,23 +315,39 @@ extension _TabletPreviewExtension on _AddDepotBottomSheetState {
                     icon: Icons.receipt_long_outlined,
                     onEdit: () => _editFromPreview(1, BpFormStep.salesTerms),
                     children: [
-                      previewItem('Distribution Channel',
+                      previewItem('add_depot.distribution_channel'.tr,
                           draft.distributionChannel ?? '—'),
-                      previewItem('Division', draft.divisionCode ?? '—'),
-                      previewItem('Depot Group', draft.depotGroup ?? '—'),
-                      previewItem('Price Group', draft.priceGroup ?? '—'),
                       previewItem(
-                          'Delivery Priority', draft.deliveryPriority ?? '—'),
+                          'add_depot.division'.tr, draft.divisionCode ?? '—'),
                       previewItem(
-                          'Shipping Condition', draft.shippingCondition ?? '—'),
-                      previewItem('Payment Terms', draft.paymentTerm ?? '—'),
+                          'add_depot.depot_group'.tr, draft.depotGroup ?? '—'),
                       previewItem(
-                          'Tax Class',
+                          'add_depot.price_group'.tr, draft.priceGroup ?? '—'),
+                      previewItem('add_depot.delivery_priority'.tr,
+                          draft.deliveryPriority ?? '—'),
+                      previewItem('add_depot.shipping_condition'.tr,
+                          draft.shippingCondition ?? '—'),
+                      previewItem('add_depot.payment_term'.tr,
+                          draft.paymentTerm ?? '—'),
+                      previewItem(
+                          'add_depot.tax_class'.tr,
                           draft.taxClass == '1'
-                              ? '1 - Taxable'
-                              : '0 - Non-taxable'),
+                              ? 'add_depot.preview.taxable'.tr
+                              : 'add_depot.preview.non_taxable'.tr),
                       if (draft.taxClass == '1')
-                        previewItem('VAT / TIN', draft.vatTin, isCode: true),
+                        previewItem('add_depot.vat_tin'.tr, draft.vatTin,
+                            isCode: true),
+                    ],
+                  ),
+                  SizedBox(height: _spacing(20)),
+                  previewCard(
+                    title: 'add_depot.steps.sales_performance'.tr,
+                    icon: Icons.insights_rounded,
+                    onEdit: () =>
+                        _editFromPreview(1, BpFormStep.salesPerformance),
+                    children: [
+                      previewItem('add_depot.steps.sales_performance'.tr,
+                          _surveySummary(draft.salesSurvey)),
                     ],
                   ),
                   SizedBox(height: _spacing(20)),
@@ -327,10 +356,15 @@ extension _TabletPreviewExtension on _AddDepotBottomSheetState {
                     icon: Icons.folder_shared_outlined,
                     onEdit: () => _editFromPreview(2, BpFormStep.documents),
                     children: [
-                      previewItem('Attachments',
-                          '${draft.attachments.length} attached (${draft.attachments.map((a) => a.kind).join(', ')})'),
+                      previewItem(
+                          'add_depot.preview.attachments'.tr,
+                          'add_depot.preview.attachments_value'.trParams({
+                            'count': '${draft.attachments.length}',
+                            'kinds':
+                                draft.attachments.map((a) => a.kind).join(', '),
+                          })),
                       if (draft.remark.isNotEmpty)
-                        previewItem('Remarks', draft.remark),
+                        previewItem('add_depot.remark'.tr, draft.remark),
                     ],
                   ),
                 ],

@@ -3,6 +3,7 @@ import 'package:steelforce/core/localization/localization_services.dart';
 import 'package:steelforce/core/theme/theme_extensions.dart'; // 👈 ADJUST THIS PATH TO YOUR THEME EXTENSION FILE
 import 'package:steelforce/features/order/domain/entities/sales_order.dart';
 import 'package:steelforce/core/responsive/responsive_sizing.dart';
+import 'package:steelforce/features/order/presentation/widgets/quotation/off_visit_reason_sheet.dart';
 
 class OrderSuccessScreen extends StatelessWidget {
   const OrderSuccessScreen(
@@ -70,10 +71,8 @@ class OrderSuccessScreen extends StatelessWidget {
                               '\$${salesOrder.total.toStringAsFixed(2)}',
                               emphasize: true),
                           if (salesOrder.offVisitReason != null)
-                            _Row(
-                                'orders.shop.off_visit_warning'.tr,
-                                salesOrder.offVisitReason!
-                                    .name), // 👈 CHANGED FROM localizedLabel TO name TO RESOLVE COMPILER ERROR
+                            _Row('orders.shop.off_visit_warning'.tr,
+                                salesOrder.offVisitReason!.localizedLabel),
                           _Row('orders.quotation.builder_title'.tr,
                               salesOrder.quotationId),
                           _Row('orders.sales_order.sap_status'.tr,

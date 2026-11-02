@@ -1,5 +1,4 @@
 import 'package:steelforce/core/utils/typedefs.dart';
-import 'package:steelforce/features/depots/domain/entities/bp_depot_draft.dart';
 import 'package:steelforce/features/depots/domain/entities/business_partner_request.dart';
 import 'package:steelforce/features/depots/domain/entities/pending_depot_registration.dart';
 import 'package:steelforce/features/depots/domain/repositories/depot_document_repository.dart';
@@ -32,7 +31,20 @@ abstract interface class DepotRegistrationOutbox {
     required List<PendingDepotDocument> photos,
     bool mayHaveLanded = false,
     String? message,
-    BpDepotDraft? draftSnapshot,
+    Map<String, dynamic>? draftSnapshot,
+  });
+
+  /// Persists a wizard registration the device could not send (no
+  /// connection), for replay through `POST /api/v1/mobile/depots`.
+  ///
+  /// [draftSnapshot] is the form, carrying [clientDraftId]: that id makes a
+  /// resend return the record already saved, so this row is retried on its
+  /// own after a lost answer instead of going to review.
+  ResultFuture<String> enqueueDraft({
+    required String clientDraftId,
+    required String depotName,
+    required Map<String, dynamic> draftSnapshot,
+    required List<PendingDepotDocument> photos,
   });
 
   /// Sends the queued registrations one at a time, oldest first, with a short

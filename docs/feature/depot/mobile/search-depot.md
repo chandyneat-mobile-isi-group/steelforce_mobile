@@ -311,4 +311,4 @@ every row.
 
 - [get-depot.md](get-depot.md) — the list endpoint and offline sync
 - [filter-depot.md](filter-depot.md) — filters, sorting, paging
-- [mobile.md](mobile.md) — the whole mobile depot surface
+- [mobile.md](api.md) — the whole mobile depot surface

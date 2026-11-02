@@ -14,7 +14,7 @@ android/keystore/
 *.jks
 *.keystore
 # Generated from .env by `dart run tool/generate_ios_env.dart`; carries the
-# Google Maps key that SECURITY.md §9 keeps out of git history.
+# Google Maps key that docs/skills/security.md §9 keeps out of git history.
 ios/Flutter/Env.xcconfig
 
 # Note: build/ and .dart_tool/ are deliberately NOT listed here. This repo
@@ -69,6 +69,8 @@ lib/core/config/env.g.dart
 # that happens.
 android/app/google-services.json
 ios/Runner/GoogleService-Info.plist
+# A copy downloaded next to Runner/ rather than into it.
+ios/GoogleService-Info.plist
 
 # Release signing and distribution credentials — repo-wide.
 #
@@ -111,22 +113,14 @@ android/.kotlin/
 #
 # To reverse: delete these two lines and `git add test QA-engineering`.
 
-# Python QA automation framework (automation/). Secrets live in
-# automation/projects/<project>/.env.<environment>, already covered by `.env.*`
-# above; only `.env.example` is committed.
-automation/.venv/
-automation/reports/
-automation/history/
-__pycache__/
-*.pyc
-.pytest_cache/
-.ruff_cache/
 
-
-# Local test coverage output and Flutter crash logs — per-machine, regenerated.
+# Local tooling output — regenerated on demand, never source.
 coverage/
-flutter_*.log
+.idea/
+*.iml
 
-# Brand guide source PDF (60 MB, work in progress). Kept locally only: too large
-# for git, and not for a public repository.
-docs/style-rule/*.pdf
+# Kept local only — never pushed to GitHub.
+/test/
+/QA-engineering/
+/tool/
+/automation/

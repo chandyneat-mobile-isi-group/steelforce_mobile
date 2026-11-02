@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:steelforce/core/localization/localization_services.dart';
 
 enum ShipmentMethod { pickup, delivery }
 
@@ -85,14 +86,14 @@ class ShipmentSelectionWidget extends StatelessWidget {
       mainAxisSize: MainAxisSize.min,
       children: [
         // 1. Step 1: Delivery vs Pick up
-        Text('Method of shipment', style: headerTextStyle),
+        Text('orders.shipment.method'.tr, style: headerTextStyle),
         SizedBox(height: isTablet ? 16 : 12),
 
         Row(
           children: [
             Expanded(
               child: _SelectCard(
-                title: 'Delivery',
+                title: 'orders.sku_key_in.delivery'.tr,
                 icon: Icons.local_shipping_outlined,
                 isSelected: method == ShipmentMethod.delivery,
                 onTap: () => onMethodChanged(ShipmentMethod.delivery),
@@ -101,7 +102,7 @@ class ShipmentSelectionWidget extends StatelessWidget {
             SizedBox(width: isTablet ? 16 : 12),
             Expanded(
               child: _SelectCard(
-                title: 'Pick up',
+                title: 'orders.shipment.pick_up'.tr,
                 icon: Icons.storefront_outlined,
                 isSelected: method == ShipmentMethod.pickup,
                 onTap: () => onMethodChanged(ShipmentMethod.pickup),
@@ -114,13 +115,13 @@ class ShipmentSelectionWidget extends StatelessWidget {
 
         // 2. Step 2 (Conditional): Options based on selected shipment method
         if (method == ShipmentMethod.pickup) ...[
-          Text('Pickup Location', style: headerTextStyle),
+          Text('orders.shipment.pickup_location'.tr, style: headerTextStyle),
           SizedBox(height: isTablet ? 16 : 12),
           Row(
             children: [
               Expanded(
                 child: _SelectCard(
-                  title: 'Factory',
+                  title: 'orders.sku_key_in.pickup_factory'.tr,
                   icon: Icons.factory_outlined,
                   isSelected: pickupLocation == PickupLocation.factory,
                   onTap: () => onPickupLocationChanged(PickupLocation.factory),
@@ -129,7 +130,7 @@ class ShipmentSelectionWidget extends StatelessWidget {
               SizedBox(width: isTablet ? 16 : 12),
               Expanded(
                 child: _SelectCard(
-                  title: 'Branch',
+                  title: 'orders.sku_key_in.pickup_branch'.tr,
                   icon: Icons.store_outlined,
                   isSelected: pickupLocation == PickupLocation.branch,
                   onTap: () => onPickupLocationChanged(PickupLocation.branch),
@@ -150,7 +151,7 @@ class ShipmentSelectionWidget extends StatelessWidget {
                   ? selectedFactory
                   : _mockFactories.first,
               decoration: InputDecoration(
-                labelText: 'Select Factory Location',
+                labelText: 'orders.shipment.select_factory'.tr,
                 prefixIcon:
                     Icon(Icons.factory_rounded, size: isTablet ? 28 : 24),
                 border: OutlineInputBorder(
@@ -182,7 +183,7 @@ class ShipmentSelectionWidget extends StatelessWidget {
                   ? selectedBranch
                   : _mockBranches.first,
               decoration: InputDecoration(
-                labelText: 'Select Branch Location',
+                labelText: 'orders.shipment.select_branch'.tr,
                 prefixIcon: Icon(Icons.store_rounded, size: isTablet ? 28 : 24),
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(12),
@@ -205,10 +206,10 @@ class ShipmentSelectionWidget extends StatelessWidget {
             ),
           ],
         ] else if (method == ShipmentMethod.delivery) ...[
-          Text('Delivery Address', style: headerTextStyle),
+          Text('orders.sku_key_in.new_address'.tr, style: headerTextStyle),
           SizedBox(height: isTablet ? 16 : 12),
           _DeliveryOptionTile(
-            title: 'Default address (follow SAP)',
+            title: 'orders.shipment.default_address'.tr,
             subtitle: defaultAddress,
             isSelected: deliveryOption == DeliveryAddressOption.defaultAddress,
             onTap: () =>
@@ -216,7 +217,7 @@ class ShipmentSelectionWidget extends StatelessWidget {
           ),
           SizedBox(height: isTablet ? 14 : 10),
           _DeliveryOptionTile(
-            title: 'Input new address & phone number',
+            title: 'orders.shipment.new_address_option'.tr,
             subtitle: null,
             isSelected: deliveryOption == DeliveryAddressOption.newAddress,
             onTap: () =>
@@ -230,8 +231,8 @@ class ShipmentSelectionWidget extends StatelessWidget {
               style: TextStyle(fontSize: isTablet ? 17 : 14),
               onChanged: (_) => onAddressFieldsChanged?.call(),
               decoration: InputDecoration(
-                labelText: 'New Address',
-                hintText: 'Enter new delivery address',
+                labelText: 'orders.shipment.new_address'.tr,
+                hintText: 'orders.shipment.new_address_hint'.tr,
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(12),
                 ),
@@ -244,8 +245,8 @@ class ShipmentSelectionWidget extends StatelessWidget {
               style: TextStyle(fontSize: isTablet ? 17 : 14),
               onChanged: (_) => onAddressFieldsChanged?.call(),
               decoration: InputDecoration(
-                labelText: 'Phone Number',
-                hintText: 'Enter contact phone number',
+                labelText: 'orders.shipment.phone_number'.tr,
+                hintText: 'orders.shipment.phone_hint'.tr,
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(12),
                 ),
@@ -257,14 +258,14 @@ class ShipmentSelectionWidget extends StatelessWidget {
         SizedBox(height: isTablet ? 26 : 20),
 
         // 3. Cash on Delivery (COD) Section
-        Text('Cash on Delivery (COD)', style: headerTextStyle),
+        Text('orders.shipment.cod'.tr, style: headerTextStyle),
         SizedBox(height: isTablet ? 16 : 12),
 
         Row(
           children: [
             Expanded(
               child: _SelectCard(
-                title: 'Yes',
+                title: 'orders.shipment.yes'.tr,
                 icon: Icons.payments_outlined,
                 isSelected: isCod == true,
                 onTap: () => onCodChanged(true),
@@ -273,7 +274,7 @@ class ShipmentSelectionWidget extends StatelessWidget {
             SizedBox(width: isTablet ? 16 : 12),
             Expanded(
               child: _SelectCard(
-                title: 'No',
+                title: 'orders.shipment.no'.tr,
                 icon: Icons.money_off_outlined,
                 isSelected: isCod == false,
                 onTap: () => onCodChanged(false),
@@ -284,7 +285,7 @@ class ShipmentSelectionWidget extends StatelessWidget {
 
         // 4. Type of Invoice Section
         SizedBox(height: isTablet ? 26 : 20),
-        Text('Type of Invoice', style: headerTextStyle),
+        Text('orders.shipment.invoice_type'.tr, style: headerTextStyle),
         SizedBox(height: isTablet ? 16 : 12),
 
         IntrinsicHeight(
@@ -293,7 +294,7 @@ class ShipmentSelectionWidget extends StatelessWidget {
             children: [
               Expanded(
                 child: _SelectCard(
-                  title: 'Tax Invoice',
+                  title: 'orders.shipment.tax_invoice'.tr,
                   icon: Icons.receipt_long_outlined,
                   isSelected: isTaxApplicable == true,
                   onTap: () => onTaxApplicableChanged?.call(true),
@@ -302,7 +303,7 @@ class ShipmentSelectionWidget extends StatelessWidget {
               SizedBox(width: isTablet ? 16 : 12),
               Expanded(
                 child: _SelectCard(
-                  title: 'Commercial Invoice',
+                  title: 'orders.shipment.commercial_invoice'.tr,
                   icon: Icons.receipt_outlined,
                   isSelected: isTaxApplicable == false,
                   onTap: () => onTaxApplicableChanged?.call(false),

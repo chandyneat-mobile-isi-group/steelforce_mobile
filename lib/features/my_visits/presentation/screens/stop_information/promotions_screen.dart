@@ -13,6 +13,7 @@ import 'package:steelforce/shared/widgets/promotions/promo_card.dart';
 import 'package:steelforce/shared/widgets/promotions/promo_filter_bar.dart';
 import 'package:steelforce/shared/widgets/promotions/promo_tone.dart';
 import 'package:steelforce/shared/widgets/promotions/promo_view.dart';
+import 'package:steelforce/shared/widgets/brand_wallpaper_background.dart';
 
 /// Every promotion a rep can quote at one outlet.
 ///
@@ -124,7 +125,7 @@ class _PromotionsScreenState extends State<PromotionsScreen> {
     final quotable = _sorted.where((p) => p.isQuotable(_now)).length;
 
     return Scaffold(
-      backgroundColor: colors.canvas,
+      backgroundColor: context.appColors.canvas,
       appBar: AppBar(
         backgroundColor: colors.canvas,
         elevation: 0,
@@ -161,45 +162,47 @@ class _PromotionsScreenState extends State<PromotionsScreen> {
           ],
         ),
       ),
-      body: SafeArea(
-        child: ResponsiveContentFrame(
-          child: Column(
-            children: [
-              SizedBox(height: context.rh(4)),
-              PromoFilterBar<PromoKind>(
-                selected: _kind,
-                onChanged: (kind) => setState(() => _kind = kind),
-                options: [
-                  PromoFilterOption(
-                    value: null,
-                    label: 'promotions.filter.all'.tr,
-                    count: _all.length,
-                    icon: Icons.apps_rounded,
+      body: BrandWallpaperBody(
+          style: BrandWallpaperStyle.vivid,
+          child: SafeArea(
+            child: ResponsiveContentFrame(
+              child: Column(
+                children: [
+                  SizedBox(height: context.rh(4)),
+                  PromoFilterBar<PromoKind>(
+                    selected: _kind,
+                    onChanged: (kind) => setState(() => _kind = kind),
+                    options: [
+                      PromoFilterOption(
+                        value: null,
+                        label: 'promotions.filter.all'.tr,
+                        count: _all.length,
+                        icon: Icons.apps_rounded,
+                      ),
+                      // The three mechanisms a depot can be offered (BRD §6.1),
+                      // fixed rather than derived from the data. A bar whose
+                      // options appear and vanish as promotions expire gives the
+                      // rep no stable place to tap; a mechanism with none left
+                      // still renders, disabled, and its zero is the answer.
+                      for (final kind in _offeredKinds)
+                        PromoFilterOption(
+                          value: kind,
+                          label: promoToneFor(context, kind).labelKey.tr,
+                          count: _countOf(kind),
+                          icon: promoToneFor(context, kind).icon,
+                        ),
+                    ],
                   ),
-                  // The three mechanisms a depot can be offered (BRD §6.1),
-                  // fixed rather than derived from the data. A bar whose
-                  // options appear and vanish as promotions expire gives the
-                  // rep no stable place to tap; a mechanism with none left
-                  // still renders, disabled, and its zero is the answer.
-                  for (final kind in _offeredKinds)
-                    PromoFilterOption(
-                      value: kind,
-                      label: promoToneFor(context, kind).labelKey.tr,
-                      count: _countOf(kind),
-                      icon: promoToneFor(context, kind).icon,
-                    ),
+                  SizedBox(height: context.rh(8)),
+                  Expanded(
+                    child: visible.isEmpty
+                        ? _EmptyState(filtered: _kind != null)
+                        : _PromoList(promos: visible, now: _now),
+                  ),
                 ],
               ),
-              SizedBox(height: context.rh(8)),
-              Expanded(
-                child: visible.isEmpty
-                    ? _EmptyState(filtered: _kind != null)
-                    : _PromoList(promos: visible, now: _now),
-              ),
-            ],
-          ),
-        ),
-      ),
+            ),
+          )),
     );
   }
 }

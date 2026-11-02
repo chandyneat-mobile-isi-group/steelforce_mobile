@@ -2,7 +2,7 @@ import 'package:steelforce/core/database/hive/app_preferences.dart';
 
 /// Persistence for the language preference, backed by the Hive-based
 /// [AppPreferences] cache box (non-sensitive — same store as theme and
-/// onboarding, per SECURITY.md §3).
+/// onboarding, per docs/skills/security.md §3).
 abstract interface class LanguageLocalDatasource {
   /// Saved ISO 639-1 code, or null when the user never chose.
   String? getSavedLanguageCode();

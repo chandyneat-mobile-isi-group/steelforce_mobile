@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:steelforce/core/localization/localization_services.dart';
 import 'package:steelforce/core/theme/theme_extensions.dart';
+import 'package:steelforce/features/app_coach/presentation/services/coach_keys.dart';
 import 'package:steelforce/features/order/presentation/bloc/cart/cart_cubit.dart';
 import 'package:steelforce/features/order/presentation/bloc/cart/cart_state.dart';
 import 'package:steelforce/core/responsive/responsive_sizing.dart';
@@ -75,22 +76,26 @@ class QuotationBottomBar extends StatelessWidget {
                   SizedBox(width: context.rw(12)),
                   Expanded(
                     flex: 7,
-                    child: ElevatedButton(
-                      onPressed: items.isEmpty ? null : onSave,
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: colors.accentPurple,
-                        foregroundColor: Colors.white,
-                        padding: EdgeInsets.symmetric(vertical: context.rh(18)),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(14),
+                    child: CoachKeys.wrap(
+                      CoachKeys.quotationSave,
+                      child: ElevatedButton(
+                        onPressed: items.isEmpty ? null : onSave,
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: colors.accentPurple,
+                          foregroundColor: Colors.white,
+                          padding:
+                              EdgeInsets.symmetric(vertical: context.rh(18)),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(14),
+                          ),
                         ),
-                      ),
-                      child: Text(
-                        'orders.quotation.save_to_sap'.tr,
-                        textAlign: TextAlign.center,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: const TextStyle(fontWeight: FontWeight.w800),
+                        child: Text(
+                          'orders.quotation.save_to_sap'.tr,
+                          textAlign: TextAlign.center,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: const TextStyle(fontWeight: FontWeight.w800),
+                        ),
                       ),
                     ),
                   ),

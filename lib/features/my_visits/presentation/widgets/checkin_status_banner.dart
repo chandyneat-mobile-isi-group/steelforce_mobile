@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:steelforce/core/localization/localization_services.dart';
 import 'package:steelforce/core/theme/theme_extensions.dart';
 import 'package:steelforce/core/responsive/responsive_sizing.dart';
+import 'package:steelforce/features/my_visits/presentation/localization/my_visits_labels.dart';
 
 /// Surfaces exactly why check-in is (or isn't) allowed right now — blocked
 /// reasons in red, non-blocking fraud/VPN warnings in amber. Covers both
@@ -42,14 +43,14 @@ class CheckinStatusBanner extends StatelessWidget {
           _Pill(
               color: Theme.of(context).colorScheme.error,
               icon: Icons.block_rounded,
-              text: blockedReason!),
+              text: localizeCheckInMessage(blockedReason!)),
         ],
         for (final warning in warnings) ...[
           SizedBox(height: context.rh(8)),
           _Pill(
               color: colors.warning,
               icon: Icons.warning_amber_rounded,
-              text: warning),
+              text: localizeCheckInMessage(warning)),
         ],
       ],
     );

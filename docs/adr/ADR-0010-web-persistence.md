@@ -3,13 +3,13 @@
 - **Status**: Accepted
 - **Date**: 2026-07-29
 - **Deciders**: Solution / Flutter / DB / Security architecture review
-- **Related**: `docs/blueprint/web-migration-plan.md` §3/§10, `docs/skills/security.md` §3/§4, `docs/blueprint/system-architecture.md` §3, ADR-001, ADR-002, ADR-008
+- **Related**: `docs/blueprint/web-architecture.md` §3/§10, `docs/skills/security.md` §3/§4, `docs/blueprint/system-architecture.md` §3, ADR-001, ADR-002, ADR-008
 
 ---
 
 ## Context
 
-`docs/blueprint/web-migration-plan.md` establishes that the presentation and domain layers of this app are web-ready, and that the blocker to a Flutter Web target sits entirely in `core/` persistence. The specific problem:
+`docs/blueprint/web-architecture.md` establishes that the presentation and domain layers of this app are web-ready, and that the blocker to a Flutter Web target sits entirely in `core/` persistence. The specific problem:
 
 `docs/blueprint/system-architecture.md` §3 assigns every byte of application state to one of four stores, and three of them have no faithful web equivalent.
 
@@ -34,7 +34,7 @@ Consequently:
 2. **ADR-008 is unaffected.** The SQLCipher path and its fail-closed checks remain the mobile standard, unchanged. This ADR supersedes nothing.
 3. **ADR-001 (single database) and ADR-002 (local DB is the source of truth) hold on web.** The schema, DAOs, migrator, repositories, usecases, sync queue, and optimistic-UI paths are byte-identical across platforms. Only the executor differs, selected by conditional import.
 4. **Layer 4 (media) on web is in-memory `Uint8List`/`XFile`**, never a filesystem path. Presentation code must not assume `dart:io File`.
-5. **Layer 3 (secrets) on web is explicitly weaker** and is handled separately under `docs/blueprint/web-migration-plan.md` §4/W6 — short-lived in-memory access tokens, strict CSP, and a compile-time guard ensuring `Env.dbSalt` and SAP credentials never reach a web bundle. **Envied obfuscation provides no protection in a JS/WASM bundle** and must not be relied on there.
+5. **Layer 3 (secrets) on web is explicitly weaker** and is handled separately under `docs/blueprint/web-architecture.md` §4/W6 — short-lived in-memory access tokens, strict CSP, and a compile-time guard ensuring `Env.dbSalt` and SAP credentials never reach a web bundle. **Envied obfuscation provides no protection in a JS/WASM bundle** and must not be relied on there.
 
 Offline capability on web is therefore **session-scoped**: a rep can work disconnected for the length of a browser session, and unsynced work is lost if the tab closes while offline. This limitation must be stated honestly in `docs/blueprint/offline-architecture.md` and surfaced in the web UI — it must not be presented as parity with mobile.
 
@@ -53,8 +53,8 @@ Offline capability on web is therefore **session-scoped**: a rep can work discon
 **Negative**
 
 - **Web offline is genuinely weaker than mobile**, and unsynced captures are lost on tab close while disconnected. Accepted: the realistic web use case is desk and back-office work, not a full field day. Mitigation: the web UI must warn before closing with a non-empty sync queue.
-- **Cold start on web re-pulls data**, since nothing is cached across sessions. This makes first-load latency a real UX concern on a Cambodian field connection and interacts with the bundle-size budget (`docs/blueprint/web-migration-plan.md` R5/W7).
-- **Two executor paths to keep honest.** Divergence between the native and in-memory connections is a live risk (R3). Mitigation is mandatory and non-negotiable: the DAO test suite runs against **both** executors, per `docs/blueprint/web-migration-plan.md` §8.
+- **Cold start on web re-pulls data**, since nothing is cached across sessions. This makes first-load latency a real UX concern on a Cambodian field connection and interacts with the bundle-size budget (`docs/blueprint/web-architecture.md` R5/W7).
+- **Two executor paths to keep honest.** Divergence between the native and in-memory connections is a live risk (R3). Mitigation is mandatory and non-negotiable: the DAO test suite runs against **both** executors, per `docs/blueprint/web-architecture.md` §8.
 - **Memory ceiling.** A large catalog pull now sits in browser RAM rather than on disk. Needs measurement before the web target ships; may force pagination limits that mobile does not have.
 - **`docs/blueprint/system-architecture.md` §3's four-layer matrix now has a documented platform exception**, which is a small ongoing comprehension cost for new engineers. Mitigated by this ADR being linked from that section.
 

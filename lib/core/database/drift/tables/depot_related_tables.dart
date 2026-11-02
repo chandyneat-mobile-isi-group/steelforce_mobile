@@ -21,7 +21,7 @@ import 'package:drift/drift.dart';
 /// invisible (every read filters by `depot_id`) and self-heals on the next
 /// sync — which is strictly better than losing the batch.
 ///
-/// See `docs/adr/ADR011localmirrornorelations.md`.
+/// See `docs/adr/ADR-0011-local-mirror-no-foreign-keys.md`.
 
 @TableIndex(name: 'idx_depot_contacts_depot', columns: {#depotId})
 class DepotContacts extends Table {

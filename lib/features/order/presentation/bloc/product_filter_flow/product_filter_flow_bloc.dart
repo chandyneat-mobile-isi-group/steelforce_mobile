@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'package:steelforce/core/error/failure_message.dart';
 
 import 'package:bloc_concurrency/bloc_concurrency.dart';
 import 'package:steelforce/core/network/api/api_defaults.dart';
@@ -106,7 +107,7 @@ class ProductFilterFlowBloc
       )),
       failure: (f) => emit(state.copyWith(
         status: FilterFlowStatus.failure,
-        errorMessage: () => f.message,
+        errorMessage: () => f.userMessage,
       )),
     );
   }
@@ -146,7 +147,7 @@ class ProductFilterFlowBloc
         status: FilterFlowStatus.failure,
         errorMessage: () => result.when(
           success: (_) => null,
-          failure: (f) => f.message,
+          failure: (f) => f.userMessage,
         ),
       ));
       return;
@@ -299,7 +300,7 @@ class ProductFilterFlowBloc
           optionsLoading: false,
           status: FilterFlowStatus.failure,
           errorMessage: () =>
-              result.when(success: (_) => null, failure: (f) => f.message),
+              result.when(success: (_) => null, failure: (f) => f.userMessage),
         ));
         return;
       }
@@ -527,7 +528,7 @@ class ProductFilterFlowBloc
       )),
       failure: (f) => emit(state.copyWith(
         productStatus: ProductListStatus.failure,
-        errorMessage: () => f.message,
+        errorMessage: () => f.userMessage,
       )),
     );
 

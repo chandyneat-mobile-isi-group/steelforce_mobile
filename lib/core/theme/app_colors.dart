@@ -92,13 +92,48 @@ class AppColors {
   // explained at the top of this class.
   static const brandNavy = Color(0xFF011E41); // Ironclad Blue · Pantone 282 C
   static const brandNavyDark = Color(0xFF002169); // Dark Sapphire · 280 C
+  // Apex Blue softened, sampled from the approved chevron backdrop artwork
+  // (launch, sign-in, password reset — `BrandPatternBackground`).
+  static const brandPattern = Color(0xFF1C4790);
+  // The app wallpaper (`BrandWallpaperBackground`): white, settling into a
+  // breath of steel, under the brand chevron in Ironclad navy — the pattern
+  // of the sign-in backdrop (`BrandPatternBackground`).
+  static const wallpaperTop = Color(0xFFFFFFFF);
+  static const wallpaperBottom = Color(0xFFF4F7FB);
+  static const wallpaperLine = Color(0x14011E41); // Ironclad, 8%
+  // Its calm variant for text-heavy screens (profile): the same white with a
+  // fainter chevron, so long text stays the focus.
+  static const wallpaperSubtleTop = Color(0xFFFFFFFF);
+  static const wallpaperSubtleBottom = Color(0xFFF7F9FC);
+  static const wallpaperSubtleLine =
+      Color(0x59DCE3EB); // Foundational White, 35%
   // Brand Guide §07 secondary colour: the guide's one warm accent.
   static const brandBlaze = Color(0xFFE0592A); // Worksite Blaze · 7579 C
   static const accentPurple = Color(0xFF7C3AED);
   static const slate = Color(0xFF1E293B);
-  // The gold accent of the SteelForce wordmark ("Steel" navy, "Force" gold)
-  // and its underline, sampled from the approved guest-landing artwork.
-  static const brandGold = Color(0xFFCF9611);
+  // The signed-in home's frames, in the brand's own steel (Brand Guide §07):
+  // Foundational White and a deeper tint of it that holds as a rim on white.
+  // The accents beside them are Apex Blue → Ironclad ([primary],
+  // [brandNavy]); the gold these replaced was not part of the identity.
+  static const steelLight = Color(0xFFDCE3EB); // Foundational White · 656 C
+  static const steelRim = Color(0xFFC5D1E0);
+
+  // ── On photography ─────────────────────────────────────────────────
+  // Surfaces that stay dark in both themes — the sign-in screen's building
+  // photo under an Ironclad overlay. The theme's own tokens are tuned for
+  // white (light) or near-black (dark) and lose contrast on that navy.
+  //
+  // Apex Blue lifted for dark surfaces: the brand palette's dark-theme
+  // primary. Accents, focus rings and the checked box on the photo.
+  static const apexOnDark = Color(0xFF8AB4E8);
+  // A red that reads on navy; [error] is tuned for white and goes muddy.
+  static const errorOnDark = Color(0xFFFF8A80);
+  // The sign-in screen's lit blue, sampled from the approved login artwork:
+  // the Sign In gradient, the ticked box and the bottom glow. Too saturated
+  // for small text on white; for the dark brand backdrop only.
+  static const signalBlue = Color(0xFF1F6BFF);
+  // Its lighter end: the gradient's far stop, "Stronger" and the links.
+  static const signalBlueLight = Color(0xFF5AA2FF);
 
   static const double radius = 16.0;
 

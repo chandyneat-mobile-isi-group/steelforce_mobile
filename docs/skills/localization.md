@@ -1,7 +1,7 @@
 # Localization Guide
 
 > SteelForce (ISI Steel Sales Mobile) · How the multilingual system works and how to extend it.
-> Companion: `docs/feature/localization/string-analysis-report.md` (the migration analysis that produced this system).
+> Companion: `docs/skills/localization.md` (the migration analysis that produced this system).
 > Last updated: 2026-08-06.
 
 ---

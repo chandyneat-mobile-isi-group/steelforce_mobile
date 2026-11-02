@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'package:steelforce/core/error/failure_message.dart';
 
 import 'package:bloc_concurrency/bloc_concurrency.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -59,7 +60,7 @@ class CatalogBloc extends Bloc<CatalogEvent, CatalogState> {
         filter: filter,
         brands: brands,
       )),
-      failure: (f) => emit(CatalogError(f.message)),
+      failure: (f) => emit(CatalogError(f.userMessage)),
     );
   }
 

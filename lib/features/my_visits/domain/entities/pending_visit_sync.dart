@@ -33,6 +33,8 @@ class PendingVisitStop extends Equatable {
     this.collections = 0,
     this.notes = 0,
     this.photos = 0,
+    this.photoFiles = const [],
+    this.noteTexts = const [],
   });
 
   final String stopId;
@@ -54,6 +56,13 @@ class PendingVisitStop extends Equatable {
   final int collections;
   final int notes;
   final int photos;
+
+  /// The photographs themselves, oldest first, for the Sync Center's details
+  /// view. Shown on this device only, never logged.
+  final List<PendingVisitPhoto> photoFiles;
+
+  /// What the rep wrote in each unsent note, oldest first.
+  final List<String> noteTexts;
 
   /// The check-out is held until the check-in reaches the server.
   bool get checkOutWaitsForCheckIn => checkInAt != null && checkOutAt != null;
@@ -79,5 +88,26 @@ class PendingVisitStop extends Equatable {
         collections,
         notes,
         photos,
+        photoFiles,
+        noteTexts,
       ];
+}
+
+/// One photograph a visit holds on the device, waiting to be sent.
+class PendingVisitPhoto extends Equatable {
+  const PendingVisitPhoto({
+    required this.path,
+    required this.takenAt,
+    this.caption = '',
+    this.isSignature = false,
+  });
+
+  /// Local file path (or, for an already-uploaded legacy row, a URL).
+  final String path;
+  final DateTime takenAt;
+  final String caption;
+  final bool isSignature;
+
+  @override
+  List<Object?> get props => [path, takenAt, caption, isSignature];
 }

@@ -27,6 +27,19 @@ class _TransitMapState extends State<TransitMap> {
   GoogleMapController? _controller;
   bool _didInitialFit = false;
 
+  /// The map as last built while this screen was on top.
+  ///
+  /// Once another screen covers it, or it is on its way out, the same
+  /// instance is handed back so Flutter skips the update. On iOS the native
+  /// map view is torn down before the route's exit animation ends, and every
+  /// location fix meanwhile used to push markers, circles and polylines at
+  /// it — eight `channel-error` PlatformExceptions per fix, right after a
+  /// check-in opened the camera.
+  GoogleMap? _map;
+
+  /// This screen is the one on top, so the native map is there to update.
+  bool get _onTop => ModalRoute.of(context)?.isCurrent ?? true;
+
   /// Whether the shop has a pin worth drawing anything against.
   ///
   /// `(0, 0)` is the app-wide encoding for "no coordinates were ever recorded",
@@ -94,7 +107,8 @@ class _TransitMapState extends State<TransitMap> {
   void _fitBounds() {
     final current = _currentLatLng;
     final controller = _controller;
-    if (controller == null) return;
+    // Covered or leaving: the native map may already be gone.
+    if (controller == null || !mounted || !_onTop) return;
     _didInitialFit = true;
 
     // No pin: there is nothing to fit *to*, so the rep's own position is the
@@ -184,30 +198,34 @@ class _TransitMapState extends State<TransitMap> {
       return _NoLocationPlaceholder();
     }
 
+    if (_onTop || _map == null) {
+      _map = GoogleMap(
+        initialCameraPosition: CameraPosition(
+          target: current ?? _targetLatLng,
+          zoom: 14,
+        ),
+        onMapCreated: (controller) {
+          _controller = controller;
+          WidgetsBinding.instance.addPostFrameCallback((_) => _fitBounds());
+        },
+        markers: markers,
+        circles: circles,
+        polylines: polylines,
+        // Native OS blue-dot layer — draws straight from the device's GPS,
+        // independent of LocationTrackingCubit/current. Useful both as a
+        // real "where am I" indicator for the rep and as a way to tell
+        // whether a stuck geofence is a tracking-pipeline issue (blue dot
+        // moves, custom marker doesn't) or a genuine GPS/position issue
+        // (blue dot itself doesn't move or sits outside the circle).
+        myLocationEnabled: true,
+        myLocationButtonEnabled: false,
+        zoomControlsEnabled: false,
+      );
+    }
+
     return Stack(
       children: [
-        GoogleMap(
-          initialCameraPosition: CameraPosition(
-            target: current ?? _targetLatLng,
-            zoom: 14,
-          ),
-          onMapCreated: (controller) {
-            _controller = controller;
-            WidgetsBinding.instance.addPostFrameCallback((_) => _fitBounds());
-          },
-          markers: markers,
-          circles: circles,
-          polylines: polylines,
-          // Native OS blue-dot layer — draws straight from the device's GPS,
-          // independent of LocationTrackingCubit/current. Useful both as a
-          // real "where am I" indicator for the rep and as a way to tell
-          // whether a stuck geofence is a tracking-pipeline issue (blue dot
-          // moves, custom marker doesn't) or a genuine GPS/position issue
-          // (blue dot itself doesn't move or sits outside the circle).
-          myLocationEnabled: true,
-          myLocationButtonEnabled: false,
-          zoomControlsEnabled: false,
-        ),
+        _map!,
         // Hidden, not disabled: driving directions to (0, 0) open the device's
         // map app on open water, which is worse than having no button.
         if (_hasTarget)

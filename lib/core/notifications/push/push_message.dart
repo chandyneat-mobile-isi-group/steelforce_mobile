@@ -1,3 +1,5 @@
+import 'package:steelforce/core/notifications/notification_deep_link.dart';
+
 /// A push as this app sees it, with no Firebase types attached.
 ///
 /// `RemoteMessage` stops at the platform boundary. Everything above
@@ -30,7 +32,9 @@ class PushMessage {
       (title == null || title!.isEmpty) && (body == null || body!.isEmpty);
 
   /// `notification_id` — the inbox row this push is about, and the upsert key.
-  String? get notificationId => data['notification_id'];
+  /// The `/me` backend sends it as `notificationId`.
+  String? get notificationId =>
+      data['notification_id'] ?? data['notificationId'];
 
   /// The canonical dotted event code (`ROUTE.ASSIGNED`).
   ///
@@ -66,11 +70,16 @@ class PushMessage {
   /// is invisible until a rep reports it.
   ///
   /// `action` is the shorthand alias for the same value.
+  ///
+  /// The `/me` backend sends the target as `targetType` + `targetId` instead;
+  /// that pair is re-encoded the same way the inbox row's `link` is.
   String? get deepLink {
     final canonical = data['deep_link'];
     if (canonical != null && canonical.isNotEmpty) return canonical;
     final alias = data['action'];
-    return (alias != null && alias.isNotEmpty) ? alias : null;
+    if (alias != null && alias.isNotEmpty) return alias;
+    return NotificationDeepLink.fromTarget(
+        data['targetType'], data['targetId']);
   }
 
   String? get entityType => data['entity_type'] ?? data['referenceType'];

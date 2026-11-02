@@ -10,7 +10,6 @@ import 'package:gal/gal.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import 'package:steelforce/core/animations/page_transition.dart';
-import 'package:steelforce/core/config/feature_flags.dart';
 import 'package:steelforce/core/di/injection_container.dart';
 import 'package:steelforce/core/localization/localization_services.dart';
 import 'package:steelforce/core/localization/localized_builder.dart';
@@ -30,11 +29,15 @@ import 'package:steelforce/features/my_visits/presentation/navigation/end_visit.
 import 'package:steelforce/features/my_visits/presentation/screens/stop_information/order_history_screen.dart';
 import 'package:steelforce/features/my_visits/presentation/screens/stop_information/promotions_screen.dart';
 import 'package:steelforce/features/my_visits/presentation/screens/stops_check_in_screen.dart';
-import 'package:steelforce/features/my_visits/presentation/widgets/visit_step_bar.dart';
 import 'package:steelforce/core/utils/money.dart';
 import 'package:steelforce/features/depots/domain/entities/depot_stop_information.dart';
 import 'package:steelforce/features/my_visits/presentation/bloc/cubit/stop_information_cubit.dart';
 import 'package:intl/intl.dart';
+import 'package:steelforce/features/app_coach/domain/entities/coach_action.dart';
+import 'package:steelforce/features/app_coach/presentation/services/coach_keys.dart';
+import 'package:steelforce/features/my_visits/presentation/widgets/coach_on_open.dart';
+import 'package:steelforce/shared/widgets/brand_wallpaper_background.dart';
+import 'package:steelforce/features/my_visits/presentation/localization/my_visits_labels.dart';
 
 part 'widgets/stop_hero_card.dart';
 part 'widgets/stop_information_tabs.dart';
@@ -66,6 +69,7 @@ class StopInformationScreen extends StatelessWidget {
 
     Navigator.of(context).push(
       MaterialPageRoute(
+        settings: const RouteSettings(name: RouteCheckInScreen.routeName),
         builder: (_) => LocalizedBuilder(
           builder: (_) => MultiBlocProvider(
             providers: [
@@ -139,13 +143,16 @@ class StopInformationScreen extends StatelessWidget {
   }
 
   @override
-  Widget build(BuildContext context) => LocalizedBuilder(builder: _build);
+  Widget build(BuildContext context) => CoachOnOpen(
+        action: CoachAction.openVisitDetails,
+        child: LocalizedBuilder(builder: _build),
+      );
 
   Widget _build(BuildContext context) {
     final colors = context.appColors;
 
     return Scaffold(
-      backgroundColor: colors.canvas,
+      backgroundColor: context.appColors.canvas,
       appBar: AppBar(
         backgroundColor: colors.canvas,
         elevation: 0,
@@ -155,7 +162,6 @@ class StopInformationScreen extends StatelessWidget {
           color: colors.textPrimary,
           size: context.rr(22),
         ),
-        bottom: VisitStepBar(current: VisitStepBar.forStatus(stop.status)),
         title: Text(
           'my_visits.stop_info.title'.tr,
           style: TextStyle(
@@ -165,73 +171,73 @@ class StopInformationScreen extends StatelessWidget {
           ),
         ),
       ),
-      body: SafeArea(
-        child: ResponsiveContentFrame(
-          child: DefaultTabController(
-            // Sales (credit and order history) is hidden while quotations
-            // and orders are switched off.
-            length: FeatureFlags.quotesAndOrders ? 3 : 2,
-            child: Column(
-              children: [
-                Padding(
-                  padding: EdgeInsets.symmetric(
-                    horizontal: context.pagePadding,
-                    vertical: context.rh(6),
-                  ),
-                  child: _HeroCard(
-                    stop: stop,
-                    onPhoneTap: _openPhoneOrTelegram,
-                    onLocationTap: _openGoogleMaps,
-                  ),
-                ),
-                SizedBox(height: context.rh(8)),
-                Container(
-                  margin: EdgeInsets.symmetric(horizontal: context.pagePadding),
-                  decoration: BoxDecoration(
-                    color: colors.card,
-                    borderRadius: BorderRadius.circular(context.rr(12)),
-                    border: Border.all(color: colors.border),
-                  ),
-                  child: TabBar(
-                    labelColor: Theme.of(context).colorScheme.primary,
-                    unselectedLabelColor: colors.textSecondary,
-                    indicatorColor: Theme.of(context).colorScheme.primary,
-                    indicatorSize: TabBarIndicatorSize.tab,
-                    indicatorWeight: 3,
-                    labelStyle: TextStyle(
-                      fontSize: context.rsp(13),
-                      fontWeight: FontWeight.w800,
-                    ),
-                    unselectedLabelStyle: TextStyle(
-                      fontSize: context.rsp(13),
-                      fontWeight: FontWeight.w600,
-                    ),
-                    tabs: [
-                      Tab(text: 'my_visits.stop_info.tab_overview'.tr),
-                      if (FeatureFlags.quotesAndOrders)
-                        Tab(text: 'my_visits.stop_info.tab_sales'.tr),
-                      Tab(text: 'my_visits.stop_info.tab_promos'.tr),
-                    ],
-                  ),
-                ),
-                Expanded(
-                  child: TabBarView(
-                    children: [
-                      _OverviewTab(
+      body: BrandWallpaperBody(
+          style: BrandWallpaperStyle.vivid,
+          child: SafeArea(
+            child: ResponsiveContentFrame(
+              child: DefaultTabController(
+                length: 3,
+                child: Column(
+                  children: [
+                    Padding(
+                      padding: EdgeInsets.symmetric(
+                        horizontal: context.pagePadding,
+                        vertical: context.rh(6),
+                      ),
+                      child: _HeroCard(
                         stop: stop,
                         onPhoneTap: _openPhoneOrTelegram,
                         onLocationTap: _openGoogleMaps,
                       ),
-                      if (FeatureFlags.quotesAndOrders) _SalesTab(stop: stop),
-                      _PromosTab(stop: stop),
-                    ],
-                  ),
+                    ),
+                    SizedBox(height: context.rh(8)),
+                    Container(
+                      margin:
+                          EdgeInsets.symmetric(horizontal: context.pagePadding),
+                      decoration: BoxDecoration(
+                        color: colors.card,
+                        borderRadius: BorderRadius.circular(context.rr(12)),
+                        border: Border.all(color: colors.border),
+                      ),
+                      child: TabBar(
+                        labelColor: Theme.of(context).colorScheme.primary,
+                        unselectedLabelColor: colors.textSecondary,
+                        indicatorColor: Theme.of(context).colorScheme.primary,
+                        indicatorSize: TabBarIndicatorSize.tab,
+                        indicatorWeight: 3,
+                        labelStyle: TextStyle(
+                          fontSize: context.rsp(13),
+                          fontWeight: FontWeight.w800,
+                        ),
+                        unselectedLabelStyle: TextStyle(
+                          fontSize: context.rsp(13),
+                          fontWeight: FontWeight.w600,
+                        ),
+                        tabs: [
+                          Tab(text: 'my_visits.stop_info.tab_overview'.tr),
+                          Tab(text: 'my_visits.stop_info.tab_sales'.tr),
+                          Tab(text: 'my_visits.stop_info.tab_promos'.tr),
+                        ],
+                      ),
+                    ),
+                    Expanded(
+                      child: TabBarView(
+                        children: [
+                          _OverviewTab(
+                            stop: stop,
+                            onPhoneTap: _openPhoneOrTelegram,
+                            onLocationTap: _openGoogleMaps,
+                          ),
+                          _SalesTab(stop: stop),
+                          _PromosTab(stop: stop),
+                        ],
+                      ),
+                    ),
+                  ],
                 ),
-              ],
+              ),
             ),
-          ),
-        ),
-      ),
+          )),
       bottomNavigationBar: _StopActionBar(
         stop: stop,
         bloc: _resolveBloc<ActiveRouteBloc>(context),

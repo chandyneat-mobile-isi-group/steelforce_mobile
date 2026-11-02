@@ -7,10 +7,20 @@ class DepotInitialPage {
     required this.hasMore,
     this.syncTimestamp,
     this.pageSize,
+    this.completeIds,
+    this.skippedWithoutId = 0,
   });
 
   final List<DepotModel> items;
   final bool hasMore;
+
+  /// Rows the answer listed but gave no id for — not stored, since every one
+  /// would land on the same primary key.
+  final int skippedWithoutId;
+
+  /// Every id the rep holds, when the answer is their complete book (the
+  /// grouped `depots` / `nonDepots` / `draft` shape). Null for a paged answer.
+  final Set<String>? completeIds;
 
   /// The server's clock, from `metadata.syncTimestamp`. The watermark for the
   /// next delta comes from here and **never** from the device clock.
@@ -28,9 +38,17 @@ class DepotDeltaPage {
     required this.deletedIds,
     this.hasMore = false,
     this.syncTimestamp,
+    this.completeIds,
+    this.skippedWithoutId = 0,
   });
 
   final List<DepotModel> upserted;
+
+  /// See [DepotInitialPage.skippedWithoutId].
+  final int skippedWithoutId;
+
+  /// As [DepotInitialPage.completeIds].
+  final Set<String>? completeIds;
 
   /// Ids of rows the server reported as `deleted: true`.
   ///

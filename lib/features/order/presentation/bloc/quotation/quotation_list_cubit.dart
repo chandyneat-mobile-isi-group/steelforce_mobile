@@ -1,4 +1,5 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:steelforce/core/error/failure_message.dart';
 import 'package:steelforce/features/order/domain/entities/quotation_api_entities.dart';
 import 'package:steelforce/features/order/domain/usecases/quotation_api_usecases.dart';
 import 'package:steelforce/features/order/presentation/bloc/quotation/quotation_list_state.dart';
@@ -46,7 +47,7 @@ class QuotationListCubit extends Cubit<QuotationListState> {
         ));
       },
       failure: (failure) {
-        emit(QuotationListError(failure.message));
+        emit(QuotationListError(failure.userMessage));
       },
     );
   }

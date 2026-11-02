@@ -24,4 +24,9 @@ abstract final class PreferenceKeys {
   /// §14 caps re-showing it at once every 14 days after a decline. Local UI
   /// state with nothing sensitive in it, so Hive is the right home.
   static const String kPushExplainerShownAt = 'isi.push_explainer_shown_at';
+
+  /// Hive key for the rep's chosen work mode (`online` / `offline`). A
+  /// preference, not data: switching it never touches the database or the
+  /// queues of unsent work.
+  static const String kWorkMode = 'isi.work_mode';
 }

@@ -1,7 +1,6 @@
 import 'dart:async';
 import 'dart:convert';
 
-import 'package:steelforce/core/network/api/api_defaults.dart';
 import 'package:steelforce/core/database/drift/daos/notification_dao.dart';
 import 'package:steelforce/core/error/failures.dart';
 import 'package:steelforce/core/logging/app_logger.dart';
@@ -14,6 +13,7 @@ import 'package:steelforce/core/utils/uuid.dart';
 import 'package:steelforce/features/notification/data/models/notification_api_mapper.dart';
 import 'package:steelforce/features/notification/data/models/notification_drift_mappers.dart';
 import 'package:steelforce/features/notification/data/remote/notification_remote_data_source.dart';
+import 'package:steelforce/features/notification/data/repositories/inbox_pager.dart';
 import 'package:steelforce/features/notification/domain/entities/notification_category.dart';
 import 'package:steelforce/features/notification/domain/entities/notification_counts.dart';
 import 'package:steelforce/features/notification/domain/entities/notification_message.dart';
@@ -51,8 +51,10 @@ class NotificationInboxRepositoryImpl implements NotificationInboxRepository {
   })  : _dao = dao,
         _remote = remote,
         _session = session,
-        _logger = logger;
+        _logger = logger,
+        _pager = InboxPager(remote: remote, dao: dao);
 
+  final InboxPager _pager;
   final NotificationDao _dao;
   final NotificationRemoteDataSource _remote;
   final SessionManager _session;
@@ -197,58 +199,21 @@ class NotificationInboxRepositoryImpl implements NotificationInboxRepository {
       // the server converging rather than fighting.
       await _drainQueue();
 
-      final meta = await _dao.syncMeta();
-      var cursor = full ? null : meta?.cursor;
-      var page = ApiDefaults.firstPage;
-      var received = 0;
-      DateTime? newCursor;
-
-      while (page <= ApiDefaults.notificationMaxCatchUpPages) {
-        final result = await _remote.fetchPage(
-          since: cursor,
-          pageNumber: page,
-          pageSize: ApiDefaults.notificationPageSize,
-        );
-
-        // Only advance the cursor on the last page. Storing page 1's timestamp
-        // and then failing on page 2 would skip page 2 permanently — the next
-        // run asks for changes after a point those rows already precede.
-        newCursor = result.syncTimestamp ?? newCursor;
-
-        await _dao.upsertPage(
-          [for (final item in result.items) item.toRow()],
-          cursor: result.hasMore ? null : newCursor,
-        );
-
-        received += result.items.length;
-        if (!result.hasMore) break;
-        page++;
-      }
-
-      if (page > ApiDefaults.notificationMaxCatchUpPages) {
-        // Not silently truncated: a server that always reports `hasNextPage`, or
-        // a cursor that never advances, is a defect and this is the only place it
-        // is visible. The rows pulled so far are kept.
-        _logger.warning('notifications.catchup_page_cap', fields: {
-          'cap': ApiDefaults.notificationMaxCatchUpPages,
-          'received': received,
-        });
-      }
+      final pulled = await _pager.catchUp(full: full);
 
       // Reconciled after the pull, so the badge reflects the rows just stored
       // rather than the state before them.
       await _reconcileCounts();
 
       _logger.info('notifications.catchup', fields: {
-        'received': received,
-        'pages': page,
+        'received': pulled.received,
+        'pages': pulled.pages,
         'full': full,
       });
 
       return Success(NotificationSyncResult(
-        received: received,
-        pages: page,
-        cursor: newCursor,
+        received: pulled.received,
+        pages: pulled.pages,
       ));
     } on ApiException catch (e) {
       return Failed(_failureFor(e.error, 'notifications.catchup_failed'));
@@ -256,7 +221,22 @@ class NotificationInboxRepositoryImpl implements NotificationInboxRepository {
       _logger.error('notifications.catchup_error',
           error: error, stackTrace: stackTrace);
       return const Failed(
-          CacheFailure(message: 'Could not update your notifications.'));
+          CacheFailure(message: 'notifications.error.update_failed'));
+    }
+  }
+
+  @override
+  ResultFuture<bool> loadOlder({bool unreadOnly = false}) async {
+    if (!_session.canCallProtectedApi) return const Success(false);
+    try {
+      return Success(await _pager.loadOlder(unreadOnly: unreadOnly));
+    } on ApiException catch (e) {
+      return Failed(_failureFor(e.error, 'notifications.load_older_failed'));
+    } catch (error, stackTrace) {
+      _logger.error('notifications.load_older_error',
+          error: error, stackTrace: stackTrace);
+      return const Failed(
+          CacheFailure(message: 'notifications.error.update_failed'));
     }
   }
 
@@ -341,7 +321,7 @@ class NotificationInboxRepositoryImpl implements NotificationInboxRepository {
       // another approver decided first. Reported so the caller can say so
       // instead of leaving the button looking broken.
       return const Failed(ServerFailure(
-        message: 'This has already been dealt with.',
+        message: 'notifications.error.already_dealt_with',
         statusCode: 409,
       ));
     }
@@ -362,7 +342,7 @@ class NotificationInboxRepositoryImpl implements NotificationInboxRepository {
       // awaiting acknowledgement cannot be swiped away (§5.4). Failing here
       // rather than in a round trip keeps the row from vanishing and reappearing.
       return const Failed(ServerFailure(
-        message: 'This needs to be acknowledged before it can be cleared.',
+        message: 'notifications.error.ack_before_clear',
         statusCode: 409,
       ));
     }
@@ -417,12 +397,14 @@ class NotificationInboxRepositoryImpl implements NotificationInboxRepository {
 
     final resolvedElsewhere = <String>[];
     final queued = await _dao.pendingActions();
+    var sent = 0;
 
     for (final row in queued) {
       final action = row.toEntity();
       try {
         await _send(action);
         await _dao.removeQueued(action.id);
+        sent++;
       } on ApiException catch (e) {
         final outcome = _classify(e.error);
         switch (outcome) {
@@ -454,6 +436,7 @@ class NotificationInboxRepositoryImpl implements NotificationInboxRepository {
             await _dao.recordAttempt(action.id, action.attempts + 1);
             _logger.info('notifications.queue_deferred',
                 fields: {'remaining': queued.length});
+            await _reconcileAfterSend(sent);
             return Success(resolvedElsewhere);
 
           case _DrainOutcome.permanent:
@@ -469,7 +452,21 @@ class NotificationInboxRepositoryImpl implements NotificationInboxRepository {
       }
     }
 
+    await _reconcileAfterSend(sent);
     return Success(resolvedElsewhere);
+  }
+
+  /// Re-reads the unread count once reads have reached the server: with the
+  /// queue empty there is nothing left to subtract, so without this the bell
+  /// would fall back to the figure from before the read.
+  Future<void> _reconcileAfterSend(int sent) async {
+    if (sent == 0) return;
+    try {
+      await _reconcileCounts();
+    } on ApiException catch (e) {
+      _logger.info('notifications.counts_deferred',
+          fields: {'code': e.error.code});
+    }
   }
 
   /// Fire-and-forget drain used after a local mutation.
@@ -504,7 +501,10 @@ class NotificationInboxRepositoryImpl implements NotificationInboxRepository {
   // ── Lifecycle ───────────────────────────────────────────────────────
 
   @override
-  Future<void> clear() => _dao.clearAll();
+  Future<void> clear() {
+    _pager.reset();
+    return _dao.clearAll();
+  }
 
   /// Classifies a drain failure into the four behaviours §8.5 prescribes.
   ///
@@ -514,7 +514,7 @@ class NotificationInboxRepositoryImpl implements NotificationInboxRepository {
     if (error.code == _alreadyResolved || error.statusCode == 409) {
       return _DrainOutcome.resolved;
     }
-    if (error.code == _notFound || error.statusCode == 404) {
+    if (error.serverCode == _notFound || error.statusCode == 404) {
       return _DrainOutcome.gone;
     }
     // A 401 is transient by design: the interceptor refreshes and replays, and
@@ -538,7 +538,7 @@ class NotificationInboxRepositoryImpl implements NotificationInboxRepository {
     return ServerFailure(
       // The server localised this against the `Accept-Language` header the app
       // sends, so it is safe to show. `detail` never is.
-      message: error.message ?? 'Could not reach your notifications.',
+      message: error.message ?? 'notifications.error.unreachable',
       statusCode: error.statusCode,
     );
   }
@@ -546,8 +546,8 @@ class NotificationInboxRepositoryImpl implements NotificationInboxRepository {
   /// §15. Actioned, dismissed, expired, or decided by somebody else.
   static const String _alreadyResolved = 'Notification.AlreadyResolved';
 
-  /// §15. Not yours, or does not exist.
-  static const String _notFound = 'Notification.NotFound';
+  /// Not yours, or does not exist (`MarkNotificationRead` → 404).
+  static const String _notFound = 'NOTIFICATION_NOT_FOUND';
 }
 
 /// What to do with a queued row that failed to send.

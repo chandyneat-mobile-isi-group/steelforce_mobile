@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:steelforce/core/localization/localization_services.dart';
 import 'package:steelforce/core/responsive/responsive_sizing.dart';
 import 'package:steelforce/core/theme/theme_extensions.dart';
 import 'package:steelforce/features/order/domain/entities/cart_item.dart';
@@ -60,7 +61,7 @@ class LineDiscountChips extends StatelessWidget {
             _Chip(
               icon: Icons.sell_outlined,
               label: '-${percent.toStringAsFixed(0)}%',
-              detail: compact ? null : 'Rep discount',
+              detail: compact ? null : 'orders.discount_source.rep_discount'.tr,
               color: colors.success,
             ),
 

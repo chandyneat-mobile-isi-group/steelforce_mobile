@@ -32,11 +32,11 @@ session (`AuthGuard`).
 
 | Document | What it covers |
 |---|---|
-| [api.md](api.md) | **Authoritative endpoint reference** for the whole `/api/v1/mobile/depots` surface — envelope, localisation, filtering, paging, offline sync, contacts, money, error codes. |
-| [api-design-notes.md](api-design-notes.md) | Why the mobile controller is separate from the admin one, the migration plan, the breaking-change report, and v2 recommendations. Endpoint shapes come from [api.md](api.md). |
+| [mobile/api.md](mobile/api.md) | **Authoritative endpoint reference** for the whole `/api/v1/mobile/depots` surface — envelope, localisation, filtering, paging, offline sync, contacts, money, error codes. |
+| [mobile/](mobile/README.md) | One page per operation: [list](mobile/get-depot.md), [detail](mobile/get-depot-by-id.md), [search](mobile/search-depot.md), [filter](mobile/filter-depot.md), [create](mobile/create-depot.md), [edit](mobile/edit-depot.md), [documents](mobile/depot-documents.md), plus the [backend change notice](mobile/backend-change-notice.md). |
 | [ui-ux.md](ui-ux.md) | The step-and-section design for the create form, mapped to the SAP field list. |
-| [registration/](registration/) | The SAP BP registration sub-package: [overview](registration/README.md), [api](registration/api.md), [backend implementation](registration/backend-implementation.md), [SAP helper catalogues](registration/sap-helpers.md). |
-| [reference/](reference/) | Source specifications — the SAP BP field spreadsheet and the SAP API technical document. |
+| [registration/](registration/) | The SAP BP registration sub-package: [overview](registration/README.md), [api](registration/api.md), [depot type & sales survey](registration/sales-performance.md), [SAP helper catalogues](reference/sap-helpers.md). |
+| [reference/](reference/) | Source material — the SAP BP field spreadsheet, the SAP API technical document, the SAP helper catalogues, a sample create request, and the offline-registration sync diagram (`offline-registration-sync.drawio`). |
 
 ---
 
@@ -117,14 +117,12 @@ Schema and DAO coverage is in `test/core/database/drift/depot_dao_test.dart`,
 - **No requirement documents.** Business rules are embedded in `api.md` and the
   form validators rather than stated as testable acceptance criteria — see
   [../../requirement/README.md](../../requirement/README.md).
-- **Two overlapping API documents.** [api.md](api.md) and
-  [api-design-notes.md](api-design-notes.md) both describe the endpoint set.
-  `api.md` is authoritative; the design notes retain the rationale, migration
-  plan, and breaking-change history that would otherwise be lost. Fold them
-  fully once v2 lands.
+- **API documents consolidated (2026-10-24).** The old top-level `api.md`
+  (a subset of [mobile/api.md](mobile/api.md)) and the server-side
+  `api-design-notes.md` were removed; both are in git history.
 - **`.docx` / `.xlsx` sources** in [reference/](reference/) are not diffable and
   cannot be reviewed in a PR. Their content is transcribed into
-  [ui-ux.md](ui-ux.md) and [registration/sap-helpers.md](registration/sap-helpers.md);
+  [ui-ux.md](ui-ux.md) and [registration/sap-helpers.md](reference/sap-helpers.md);
   treat those as the working reference.
 
 ---

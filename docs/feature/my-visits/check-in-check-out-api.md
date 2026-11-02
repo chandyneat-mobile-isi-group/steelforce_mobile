@@ -7,7 +7,7 @@
 > **Audience:** backend engineers building the visit endpoints.
 > **Related:** [api.md](api.md) (the current visits contract — §6.1 push,
 > §7.3 CheckIn, §7.4 CheckOut, §8 server validation),
-> [../quotation-orders/api/mobile.md](../quotation-orders/api/mobile.md)
+> [../order/quotation/api/mobile.md](../order/quotation/api/mobile.md)
 > (quotations).
 
 ---

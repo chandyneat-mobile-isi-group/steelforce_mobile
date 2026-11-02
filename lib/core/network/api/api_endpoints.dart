@@ -12,7 +12,7 @@ abstract final class ApiEndpoints {
   // `AppNetwork`). A hardcoded literal previously lived here and pinned every
   // build — including QA and staging — to the production host.
   /// Every documented route is rooted at `https://<host>/api/v1`
-  /// (`docs/Authentication-guild-integratemobile.md`, "Base URL"). Only the
+  /// (`docs/feature/authentication/backend-auth-guide.md`, "Base URL"). Only the
   /// host varies per environment, and that half comes from
   /// `AppConfig.apiBaseUrl`.
   static const String apiPrefix = '/api/v1';
@@ -24,27 +24,32 @@ abstract final class ApiEndpoints {
   // and not with 401. Everything else answers RFC 9457. See `ApiError`.
   static const String loginEndpoint = '$apiPrefix/mobile/auth/login';
 
-  // ── Forgot password by SMS code (three steps) ──────────────────────
-  //
-  // No token exists yet — the rep cannot sign in — so these are **not**
-  // under `/mobile/`, which requires one (staging answers 401 there).
-  // Steps 1 and 2 send `recoveryMethod: "phone"`; the server also accepts
-  // "email", which this app does not use.
+  // ── Firebase phone password reset ─────────────────────────────────
 
-  /// `POST {recoveryMethod, phoneNumber}` — texts a code to the rep's phone.
-  /// Answers 200 whether or not the number is registered.
-  static const String sendOtpEndpoint =
-      '$apiPrefix/auth/forgot-password/request';
-
-  /// `POST {recoveryMethod, phoneNumber, otp}` — checks the 6-digit code and
-  /// answers with a one-time `resetToken` and the `passwordPolicy`.
-  static const String verifyOtpEndpoint =
-      '$apiPrefix/auth/forgot-password/verify-otp';
-
-  /// `POST {resetToken, newPassword, confirmPassword}` — sets the new
-  /// password. Signs the account out everywhere.
+  /// `POST {resetToken, newPassword, confirmPassword}` → 200. Sets the new
+  /// password and signs the account out everywhere. A password that fails
+  /// the policy leaves the token usable.
+  /// docs/feature/authentication/mobile-integration.md, A5.
   static const String resetOtpEndpoint =
       '$apiPrefix/auth/forgot-password/reset';
+
+  /// `POST {phoneNumber}` → `{expiresAt, expiresIn, codeLength}`: the first
+  /// step of both phone password flows (forgot and change), before Firebase
+  /// sends the SMS. The body is that one field only; the answer carries no
+  /// phone number, so Firebase gets the number that was sent. Rate-limited per
+  /// number (429 with `Retry-After`).
+  static const String startFirebaseResetEndpoint =
+      '$apiPrefix/auth/otp/request';
+
+  /// `POST {firebaseIdToken}` → `{resetToken, expiresIn, passwordPolicy}`:
+  /// exchanges Firebase's proof for a one-time reset token, signed out. Only
+  /// for the number of an open verification from
+  /// [startFirebaseResetEndpoint]. Step 2 is [resetOtpEndpoint].
+  ///
+  /// Not `auth/password/phone/verify`: that one is for a signed-in rep's own
+  /// number and needs a bearer token.
+  static const String verifyFirebaseResetEndpoint =
+      '$apiPrefix/auth/forgot-password/phone/verify';
 
   /// `POST {refreshToken}` → `{data: {accessToken, refreshToken, …}}`.
   /// Rotates the refresh token: store the new one and discard the old —
@@ -62,7 +67,7 @@ abstract final class ApiEndpoints {
 
   /// The rep's own profile for the profile screen, `GET`: `{id, employeeCode,
   /// fullName, khmerName, phoneNumber, email, role, passwordChangeRequired,
-  /// lastLoginAt, lineManager}`. Read-only.
+  /// lastLoginAt, lineManager, saleOrg}`. Read-only.
   static const String myProfileEndpoint = '$apiPrefix/mobile/auth/profile';
 
   /// The rep's own profile photo — the **only** part of their profile they
@@ -86,22 +91,41 @@ abstract final class ApiEndpoints {
   static const String changePasswordEndpoint =
       '$apiPrefix/mobile/auth/change-password';
 
+  // ── Signed-in password change, proven by an SMS to the own number ──
+  //
+  // docs/feature/authentication/mobile-integration.md, Flow B. All three need
+  // the bearer token; the number always comes from the account.
+
+  /// The signed-in change-password flow starts the same way as forgot
+  /// password: `{phoneNumber}` with the account's own number.
+  static const String startOwnPhoneVerificationEndpoint =
+      startFirebaseResetEndpoint;
+
+  /// `{firebaseIdToken}` → `{phoneProofToken, expiresIn}`. Single use.
+  static const String verifyOwnPhoneEndpoint =
+      '$apiPrefix/auth/password/phone/verify';
+
+  /// `{phoneProofToken, newPassword}` → 204. The same `ChangePasswordRequest`
+  /// as [changePasswordEndpoint], which also accepts the proof.
+  static const String changePasswordWithProofEndpoint =
+      '$apiPrefix/auth/password';
+
   /// Routes that must never trigger the interceptor's refresh-and-replay: a
   /// 401 from one of these is the answer, not a stale-token symptom.
   static const Set<String> authRoutes = {
     loginEndpoint,
     refreshEndpoint,
     // Forgot password runs signed out — there is no token to refresh.
-    sendOtpEndpoint,
-    verifyOtpEndpoint,
     resetOtpEndpoint,
+    startFirebaseResetEndpoint,
+    verifyFirebaseResetEndpoint,
   };
 
   // ── Mobile depot endpoints ──────────────────────────────────────
   static const String depotsEndpoint = '$apiPrefix/mobile/depots';
 
   /// Depot discount agreements / incentives per
-  /// `docs/feature/prom-discount/promotions-discounts-plan.md` §8.1.
+  /// `docs/feature/order/promotions/plan.md` §8.1.
   static String depotAgreementsEndpoint(String depotId) =>
       '$depotsEndpoint/$depotId/agreements';
 
@@ -125,7 +149,7 @@ abstract final class ApiEndpoints {
       '$apiPrefix/mobile/me/discount-authority';
 
   // ── Mobile quotation endpoints ─────────────────────────────────────
-  // Per `docs/feature/quotation-orders/api/mobile.md`.
+  // Per `docs/feature/order/quotation/api/mobile.md`.
   static const String quotationsEndpoint = '$apiPrefix/mobile/quotations';
 
   static String quotationEndpoint(String id) => '$quotationsEndpoint/$id';
@@ -161,8 +185,38 @@ abstract final class ApiEndpoints {
   /// portal depot shape (`code` not `depotCode`, a nested `address`, a
   /// bare `creditLimit` number), so it needs its own parser. Documented as a
   /// rough edge rather than a design — see
-  /// `docs/feature/depot/mobile/mobile.md` §Looking a depot up by code.
+  /// `docs/feature/depot/mobile/api.md` §Looking a depot up by code.
   static const String depotsByCodeEndpoint = '$apiPrefix/depots/by-code';
+
+  // ── Depot drafts (new depot registration) ──────────────────────────
+  // Per the backend's `features/create-depot/api-contract.md` and
+  // `attachments.md`. Not under `/mobile`: the portal and the app share them.
+
+  /// The route a depot draft lives on. The app creates one through
+  /// `POST /mobile/depots` ([depotsEndpoint]) with `depotType` `DEPOT`.
+  static const String depotDraftsEndpoint = '$apiPrefix/depot-drafts';
+
+  /// `POST` multipart (`file`, `id`, `category`, `note`, `takenAt`,
+  /// `latitude`, `longitude`) adds evidence; `GET` returns the cover and the
+  /// evidence with fresh signed links.
+  static String depotDraftAttachmentsEndpoint(String draftId) =>
+      '$depotDraftsEndpoint/${Uri.encodeComponent(draftId)}/attachments';
+
+  /// A non-depot's own route. `POST /mobile/depots` with `depotType`
+  /// `NON_DEPOT` creates one here; its files hang off it like a draft's.
+  static const String nonDepotsEndpoint = '$apiPrefix/non-depots';
+
+  static String nonDepotAttachmentsEndpoint(String id) =>
+      '$nonDepotsEndpoint/${Uri.encodeComponent(id)}/attachments';
+
+  /// `GET` — the six SAP pick lists a sales area is filled from, each
+  /// `[{code, name}]`, `[]` when never synced.
+  static const String depotReferencesEndpoint = '$apiPrefix/depots/references';
+
+  /// `GET /profile-lists/{list}` — `branch` and `factory` are the supplier
+  /// options a draft ranks. Active values only unless `includeInactive=true`.
+  static String profileListEndpoint(String list) =>
+      '$apiPrefix/profile-lists/${Uri.encodeComponent(list)}';
 
   // ── Mobile materials endpoints ─────────────────────────────────────
   //
@@ -240,6 +294,46 @@ abstract final class ApiEndpoints {
   /// `depots` list each stop joins to by `depotId`.
   static const String visitRoutesEndpoint = '$apiPrefix/mobile/visits/routes';
 
+  /// `GET` — the caller's visit plans for `period` (`Today`, `ThisWeek`,
+  /// `ThisMonth` — the default), with the period's counts and every plan by
+  /// date, then depot code. Only the caller's own plans: the sale code comes
+  /// from the access token, so no territory or employee code is sent.
+  static const String mobilePlansEndpoint = '$apiPrefix/mobile/plans';
+
+  /// `GET` — same body as [mobilePlansEndpoint] with `period=Today`. Feeds the
+  /// Visits list; [mobilePlansEndpoint] feeds the calendar.
+  static const String mobilePlansTodayEndpoint = '$mobilePlansEndpoint/today';
+
+  /// `POST` `{ visitId, outletType, depotCode | nonDepotId }` — an unplanned
+  /// visit for today as a Draft plan: 201 new, 200 when the same `visitId` is
+  /// sent again.
+  static const String mobilePlansAdHocEndpoint = '$mobilePlansEndpoint/ad-hoc';
+
+  /// `POST` `{ "reason": "…" }` (1–500 chars) — Planned or CheckedIn →
+  /// Skipped, only on the plan's own date. [planId] is the plan id, never a
+  /// depot code.
+  static String mobilePlanSkipEndpoint(String planId) =>
+      '$mobilePlansEndpoint/${Uri.encodeComponent(planId)}/skip';
+
+  /// `GET` — one plan with `depotLocation`, `radiusMeters` and `checkIn`.
+  static String mobilePlanEndpoint(String planId) =>
+      '$mobilePlansEndpoint/${Uri.encodeComponent(planId)}';
+
+  /// `POST` multipart — check in with GPS and 1–5 photos; a reason is
+  /// required outside the zone. Idempotent on the client's `checkInId`.
+  static String mobilePlanCheckInEndpoint(String planId) =>
+      '${mobilePlanEndpoint(planId)}/check-in';
+
+  /// `POST` multipart — 1–10 stock photos in `photos` plus the client's
+  /// `uploadId`, while the visit is CheckedIn. Each upload adds to the visit.
+  static String mobilePlanInventoryPhotoUploadEndpoint(String planId) =>
+      '${mobilePlanEndpoint(planId)}/inventory-check-photo-upload';
+
+  /// `POST` JSON — CheckedIn → Completed with GPS, optional notes and the
+  /// client's `checkOutId`. Needs at least one inventory photo first.
+  static String mobilePlanCheckOutEndpoint(String planId) =>
+      '${mobilePlanEndpoint(planId)}/check-out';
+
   /// `GET` — same body shape as [visitRoutesEndpoint], narrowed by `since`.
   /// Deliberately a full re-pull of the rep's current scoped set rather than a
   /// row-level diff: a rep has a handful of routes a day, so the simplicity is
@@ -276,51 +370,42 @@ abstract final class ApiEndpoints {
   static const String visitCheckOutReasonsEndpoint =
       '$apiPrefix/mobile/visits/check-out-reasons';
 
-  // ── Mobile notification endpoints ──────────────────────────────────
+  // ── Notification endpoints ─────────────────────────────────────────
   //
-  // Per `docs/feature/notification/README.md` §3. The same routes also exist
-  // without the `/mobile` segment for the admin portal — same handlers,
-  // different envelope. **Use these**, or the response comes back in the
-  // portal's shape and every parse fails.
-  //
-  // All of these require authentication. The inbox and preference routes
-  // additionally need `notifications.read`, which every seeded role holds.
-  // Device registration deliberately requires **only** authentication: a rep
-  // who cannot read notifications must still be able to tell the platform
-  // their token changed.
+  // The signed-in user's own devices and inbox, under `/me` (backend
+  // `DeviceEndpoints` / `InboxEndpoints`). All require authentication.
 
-  /// `POST` — register or refresh this installation's FCM token. Idempotent on
-  /// `deviceId`, so calling it on every launch costs one cheap round trip;
-  /// calling it less often is how a rep silently stops receiving anything
-  /// (§4.1).
-  static const String deviceRegisterEndpoint =
-      '$apiPrefix/mobile/devices/register';
+  /// `PUT` — register or refresh this installation's FCM token.
+  static String deviceRegisterEndpoint(String installationId) =>
+      '$apiPrefix/me/devices/$installationId';
 
-  /// `GET` — the rep's registered installations.
-  static const String devicesEndpoint = '$apiPrefix/mobile/devices';
+  /// Base path for this user's installation registration.
+  static const String devicesEndpoint = '$apiPrefix/me/devices';
 
-  /// `DELETE` — deregister on sign-out. **Call before discarding the access
-  /// token**, or the platform keeps pushing one rep's notifications at a
-  /// handset that has since been handed to somebody else (§4.4).
+  /// `DELETE` — unregister on sign-out, before discarding the access token.
   static String deviceEndpoint(String deviceId) => '$devicesEndpoint/$deviceId';
 
-  /// `GET` — the inbox, paged and filtered. The guaranteed delivery path: this
-  /// is what makes a dropped push cost nothing (§1).
-  static const String notificationsEndpoint = '$apiPrefix/mobile/notifications';
+  /// `GET` — the signed-in user's inbox, newest first, keyset-paged by
+  /// `cursor` (`data.nextCursor`), `limit` 1–50 and `unreadOnly`. The
+  /// guaranteed delivery path: this is what makes a dropped push cost nothing.
+  static const String notificationsEndpoint = '$apiPrefix/me/notifications';
 
-  /// `GET` — badge figures. Cheap enough to call on every foreground, and the
-  /// only correct source for them: a locally incremented counter drifts the
-  /// first time a push is dropped (§7).
+  /// `GET` — `data.count`, the unread figure for the bell.
   static const String notificationCountsEndpoint =
       '$notificationsEndpoint/unread-count';
 
-  /// `PATCH` — mark one read. Idempotent; the first read timestamp wins.
+  /// `POST` → 204 — mark one read. Idempotent; the first read time is kept.
+  /// Another user's id answers 404 `NOTIFICATION_NOT_FOUND`.
   static String notificationReadEndpoint(String id) =>
       '$notificationsEndpoint/$id/read';
 
-  /// `PATCH` — mark all read, optionally scoped by `?category=`.
+  /// `POST` — mark all read; `data.marked` is how many were unread.
   static const String notificationReadAllEndpoint =
       '$notificationsEndpoint/read-all';
+
+  // The action, dismiss and preferences routes below are not served by the
+  // backend yet (`InboxEndpoints` maps only list, unread-count, read and
+  // read-all). Nothing in the inbox UI calls them.
 
   /// `POST` — record that the rep **acted**. The only call that closes an item
   /// requiring acknowledgement; wiring "scrolled past it" here instead of to

@@ -30,9 +30,7 @@
 // instead.
 // =============================================================================
 
-import 'package:steelforce/features/depots/domain/entities/bp_depot_draft.dart';
-import 'package:steelforce/features/depots/domain/entities/rep_sales_context.dart';
-import 'package:steelforce/features/depots/domain/entities/sap_bp_const.dart';
+import 'package:steelforce/features/depots/data/models/bp_depot_form_data.dart';
 import 'package:steelforce/features/depots/domain/entities/business_partner_request.dart';
 
 /// Wire-side constants that differ from [SapBpConst].

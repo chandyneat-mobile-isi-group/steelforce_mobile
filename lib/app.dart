@@ -1,10 +1,11 @@
+import 'package:steelforce/features/app_coach/presentation/services/coach_route_tracker.dart';
+import 'package:steelforce/features/app_coach/presentation/widgets/app_coach_host.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:phone_form_field/phone_form_field.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get_it/get_it.dart';
-import 'package:steelforce/features/shell/presentation/widgets/demo_mode_badge.dart';
 import 'package:steelforce/core/database/hive/app_preferences.dart';
 import 'package:steelforce/core/localization/fallback_localizations_delegate.dart';
 import 'package:steelforce/core/localization/localization_services.dart';
@@ -146,6 +147,13 @@ class ISISteelSalesApp extends StatelessWidget {
                       key: ValueKey(
                           'lang_${locale.languageCode}_r$restartGeneration'),
                       navigatorKey: navigatorKey, // Assign the key here
+                      // A fresh observer per Navigator (one may serve only
+                      // one), all writing into the coach's single tracker.
+                      navigatorObservers: [
+                        if (GetIt.instance.isRegistered<CoachRouteTracker>())
+                          CoachRouteObserver(
+                              GetIt.instance<CoachRouteTracker>()),
+                      ],
                       // One messenger across restarts — see [rootMessengerKey].
                       scaffoldMessengerKey: rootMessengerKey,
                       onGenerateTitle: (_) => 'app.title'.tr,
@@ -199,10 +207,10 @@ class ISISteelSalesApp extends StatelessWidget {
                                 ? GetIt.instance<ConnectivityService>()
                                 : null,
                         child: NotificationHost(
-                          // TODO(release-gate): a pass-through outside demo
-                          // builds. Above the Navigator so the DEMO badge is
-                          // on every route, sign-in included.
-                          child: DemoModeOverlay(
+                          // The App Coach draws above every route — a lesson
+                          // walks the rep through pushed screens (forms,
+                          // check-in), not just the shell.
+                          child: CoachRoot(
                             child: child ?? const SizedBox.shrink(),
                           ),
                         ),

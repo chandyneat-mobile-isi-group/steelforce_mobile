@@ -58,15 +58,6 @@ final class QuotationBuilderReady extends QuotationBuilderState {
 
   List<QuotationWarning> get warnings => preview?.warnings ?? const [];
 
-  /// The server line for [materialNumber] on the saved draft, or null. Lines
-  /// are matched by material because the cart knows nothing of server ids.
-  QuotationLineItem? lineForMaterial(String materialNumber) {
-    for (final line in quotation.lines) {
-      if (line.materialNumber == materialNumber) return line;
-    }
-    return null;
-  }
-
   QuotationBuilderReady copyWith({
     QuotationDetail? quotation,
     QuotationPreviewData? Function()? preview,

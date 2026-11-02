@@ -36,18 +36,8 @@ DAO, or service: run `graphify affected` and name who else is touched.
 Are failure paths covered, not just the happy path? Crypto and sync-queue code
 needs 100% branch coverage.
 
-**Untrusted input** — Deep links, notification payloads, and intents parsed
-against an allow-list and validated; no auth bypass or write-on-open.
-(`.claude/rules/security.md` §6)
-
 **Performance** — Work in `build()`, unbounded lists, unnarrowed rebuilds,
-repeated network calls, unsized images, heavy work on the main isolate. A
-performance claim without a measurement is a finding.
-(`.claude/rules/performance.md`)
-
-**Dependencies** — Any `pubspec.yaml` change: is the package necessary,
-maintained, multi-platform, and isolated from `domain/`? Is `pubspec.lock`
-committed? (`.claude/rules/dependencies.md`)
+repeated network calls, unsized images.
 
 **Diff hygiene** — Debug code, commented-out blocks, unrelated churn, `.DS_Store`,
 committed generated files, unnecessary new dependencies.

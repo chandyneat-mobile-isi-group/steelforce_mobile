@@ -30,7 +30,7 @@ Each is recorded in the code and worth understanding before changing anything.
 
 **There is no geographic endpoint.** `GET /mobile/depots/references` serves
 exactly ten SAP `CustHelper` catalogues
-([../depot/registration/sap-helpers.md](../depot/registration/sap-helpers.md))
+([../depot/registration/sap-helpers.md](../depot/reference/sap-helpers.md))
 and none of them is geographic — so there is nothing to cache.
 
 Before this table existed, the app carried five provinces and one province's

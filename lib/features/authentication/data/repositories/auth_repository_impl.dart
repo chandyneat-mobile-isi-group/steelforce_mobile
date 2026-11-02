@@ -11,7 +11,6 @@ import 'package:steelforce/features/authentication/data/datasources/auth_local_d
 import 'package:steelforce/features/authentication/data/datasources/auth_remote_data_source.dart';
 import 'package:steelforce/features/authentication/data/models/auth_token_model.dart';
 import 'package:steelforce/features/authentication/domain/entities/auth_profile.dart';
-import 'package:steelforce/features/authentication/domain/entities/password_reset_grant.dart';
 import 'package:steelforce/features/authentication/domain/repositories/auth_repository.dart';
 
 /// Coordinates remote + local sources and translates exceptions into
@@ -116,8 +115,10 @@ class AuthRepositoryImpl implements AuthRepository {
       // problem — a completely different investigation.
       _logger.error('auth.login.failed', fields: {
         'errorCode': e.error.code,
+        if (e.error.serverCode != null) 'serverCode': e.error.serverCode,
         'status': e.error.statusCode,
         'correlationId': e.error.correlationId,
+        if (e.error.causeType != null) 'cause': e.error.causeType,
       });
 
       // A failed profile fetch leaves a half-open session: tokens on disk with
@@ -125,7 +126,7 @@ class AuthRepositoryImpl implements AuthRepository {
       // rather than an empty shell.
       await _clearQuietly();
 
-      return Failed(_failure(e.error));
+      return Failed(failureFrom(e.error));
     } on CacheException catch (e) {
       _logger.error('auth.login.cacheFailed', fields: {'reason': e.message});
       return Failed(CacheFailure(message: e.message));
@@ -195,7 +196,7 @@ class AuthRepositoryImpl implements AuthRepository {
       return Success(profile);
     } on ApiException catch (e) {
       final cached = await _local.readProfile();
-      return cached != null ? Success(cached) : Failed(_failure(e.error));
+      return cached != null ? Success(cached) : Failed(failureFrom(e.error));
     }
   }
 
@@ -266,17 +267,6 @@ class AuthRepositoryImpl implements AuthRepository {
   }
 
   @override
-  ResultFuture<void> forgotPassword(String phoneNumber) =>
-      _guard(() => _remote.forgotPassword(phoneNumber));
-
-  @override
-  ResultFuture<PasswordResetGrant> verifyResetCode({
-    required String phoneNumber,
-    required String otp,
-  }) =>
-      _guard(() => _remote.verifyResetCode(phoneNumber: phoneNumber, otp: otp));
-
-  @override
   ResultFuture<void> resetPassword({
     required String resetToken,
     required String newPassword,
@@ -293,17 +283,18 @@ class AuthRepositoryImpl implements AuthRepository {
     try {
       return Success(await action());
     } on ApiException catch (e) {
-      return Failed(_failure(e.error));
+      return Failed(failureFrom(e.error));
     }
   }
 
-  /// Maps a server error onto the domain failure type.
+  /// Maps a server error onto the domain failure type. Shared with
+  /// `PhoneOwnershipResetRepositoryImpl`, which calls the same backend.
   ///
   /// Note what is **not** here: a 403 never becomes an [AuthenticationFailure].
   /// A 403 means this user may never perform this action, and treating it as a
   /// stale session would sign them out and drop them on a login screen for no
   /// reason. Only a genuine authentication problem does that.
-  Failure _failure(ApiError error) {
+  static Failure failureFrom(ApiError error) {
     // A transport error *here* means the gateway did not answer — not that the
     // device is offline.
     //
@@ -316,6 +307,15 @@ class AuthRepositoryImpl implements AuthRepository {
     if (error.code == ApiErrorCodes.network) {
       return const ServerUnreachableFailure();
     }
+    // The handshake failed before any request was sent. Its own code so the
+    // screen can point at the network (a filter answering for the API host)
+    // or the phone's clock, rather than at the server or the password.
+    if (error.code == ApiErrorCodes.secureConnection) {
+      return const ServerFailure(
+        message: 'common.secure_connection_failed',
+        code: ApiErrorCodes.secureConnection,
+      );
+    }
     // Checked **before** the permission branch on purpose. Two verification
     // codes are 403s — `Auth.VerificationBlocked` (five wrong codes) and
     // `Auth.ResendLimitReached` — so an `isPermissionDenied` test first would
@@ -323,7 +323,7 @@ class AuthRepositoryImpl implements AuthRepository {
     // never learn the attempt was dead. Branch on the code, not the status.
     if (_isCredentialFailure(error.code) || error.isUnauthenticated) {
       return AuthenticationFailure(
-        message: error.message ?? 'Your ID or password is incorrect.',
+        message: error.message ?? 'auth.validation.invalid_cred',
         statusCode: error.statusCode,
         // Carried so the OTP screen can tell a retryable wrong code from an
         // attempt that must restart at step 1.
@@ -332,13 +332,15 @@ class AuthRepositoryImpl implements AuthRepository {
     }
     if (error.isPermissionDenied) {
       return ServerFailure(
-        message: error.message ?? 'You do not have access to this action.',
+        message: error.message ?? 'auth.error.no_access',
         statusCode: error.statusCode ?? 403,
       );
     }
     return ServerFailure(
-      message: error.message ?? 'Something went wrong. Please try again.',
+      message: error.message ?? 'common.generic_error',
       statusCode: error.statusCode,
+      code: error.code,
+      retryAfter: error.retryAfter,
     );
   }
 

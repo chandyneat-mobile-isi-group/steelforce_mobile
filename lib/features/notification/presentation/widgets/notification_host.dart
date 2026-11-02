@@ -5,9 +5,10 @@ import 'package:get_it/get_it.dart';
 import 'package:steelforce/core/localization/localization_services.dart';
 import 'package:steelforce/core/notifications/notification_deep_link.dart';
 import 'package:steelforce/features/localization/domain/usecases/restore_saved_language.dart';
+import 'package:steelforce/features/my_visits/presentation/navigation/visit_plan_day_request.dart';
 import 'package:steelforce/features/notification/notification_coordinator.dart';
 import 'package:steelforce/features/notification/presentation/bloc/notification_badge_cubit.dart';
-import 'package:steelforce/features/shell/presentation/bloc/home_cubit.dart';
+import 'package:steelforce/features/shell/presentation/navigation/shell_tab_controller.dart';
 import 'package:steelforce/routes/app_routes.dart';
 
 /// Starts the notification machinery and turns its two output streams into
@@ -136,6 +137,10 @@ class _NotificationHostState extends State<NotificationHost>
 
     final tab = _shellTabFor(destination.route);
     if (tab != null) {
+      // `visit-plans / {day}`: the Visits tab opens on that day.
+      if (destination.arguments case {'date': final String day}) {
+        GetIt.instance<VisitPlanDayRequest>().openIso(day);
+      }
       GetIt.instance<ShellTabController>().goTo(tab);
       // Drop anything stacked over the shell — a settings screen, a detail
       // page — so the selected tab is actually visible rather than hidden

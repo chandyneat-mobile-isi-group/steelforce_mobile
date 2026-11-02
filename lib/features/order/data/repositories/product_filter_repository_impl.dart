@@ -166,7 +166,7 @@ class ProductFilterRepositoryImpl implements ProductFilterRepository {
       final products = _products;
       if (products == null) {
         return const Failed(CacheFailure(
-          message: 'The local material catalog is not available.',
+          message: 'orders.guided_filter.error_catalog_unavailable',
         ));
       }
       final rows = await products.browse(

@@ -16,16 +16,19 @@ class PointerAnimation extends StatefulWidget {
 
 class _PointerAnimationState extends State<PointerAnimation>
     with SingleTickerProviderStateMixin {
-  late final AnimationController _c = AnimationController(
-    vsync: this,
-    duration: const Duration(milliseconds: 1600),
-  );
+  // Created in initState, not lazily: with reduced motion nothing else reads
+  // it, so a lazy one was first created in dispose(), which throws there.
+  late final AnimationController _c;
 
   static const double _dotSize = 22.0;
 
   @override
   void initState() {
     super.initState();
+    _c = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 1600),
+    );
     if (widget.animate) _c.repeat();
   }
 

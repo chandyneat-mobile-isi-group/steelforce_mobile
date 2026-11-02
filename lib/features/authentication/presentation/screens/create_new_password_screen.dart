@@ -1,13 +1,13 @@
 import 'package:flutter/material.dart';
-import 'package:steelforce/core/theme/theme_extensions.dart';
 import 'package:steelforce/core/localization/localization_services.dart';
 import 'package:steelforce/features/authentication/domain/entities/password_reset_grant.dart';
-import 'package:steelforce/shared/widgets/aurora_background.dart';
-import 'package:steelforce/shared/widgets/glass_card.dart';
-import 'package:steelforce/features/authentication/presentation/widgets/login/gradient_button.dart';
+import 'package:steelforce/features/authentication/presentation/widgets/login/sign_in_button.dart';
+import 'package:steelforce/features/authentication/presentation/widgets/reset/auth_reset_scaffold.dart';
 import 'package:steelforce/features/authentication/presentation/widgets/login/status_pill.dart';
 import 'package:steelforce/features/authentication/presentation/widgets/login/vibe_field.dart';
 import 'package:steelforce/core/responsive/responsive_sizing.dart';
+import 'package:steelforce/shared/animations/coach_mascot.dart';
+import 'package:steelforce/features/authentication/presentation/widgets/auth_ink.dart';
 
 /// Outcome of a password-reset submission, returned by
 /// [CreateNewPasswordScreen.onSubmit].
@@ -26,15 +26,19 @@ class CreateNewPasswordScreen extends StatefulWidget {
     this.onSuccess,
     this.onBack,
     this.policy,
+    this.submitLabel,
   });
 
   final Future<ResetPasswordResult> Function(String newPassword) onSubmit;
 
-  /// The server's rules, from `forgot-password/verify-otp`. Null: only the
+  /// Password rules for reset. Null: only the
   /// basic length check applies, and the server has the final say.
   final PasswordPolicy? policy;
   final VoidCallback? onSuccess;
   final VoidCallback? onBack;
+
+  /// Defaults to "Reset Password".
+  final String? submitLabel;
 
   @override
   State<CreateNewPasswordScreen> createState() =>
@@ -96,167 +100,79 @@ class _CreateNewPasswordScreenState extends State<CreateNewPasswordScreen> {
       PasswordRule.lowercase => 'auth.password_needs_lowercase'.tr,
       PasswordRule.number => 'auth.password_needs_number'.tr,
       PasswordRule.special => 'auth.password_needs_special'.tr,
+      PasswordRule.distinctCharacters =>
+        'auth.password_needs_distinct_characters'.tr,
     };
   }
 
   @override
   Widget build(BuildContext context) {
-    // Dynamic max-width for tablet viewports while keeping column layout
-    final maxCardWidth = context.responsive(
-      compact: 420.0,
-      medium: 520.0,
-      expanded: 580.0,
-    );
-
-    return Scaffold(
-      backgroundColor: Theme.of(context).colorScheme.surface,
-      body: Stack(
-        children: [
-          const Positioned.fill(child: AuroraBackground()),
-          SafeArea(
-            child: Column(
-              children: [
-                _BackButton(
-                  onPressed:
-                      widget.onBack ?? () => Navigator.of(context).maybePop(),
-                ),
-                Expanded(
-                  child: Center(
-                    child: SingleChildScrollView(
-                      // FIXED: Dynamic EdgeInsets using context.pagePadding
-                      padding: EdgeInsets.all(context.pagePadding),
-                      child: ConstrainedBox(
-                        // FIXED: Replaced static 420 constraint with responsive scaling
-                        constraints: BoxConstraints(maxWidth: maxCardWidth),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.stretch,
-                          children: [
-                            Column(
-                              crossAxisAlignment: CrossAxisAlignment.center,
-                              children: [
-                                Icon(
-                                  Icons.password_outlined,
-                                  size: context.rr(40),
-                                  color:
-                                      Theme.of(context).colorScheme.secondary,
-                                ),
-                                SizedBox(height: context.rh(18)),
-                                Text(
-                                  'auth.create_new_password_title'.tr,
-                                  textAlign: TextAlign.center,
-                                  style: TextStyle(
-                                    color:
-                                        Theme.of(context).colorScheme.onSurface,
-                                    fontSize: context.rsp(26),
-                                    fontWeight: FontWeight.w900,
-                                    height: 1.15,
-                                  ),
-                                ),
-                                SizedBox(height: context.rh(8)),
-                                Text(
-                                  'auth.create_new_password_subtitle'.tr,
-                                  textAlign: TextAlign.center,
-                                  style: TextStyle(
-                                      color: context.appColors.textSecondary,
-                                      fontSize: context.rsp(15)),
-                                ),
-                              ],
-                            ),
-                            SizedBox(height: context.rh(24)),
-                            GlassCard(child: _form()),
-                          ],
-                        ),
-                      ),
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
+    return AuthResetScaffold(
+      onBack: widget.onBack ?? () => Navigator.of(context).maybePop(),
+      mascotAsset: CoachMascot.newPasswordAsset,
+      title: 'auth.create_new_password_title'.tr,
+      accentLastWord: true,
+      subtitle: 'auth.create_new_password_subtitle'.tr,
+      card: _form(),
     );
   }
+
+  Widget _reveal(bool obscured, VoidCallback onToggle) => IconButton(
+        tooltip: obscured ? 'auth.show_password'.tr : 'auth.hide_password'.tr,
+        icon: Icon(
+          obscured ? Icons.visibility_outlined : Icons.visibility_off_outlined,
+          color: AuthInk.muted,
+          size: context.rr(22),
+        ),
+        onPressed: onToggle,
+      );
 
   Widget _form() {
-    return Form(
-      key: _formKey,
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          VibeField(
-            controller: _newPassword,
-            label: 'auth.new_password'.tr,
-            icon: Icons.lock_outline,
-            obscure: _obscureNew,
-            textInputAction: TextInputAction.next,
-            autofillHints: const [AutofillHints.newPassword],
-            required: true,
-            suffix: IconButton(
-              icon: Icon(
-                _obscureNew
-                    ? Icons.visibility_outlined
-                    : Icons.visibility_off_outlined,
-                color: context.appColors.textSecondary,
-                size: context.rr(20),
-              ),
-              onPressed: () => setState(() => _obscureNew = !_obscureNew),
+    return AutofillGroup(
+      child: Form(
+        key: _formKey,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            VibeField(
+              controller: _newPassword,
+              label: 'auth.new_password'.tr,
+              icon: Icons.lock_outline_rounded,
+              obscure: _obscureNew,
+              onPhoto: true,
+              textInputAction: TextInputAction.next,
+              autofillHints: const [AutofillHints.newPassword],
+              required: true,
+              suffix: _reveal(_obscureNew,
+                  () => setState(() => _obscureNew = !_obscureNew)),
+              validator: _validateNew,
             ),
-            validator: _validateNew,
-          ),
-          SizedBox(height: context.rh(14)),
-          VibeField(
-            controller: _confirmPassword,
-            label: 'auth.confirm_new_password'.tr,
-            icon: Icons.lock_outline,
-            obscure: _obscureConfirm,
-            textInputAction: TextInputAction.done,
-            autofillHints: const [AutofillHints.newPassword],
-            required: true,
-            onSubmitted: (_) => _submit(),
-            suffix: IconButton(
-              icon: Icon(
-                _obscureConfirm
-                    ? Icons.visibility_outlined
-                    : Icons.visibility_off_outlined,
-                color: context.appColors.textSecondary,
-                size: context.rr(20),
-              ),
-              onPressed: () =>
-                  setState(() => _obscureConfirm = !_obscureConfirm),
+            SizedBox(height: context.rh(14)),
+            VibeField(
+              controller: _confirmPassword,
+              label: 'auth.confirm_new_password'.tr,
+              icon: Icons.lock_reset_rounded,
+              obscure: _obscureConfirm,
+              onPhoto: true,
+              textInputAction: TextInputAction.done,
+              autofillHints: const [AutofillHints.newPassword],
+              required: true,
+              onSubmitted: (_) => _submit(),
+              suffix: _reveal(_obscureConfirm,
+                  () => setState(() => _obscureConfirm = !_obscureConfirm)),
+              validator: (v) => v == _newPassword.text
+                  ? null
+                  : 'auth.passwords_dont_match'.tr,
             ),
-            validator: (v) =>
-                v == _newPassword.text ? null : 'auth.passwords_dont_match'.tr,
-          ),
-          SizedBox(height: context.rh(20)),
-          StatusPill(status: _status, message: _errorMessage),
-          GradientButton(
-            label: 'auth.reset_password_button'.tr,
-            loading: _status == AuthVibeStatus.verifying,
-            onPressed: _submit,
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _BackButton extends StatelessWidget {
-  const _BackButton({required this.onPressed});
-
-  final VoidCallback onPressed;
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      // FIXED: Converted static padding to relative responsive constraints
-      padding: EdgeInsets.only(left: context.rw(8), top: context.rh(4)),
-      child: Align(
-        alignment: Alignment.centerLeft,
-        child: IconButton(
-          onPressed: onPressed,
-          icon: Icon(Icons.arrow_back_ios_new, size: context.rr(18)),
-          color: Theme.of(context).colorScheme.onSurface,
+            SizedBox(height: context.rh(20)),
+            StatusPill(status: _status, message: _errorMessage, onDark: true),
+            SignInButton(
+              label: widget.submitLabel ?? 'auth.reset_password_button'.tr,
+              iconTrailing: true,
+              loading: _status == AuthVibeStatus.verifying,
+              onPressed: _submit,
+            ),
+          ],
         ),
       ),
     );

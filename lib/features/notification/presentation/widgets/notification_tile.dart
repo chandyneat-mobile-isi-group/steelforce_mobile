@@ -6,6 +6,7 @@ import 'package:steelforce/core/responsive/responsive_sizing.dart';
 import 'package:steelforce/core/theme/theme_extensions.dart';
 import 'package:steelforce/features/notification/domain/entities/notification_action.dart';
 import 'package:steelforce/features/notification/domain/entities/notification_message.dart';
+import 'package:steelforce/features/notification/domain/entities/notification_message_text.dart';
 import 'package:steelforce/features/notification/domain/entities/notification_state.dart';
 import 'package:steelforce/features/notification/presentation/widgets/notification_category_style.dart';
 
@@ -36,11 +37,13 @@ class NotificationTile extends StatelessWidget {
 
     final actions =
         onAction == null ? const <NotificationAction>[] : notification.actions;
+    // English and Khmer both arrive; the app's language picks.
+    final title = notification.titleIn(ActiveLanguage.code);
 
     return Semantics(
       label: notification.isUnread
-          ? '${'notifications.status.unread'.tr}. ${notification.title}'
-          : notification.title,
+          ? '${'notifications.status.unread'.tr}. $title'
+          : title,
       button: onTap != null,
       child: InkWell(
         onTap: onTap,
@@ -69,7 +72,7 @@ class NotificationTile extends StatelessWidget {
                       children: [
                         Expanded(
                           child: Text(
-                            notification.title,
+                            title,
                             maxLines: 2,
                             overflow: TextOverflow.ellipsis,
                             style: TextStyle(
@@ -107,7 +110,7 @@ class NotificationTile extends StatelessWidget {
                     ),
                     SizedBox(height: context.rh(4)),
                     Text(
-                      notification.body,
+                      notification.bodyIn(ActiveLanguage.code),
                       maxLines: 3,
                       overflow: TextOverflow.ellipsis,
                       style: TextStyle(

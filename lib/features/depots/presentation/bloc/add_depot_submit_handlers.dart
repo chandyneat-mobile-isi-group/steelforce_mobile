@@ -9,6 +9,9 @@ extension _AddDepotSubmitHandlers on AddDepotBloc {
   // Validate
   // ---------------------------------------------------------------------
 
+  /// A local completeness check only. `/api/v1/depot-drafts` has no dry run
+  /// (the old business-partner route's `Commit: false` is gone with it), so
+  /// what the server would refuse is learned on submit, field by field.
   Future<void> _onValidateWithSap(
       ValidateWithSap event, Emitter<AddDepotState> emit) async {
     final blocked = _firstIncompleteStep();
@@ -19,45 +22,7 @@ extension _AddDepotSubmitHandlers on AddDepotBloc {
       ));
       return;
     }
-
-    final rep = await _resolveRep();
-    if (rep == null) {
-      emit(state.copyWith(errorMessage: _repIdentityUnavailable));
-      return;
-    }
-
-    emit(state.copyWith(status: AddDepotStatus.validating));
-    _trace.send('precheck', 'requested');
-
-    final outcome = await _submission.validate(
-      state.draft,
-      rep: rep,
-      priceGroupResolver: state.references.priceGroupFor,
-    );
-
-    switch (outcome) {
-      case BpSubmissionCreated():
-        _trace.ok('precheck', 'SAP would accept');
-        emit(state.copyWith(
-          status: AddDepotStatus.editing,
-          sapPreCheckPassed: true,
-        ));
-      case BpSubmissionRejected(:final message, :final step):
-        _trace.fail('precheck', 'SAP would reject', const {});
-        emit(state.copyWith(
-          status: AddDepotStatus.editing,
-          errorMessage: message,
-          currentStep: step ?? state.currentStep,
-        ));
-      case BpSubmissionUnreachable(:final message):
-        // Not a failure of the form. The rep can still submit, which will
-        // queue if the connection is still down.
-        _trace.warn('precheck', 'unreachable', const {});
-        emit(state.copyWith(
-          status: AddDepotStatus.editing,
-          errorMessage: message,
-        ));
-    }
+    emit(state.copyWith(sapPreCheckPassed: true));
   }
 
   // ---------------------------------------------------------------------
@@ -74,7 +39,7 @@ extension _AddDepotSubmitHandlers on AddDepotBloc {
     if (blocked != null) {
       _trace.fail(
           'submit',
-          'blocked at ${blocked.step.number}/5 ${blocked.step.name}',
+          'blocked at ${blocked.step.number}/${BpFormStep.values.length} ${blocked.step.name}',
           {'missing': DebugTrace.names(blocked.errors.keys)});
       emit(state.copyWith(
         currentStep: blocked.step,
@@ -93,51 +58,29 @@ extension _AddDepotSubmitHandlers on AddDepotBloc {
       return;
     }
 
-    // The personnel number must be the signed-in rep's. Refused before any
-    // network call, and the form is kept, so the rep can sign in and resend.
-    final rep = await _resolveRep();
-    if (rep == null) {
-      await _repository.saveDraft(state.draft);
-      emit(state.copyWith(
-        status: AddDepotStatus.failure,
-        errorMessage: _repIdentityUnavailable,
-      ));
-      return;
-    }
+    // The id goes on the form and the form onto the device *before* the
+    // send: a crash or a lost answer then resends under the same id, which the
+    // server answers with the draft it already saved.
+    DepotDraftSubmission.ensureId(state.draft);
+    await _repository.saveDraft(state.draft);
 
     emit(state.copyWith(
       status: AddDepotStatus.submitting,
       progress: const DepotSubmitProgress(stage: SubmitStage.registering),
     ));
 
-    // Built from the draft as it is *now*, so every edit made up to the
-    // confirm tap is what the backend receives.
-    final outcome = await _submission.submit(
-      state.draft,
-      rep: rep,
-      priceGroupResolver: state.references.priceGroupFor,
-    );
+    final outcome = await _draftSubmission.submit(state.draft);
 
     switch (outcome) {
-      case BpSubmissionCreated(
-          :final depotNumber,
-          :final documentId,
-          :final isPendingApproval,
-        ):
-        _trace.ok('submit', isPendingApproval ? 'awaiting HQ' : 'accepted', {
-          'depot': DebugTrace.id(depotNumber),
-          'record': DebugTrace.id(documentId),
+      case DepotDraftSaved(:final draft):
+        _trace.ok('submit', draft.isNew ? 'draft created' : 'draft resent', {
+          'draft': DebugTrace.id(draft.id),
+          'status': draft.status,
         });
 
-        // Evidence goes up only now: the documents endpoint is addressed by
-        // depot id, which did not exist until this moment.
-        //
-        // Addressed by `documentId`, not the SAP number. A record awaiting HQ
-        // approval has no SAP number, and passing the empty string here made
-        // `_uploadEvidence` treat every pending registration as having no
-        // depot to attach to — so the photographs were held on the device
-        // for a record that could perfectly well accept them.
-        final photos = state.draft.attachments.length;
+        // Photos go up only now, against the id the server returned.
+        final photos =
+            state.draft.attachments.where((a) => !a.isUploaded).length;
         if (photos > 0) {
           emit(state.copyWith(
             progress: DepotSubmitProgress(
@@ -146,13 +89,11 @@ extension _AddDepotSubmitHandlers on AddDepotBloc {
             ),
           ));
         }
-
-        final unsent = await _uploadEvidence(
-          documentId,
-          false,
-          onPhotoProgress: (completed, total) {
-            // `emit` after an await is safe while the handler is still running,
-            // and this one only ever runs inside it.
+        final failed = await _draftSubmission.uploadEvidence(
+          draft.id,
+          state.draft.attachments,
+          kind: draft.kind,
+          onProgress: (completed, total) {
             if (isClosed) return;
             emit(state.copyWith(
               progress: state.progress.copyWith(
@@ -163,83 +104,95 @@ extension _AddDepotSubmitHandlers on AddDepotBloc {
             ));
           },
         );
+        _markUploaded(failed);
+        (failed.isEmpty ? _trace.ok : _trace.warn)('photos', 'done', {
+          'sent': photos - failed.length,
+          'failed': failed.length,
+        });
 
         emit(state.copyWith(
           status: AddDepotStatus.success,
           progress: state.progress.copyWith(stage: SubmitStage.finishing),
-          depotNumber: depotNumber,
-          awaitingApproval: isPendingApproval,
+          depotNumber: '',
+          awaitingApproval: true,
           queuedOffline: false,
-          unsentDocuments: unsent,
+          unsentDocuments: failed
+              .map((a) => a.documentType)
+              .whereType<DepotDocumentType>()
+              .toList(),
         ));
 
-        // Cleared last, and only on a confirmed create. Clearing before the
-        // uploads would lose the local paths of any photograph that failed.
-        await _repository.clearDraft();
+        // A photo that failed keeps the form on the device, with its id and
+        // the photos still to send: sending it again returns the same draft
+        // and uploads only those. Otherwise the next "Add depot" opens blank.
+        if (failed.isEmpty) {
+          await _repository.clearDraft();
+        } else {
+          await _repository.saveDraft(state.draft);
+        }
 
-      case BpSubmissionRejected(:final message, :final step):
-        _trace.fail('submit', 'rejected', const {});
+      case DepotDraftRefused(:final message, :final fieldErrors, :final step):
+        _trace.fail('submit', 'refused', {
+          'fields': DebugTrace.names(fieldErrors.keys),
+        });
         emit(state.copyWith(
           status: AddDepotStatus.failure,
           errorMessage: message,
+          errors: fieldErrors,
           currentStep: step ?? state.currentStep,
         ));
 
-      case BpSubmissionUnreachable(
-          :final message,
-          :final request,
-          :final mayHaveLanded
-        ):
-        // Saved locally first (ADR-002): the exact payload and its photographs
-        // go into the outbox, and the sync engine replays it when SAP is
-        // reachable. A request that may already have landed is stored for the
-        // rep to check instead — see [DepotRegistrationOutbox].
-        if (await _enqueue(request, mayHaveLanded: mayHaveLanded)) {
-          await _repository.clearDraft();
-          _trace.ok(
-            'submit',
-            mayHaveLanded ? 'held for review' : 'queued',
-            const {},
-          );
-          emit(
-            state.copyWith(
-              status: AddDepotStatus.success,
-              queuedOffline: true,
-              queuedNeedsReview: mayHaveLanded,
-            ),
-          );
+      case DepotDraftNotSent(:final message, :final offline):
+        // No connection: the registration goes to the outbox, which sends it
+        // when the server is reachable (or on "Sync now" in the Sync Center).
+        if (offline && await _queueOffline()) {
+          _trace.warn('submit', 'offline — queued for sync', const {});
+          emit(state.copyWith(
+            status: AddDepotStatus.success,
+            progress: const DepotSubmitProgress(stage: SubmitStage.finishing),
+            depotNumber: '',
+            awaitingApproval: false,
+            queuedOffline: true,
+            unsentDocuments: const [],
+          ));
           return;
         }
-
-        // No outbox, or it could not be written: keep the form as a resumable
-        // draft rather than lose the rep's work.
-        await _repository.saveDraft(state.draft);
-        _trace.warn('submit', mayHaveLanded ? 'unknown' : 'held', const {});
+        // Already saved on the device above; nothing is lost and sending again
+        // is safe.
+        _trace.warn('submit', 'not sent — kept on device', const {});
         emit(state.copyWith(
           status: AddDepotStatus.failure,
-          queuedOffline: true,
           errorMessage: message,
         ));
     }
   }
 
-  /// Writes the registration to the outbox. False when there is no outbox or
-  /// the local write failed, so the caller can fall back to the draft.
-  Future<bool> _enqueue(
-    BusinessPartnerRequest request, {
-    required bool mayHaveLanded,
-  }) async {
-    final outbox = _outbox;
-    if (outbox == null) return false;
+  /// Moves the form and its unsent photographs into the outbox, then clears
+  /// the wizard so the next "Add depot" opens blank. False when the outbox
+  /// could not store it — the form then stays on the device as before.
+  Future<bool> _queueOffline() async {
     final draft = state.draft;
-    final result = await outbox.enqueue(
-      request: request,
-      depotName: draft.nameEn.trim().isNotEmpty ? draft.nameEn : draft.nameKh,
+    final name = draft.nameEn.trim().isNotEmpty ? draft.nameEn : draft.nameKh;
+    final result = await _outbox.enqueueDraft(
+      clientDraftId: draft.clientDraftId!,
+      depotName: name.trim(),
+      draftSnapshot: draft.toDraftJson(),
       photos: _pendingDocuments(),
-      mayHaveLanded: mayHaveLanded,
-      draftSnapshot: draft,
     );
-    return result.when(success: (_) => true, failure: (_) => false);
+    final queued = result.when(success: (_) => true, failure: (_) => false);
+    if (queued) await _repository.clearDraft();
+    return queued;
+  }
+
+  /// Flags every photo that reached the server, so a resend skips it.
+  void _markUploaded(List<BpAttachment> failed) {
+    final attachments = state.draft.attachments;
+    for (var i = 0; i < attachments.length; i++) {
+      final a = attachments[i];
+      if (!a.isUploaded && !failed.contains(a)) {
+        attachments[i] = a.copyWith(isUploaded: true);
+      }
+    }
   }
 
   /// The captured photographs not yet on the server, as upload requests.

@@ -299,7 +299,7 @@ class _CartPreviewRow extends StatelessWidget {
                               SizedBox(width: context.rw(3)),
                               Flexible(
                                 child: Text(
-                                  "Material doesn't have price",
+                                  'orders.pricing.material_no_price'.tr,
                                   maxLines: 1,
                                   overflow: TextOverflow.ellipsis,
                                   style: TextStyle(
@@ -360,7 +360,7 @@ class _CartPreviewRow extends StatelessWidget {
                                 SizedBox(width: context.rw(3)),
                                 Flexible(
                                   child: Text(
-                                    'Input Price (USD)',
+                                    'orders.pricing.input_price_usd'.tr,
                                     maxLines: 1,
                                     overflow: TextOverflow.ellipsis,
                                     style: TextStyle(
@@ -424,7 +424,7 @@ class _CartPreviewRow extends StatelessWidget {
                                   mainAxisSize: MainAxisSize.min,
                                   children: [
                                     Text(
-                                      '(Manual USD)',
+                                      'orders.pricing.manual_usd'.tr,
                                       style: TextStyle(
                                         fontSize: context.rsp(9.5),
                                         fontWeight: FontWeight.w800,

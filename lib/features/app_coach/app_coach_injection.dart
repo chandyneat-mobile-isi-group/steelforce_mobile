@@ -1,4 +1,5 @@
 import 'package:get_it/get_it.dart';
+import 'package:steelforce/core/practice/practice_session.dart';
 import 'package:steelforce/core/database/hive/hive_service.dart';
 import 'package:steelforce/features/app_coach/data/datasource/coach_local_datasource.dart';
 import 'package:steelforce/features/app_coach/data/repositories/coach_repository_impl.dart';
@@ -8,6 +9,7 @@ import 'package:steelforce/features/app_coach/domain/usecases/next_step.dart';
 import 'package:steelforce/features/app_coach/domain/usecases/skip_tutorial.dart';
 import 'package:steelforce/features/app_coach/domain/usecases/start_tutorial.dart';
 import 'package:steelforce/features/app_coach/presentation/blocs/app_coach_bloc.dart';
+import 'package:steelforce/features/app_coach/presentation/services/coach_route_tracker.dart';
 
 /// Registers the App Coach feature.
 ///
@@ -30,6 +32,7 @@ void registerAppCoachFeature(GetIt sl) {
   sl.registerLazySingleton(() => const NextStep());
 
   // Presentation
+  sl.registerLazySingleton<CoachRouteTracker>(() => CoachRouteTracker());
   sl.registerLazySingleton<AppCoachBloc>(
     () => AppCoachBloc(
       repository: sl(),
@@ -37,6 +40,7 @@ void registerAppCoachFeature(GetIt sl) {
       completeStep: sl(),
       skipTutorial: sl(),
       nextStep: sl(),
+      practice: sl<PracticeSession>(),
     ),
   );
 }

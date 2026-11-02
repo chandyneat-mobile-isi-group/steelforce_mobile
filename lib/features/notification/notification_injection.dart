@@ -3,21 +3,14 @@ import 'package:get_it/get_it.dart';
 import 'package:steelforce/core/config/data_source_mode.dart';
 import 'package:steelforce/core/database/drift/app_database.dart';
 import 'package:steelforce/core/database/hive/hive_service.dart';
-import 'package:steelforce/core/demo/demo_network.dart';
 import 'package:steelforce/core/database/hive/local_cache.dart';
 import 'package:steelforce/core/logging/app_logger.dart';
 import 'package:steelforce/core/network/connectivity/connectivity_service.dart';
 import 'package:steelforce/core/notifications/local/local_notification_presenter.dart';
-import 'package:steelforce/core/notifications/local/local_notification_presenter_factory.dart'
-    as local_platform;
-import 'package:steelforce/core/notifications/local/local_notification_presenter_web.dart'
-    show NoopLocalNotificationPresenter;
+import 'package:steelforce/core/notifications/local/local_notification_presenter_factory.dart';
 import 'package:steelforce/core/notifications/notification_deep_link.dart';
 import 'package:steelforce/core/notifications/push/push_messaging_service.dart';
-import 'package:steelforce/core/notifications/push/push_messaging_service_factory.dart'
-    as push_platform;
-import 'package:steelforce/core/notifications/push/push_messaging_service_web.dart'
-    show UnsupportedPushMessagingService;
+import 'package:steelforce/core/notifications/push/push_messaging_service_factory.dart';
 import 'package:steelforce/core/session/session_manager.dart';
 import 'package:steelforce/features/notification/data/remote/api_notification_remote_data_source.dart';
 import 'package:steelforce/features/notification/data/remote/mock_notification_remote_data_source.dart';
@@ -29,10 +22,10 @@ import 'package:steelforce/features/notification/domain/repositories/notificatio
 import 'package:steelforce/features/notification/domain/repositories/notification_preferences_repository.dart';
 import 'package:steelforce/features/notification/domain/repositories/push_device_repository.dart';
 import 'package:steelforce/features/notification/domain/usecases/inbox_usecases.dart';
+import 'package:steelforce/features/notification/domain/usecases/load_older_notifications.dart';
 import 'package:steelforce/features/notification/domain/usecases/preferences_usecases.dart';
 import 'package:steelforce/features/notification/domain/usecases/push_device_usecases.dart';
 import 'package:steelforce/features/authentication/domain/notification_lifecycle.dart';
-import 'package:steelforce/features/my_visits/domain/services/location_fix_provider.dart';
 import 'package:steelforce/features/notification/notification_coordinator.dart';
 import 'package:steelforce/features/notification/presentation/bloc/notification_badge_cubit.dart';
 import 'package:steelforce/features/notification/presentation/bloc/notification_inbox_cubit.dart';
@@ -67,20 +60,11 @@ void registerNotificationFeature(GetIt sl) {
   // VAPID key, and `flutter_local_notifications` has no web implementation at
   // all). Nothing above these needs a `kIsWeb` branch, and the inbox is
   // unaffected either way, which is the §1 design in one line.
-  //
-  // TODO(release-gate): a demo build (`USE_MOCK_DATA=true`) takes the web
-  // no-ops on every platform, so `Firebase.initializeApp` never runs and no
-  // FCM traffic leaves the device. The inbox is unaffected — it syncs from the
-  // demo source either way.
   sl.registerLazySingleton<PushMessagingService>(
-    () => DataSourceMode.useLiveApi
-        ? push_platform.createPushMessagingService(sl<AppLogger>())
-        : UnsupportedPushMessagingService(sl<AppLogger>()),
+    () => createPushMessagingService(sl<AppLogger>()),
   );
   sl.registerLazySingleton<LocalNotificationPresenter>(
-    () => DataSourceMode.useLiveApi
-        ? local_platform.createLocalNotificationPresenter(sl<AppLogger>())
-        : NoopLocalNotificationPresenter(sl<AppLogger>()),
+    () => createLocalNotificationPresenter(sl<AppLogger>()),
   );
 
   // Holds a deep link that arrived before it could be opened — a cold start
@@ -92,7 +76,7 @@ void registerNotificationFeature(GetIt sl) {
   sl.registerLazySingleton<NotificationRemoteDataSource>(
     () => DataSourceMode.useLiveApi
         ? ApiNotificationRemoteDataSource(sl<Dio>())
-        : MockNotificationRemoteDataSource(network: sl<DemoNetwork>()),
+        : MockNotificationRemoteDataSource(),
   );
 
   // ── Repositories ────────────────────────────────────────────────────
@@ -115,9 +99,6 @@ void registerNotificationFeature(GetIt sl) {
       identity: sl(),
       session: sl<SessionManager>(),
       logger: sl<AppLogger>(),
-      getFixProvider: () => sl.isRegistered<LocationFixProvider>()
-          ? sl<LocationFixProvider>()
-          : null,
     ),
   );
   sl.registerLazySingleton<NotificationPreferencesRepository>(
@@ -138,6 +119,7 @@ void registerNotificationFeature(GetIt sl) {
   sl.registerLazySingleton(() => WatchNotificationCounts(sl()));
   sl.registerLazySingleton(() => GetNotificationById(sl()));
   sl.registerLazySingleton(() => SyncNotifications(sl()));
+  sl.registerLazySingleton(() => LoadOlderNotifications(sl()));
   sl.registerLazySingleton(() => RefreshNotificationCounts(sl()));
   sl.registerLazySingleton(() => MarkNotificationRead(sl()));
   sl.registerLazySingleton(() => MarkAllNotificationsRead(sl()));
@@ -196,17 +178,9 @@ void registerNotificationFeature(GetIt sl) {
     () => NotificationInboxCubit(
       watchNotifications: sl(),
       syncNotifications: sl(),
+      loadOlder: sl(),
       markRead: sl(),
       markAllRead: sl(),
-      recordAction: sl(),
-      dismissNotification: sl(),
-      // A function rather than a use case: this calls *another* feature's
-      // endpoint, chosen by the server (§12). Wrapping it in a notification use
-      // case would imply the notification domain owns route acknowledgement and
-      // quotation approval, which it does not.
-      invokeAction: ({required endpoint, required method}) =>
-          sl<NotificationRemoteDataSource>()
-              .invokeAction(endpoint: endpoint, method: method),
     ),
   );
 

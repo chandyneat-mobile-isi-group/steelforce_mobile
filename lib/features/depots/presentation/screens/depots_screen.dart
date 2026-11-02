@@ -1,12 +1,24 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:steelforce/features/depots/domain/entities/depot_filter.dart';
+import 'package:steelforce/features/depots/presentation/widgets/depot_advanced_filter_panel.dart';
+import 'package:steelforce/features/depots/presentation/widgets/depot_advanced_filter_button.dart';
+import 'package:steelforce/features/my_visits/presentation/navigation/add_depot_to_today.dart';
+import 'package:steelforce/features/my_visits/presentation/navigation/today_visit_rules.dart';
+import 'package:steelforce/features/app_coach/domain/entities/coach_module.dart';
+import 'package:steelforce/core/practice/practice_session.dart';
 import 'package:steelforce/core/localization/localized_text_context.dart';
 import 'package:steelforce/core/di/injection_container.dart';
 import 'package:steelforce/core/network/api/api_defaults.dart';
 import 'package:steelforce/core/localization/localization_services.dart';
 import 'package:steelforce/core/localization/localized_builder.dart';
 import 'package:steelforce/core/theme/theme_extensions.dart';
+import 'package:steelforce/features/app_coach/presentation/services/coach_keys.dart';
+import 'package:steelforce/features/depots/data/models/depot_registration_type.dart';
 import 'package:steelforce/features/depots/domain/entities/depot.dart';
+import 'package:steelforce/features/depots/domain/entities/depot_list_kind.dart';
 import 'package:steelforce/features/depots/presentation/bloc/depot_code_lookup_cubit.dart';
 import 'package:steelforce/features/depots/presentation/bloc/depot_sync_cubit.dart';
 import 'package:steelforce/features/depots/presentation/bloc/depot_sync_state.dart';
@@ -22,10 +34,10 @@ import 'package:steelforce/features/depots/presentation/widgets/depot_error_stat
 import 'package:steelforce/features/depots/presentation/widgets/depot_loading.dart';
 import 'package:steelforce/features/depots/presentation/widgets/depot_search_bar.dart';
 import 'package:steelforce/features/depots/presentation/widgets/depot_sync_status_banner.dart';
-import 'package:steelforce/features/depots/presentation/widgets/non_bp_depots_list_view.dart';
-import 'package:steelforce/features/shell/presentation/bloc/home_cubit.dart';
+import 'package:steelforce/features/shell/presentation/navigation/shell_tab_controller.dart';
 import 'package:steelforce/features/my_visits/presentation/navigation/open_quotation.dart';
 import 'package:steelforce/core/responsive/responsive_sizing.dart';
+import 'package:steelforce/shared/widgets/brand_wallpaper_background.dart';
 
 enum _QuickAccess {
   all,
@@ -94,14 +106,14 @@ class _DepotsViewState extends State<_DepotsView> {
   final _scrollController = ScrollController();
   _QuickAccess _quickAccess = _QuickAccess.all;
 
-  /// Which population the list is showing.
-  ///
-  /// Held here rather than in [DepotsBloc] because non-bp-depots are a
-  /// static demo with no repository behind them — putting the switch in the
-  /// BLoC would mean adding events and states for data that does not load.
-  DepotAudience _audience = DepotAudience.depots;
-
   final ShellTabController _tabs = sl<ShellTabController>();
+
+  /// Outlets that already had their ad hoc visit today; their action shows
+  /// grey.
+  Set<String> _adHocToday = const {};
+
+  /// The Advanced Filters panel is open.
+  bool _filtersOpen = false;
 
   @override
   void initState() {
@@ -109,6 +121,12 @@ class _DepotsViewState extends State<_DepotsView> {
     _scrollController.addListener(_onScroll);
     _tabs.addListener(_onTabChanged);
     _loadOnlineFirst();
+    _loadAdHocToday();
+  }
+
+  Future<void> _loadAdHocToday() async {
+    final outlets = await adHocOutletsToday();
+    if (mounted) setState(() => _adHocToday = outlets);
   }
 
   /// Online-first open: pull from the API, then render.
@@ -132,6 +150,7 @@ class _DepotsViewState extends State<_DepotsView> {
   void _onTabChanged() {
     if (_tabs.value == ShellTab.depots && mounted) {
       context.read<DepotSyncCubit>().syncIfNeeded();
+      _loadAdHocToday();
     }
   }
 
@@ -139,6 +158,7 @@ class _DepotsViewState extends State<_DepotsView> {
   /// Before the first load the pending [_loadOnlineFirst] covers it.
   void _onSyncChanged(BuildContext context, DepotSyncState sync) {
     if (sync is! DepotSyncSucceeded) return;
+    _loadAdHocToday();
     final bloc = context.read<DepotsBloc>();
     if (bloc.state is DepotsLoaded) bloc.add(const DepotsRefreshRequested());
   }
@@ -159,6 +179,7 @@ class _DepotsViewState extends State<_DepotsView> {
 
   void _openDetail(BuildContext context, String depotId) {
     Navigator.of(context).push(MaterialPageRoute(
+      settings: const RouteSettings(name: DepotDetailScreen.routeName),
       builder: (_) => DepotDetailScreen(depotId: depotId),
     ));
   }
@@ -168,56 +189,68 @@ class _DepotsViewState extends State<_DepotsView> {
     return LocalizedBuilder(
       builder: (context) => Scaffold(
         // The shell's canvas, so every tab sits on the same ground as Home.
-        backgroundColor: context.appColors.canvas,
+        backgroundColor: Colors.transparent,
+        floatingActionButton: CoachKeys.wrap(
+          CoachKeys.depotAdd,
+          child: FloatingActionButton.extended(
+            heroTag: 'depots_register',
+            onPressed: () => _registerDepot(context),
+            icon: const Icon(Icons.add_rounded),
+            label: Text('depots.register_fab'.tr),
+          ),
+        ),
         // The by-code lookup's three outcomes are handled here, and they are
         // deliberately not interchangeable: "absent" invites a registration,
         // "unavailable" must not — offering one when the ERP merely could not
         // be reached creates a duplicate business partner in SAP.
-        body: MultiBlocListener(
-          listeners: [
-            BlocListener<DepotCodeLookupCubit, DepotCodeLookupState>(
-              listener: _onLookupResult,
-            ),
-            BlocListener<DepotSyncCubit, DepotSyncState>(
-              listener: _onSyncChanged,
-            ),
-          ],
-          child: BlocBuilder<DepotsBloc, DepotsState>(
-            builder: (context, state) {
-              // The non-bp-depot list replaces the whole body rather than
-              // filtering the depot list, because the two hold different
-              // types entirely. A shared list filtered by a flag would need
-              // every card, group header and empty state to handle both.
-              if (_audience == DepotAudience.nonBpDepots) {
-                return NonBpDepotsListView(
-                  audience: _audience,
-                  onAudienceChanged: (a) => setState(() => _audience = a),
-                  depotCount: state is DepotsLoaded ? state.items.length : 0,
-                );
-              }
-
-              return switch (state) {
-                DepotsLoaded() => _Loaded(
-                    state: state,
-                    quickAccess: _quickAccess,
-                    onQuickAccessChanged: (q) =>
-                        setState(() => _quickAccess = q),
-                    audience: _audience,
-                    onAudienceChanged: (a) => setState(() => _audience = a),
-                    scrollController: _scrollController,
-                    onOpenDetail: (id) => _openDetail(context, id),
-                  ),
-                DepotsError(:final message) => DepotErrorState(
-                    message: message,
-                    onRetry: () => context
-                        .read<DepotsBloc>()
-                        .add(const DepotsLoadRequested()),
-                  ),
-                _ => const DepotLoading(),
-              };
-            },
-          ),
-        ),
+        body: BrandWallpaperBody(
+            style: BrandWallpaperStyle.vivid,
+            child: MultiBlocListener(
+              listeners: [
+                BlocListener<DepotCodeLookupCubit, DepotCodeLookupState>(
+                  listener: _onLookupResult,
+                ),
+                BlocListener<DepotSyncCubit, DepotSyncState>(
+                  listener: _onSyncChanged,
+                ),
+              ],
+              child: BlocBuilder<DepotsBloc, DepotsState>(
+                builder: (context, state) {
+                  return switch (state) {
+                    // Depots, Non-BP depots and the ones awaiting approval are
+                    // one list filtered by kind, so search and paging work
+                    // the same on all three.
+                    DepotsLoaded() => _Loaded(
+                        state: state,
+                        adHocToday: _adHocToday,
+                        onAdHocAdded: _loadAdHocToday,
+                        filtersOpen: _filtersOpen,
+                        onToggleFilters: () =>
+                            setState(() => _filtersOpen = !_filtersOpen),
+                        quickAccess: _quickAccess,
+                        onQuickAccessChanged: (q) =>
+                            setState(() => _quickAccess = q),
+                        audience: DepotAudience.of(state.filter.kind),
+                        onAudienceChanged: (a) => context
+                            .read<DepotsBloc>()
+                            // Another list's regions and types differ: its
+                            // filters start clear.
+                            .add(DepotsFilterChanged(DepotFilter(
+                                kind: a.kind, sortBy: state.filter.sortBy))),
+                        scrollController: _scrollController,
+                        onOpenDetail: (id) => _openDetail(context, id),
+                      ),
+                    DepotsError(:final message) => DepotErrorState(
+                        message: message,
+                        onRetry: () => context
+                            .read<DepotsBloc>()
+                            .add(const DepotsLoadRequested()),
+                      ),
+                    _ => const DepotLoading(),
+                  };
+                },
+              ),
+            )),
       ),
     );
   }
@@ -267,6 +300,10 @@ class _Loaded extends StatelessWidget {
     required this.onAudienceChanged,
     required this.scrollController,
     required this.onOpenDetail,
+    required this.adHocToday,
+    required this.onAdHocAdded,
+    required this.filtersOpen,
+    required this.onToggleFilters,
   });
 
   final DepotsLoaded state;
@@ -276,6 +313,10 @@ class _Loaded extends StatelessWidget {
   final ValueChanged<DepotAudience> onAudienceChanged;
   final ScrollController scrollController;
   final ValueChanged<String> onOpenDetail;
+  final Set<String> adHocToday;
+  final VoidCallback onAdHocAdded;
+  final bool filtersOpen;
+  final VoidCallback onToggleFilters;
 
   List<Depot> get _visibleItems => switch (quickAccess) {
         _QuickAccess.all ||
@@ -333,6 +374,11 @@ class _Loaded extends StatelessWidget {
     final colors = context.appColors;
     final items = _visibleItems;
     final rows = _buildRows(items);
+    // The App Coach points at the first depot on screen, whichever group
+    // header precedes it.
+    final firstDepotId = rows.whereType<_DepotRow>().firstOrNull?.depot.id;
+    final quotationLesson =
+        sl<PracticeSession>().lesson == CoachModuleIds.quotation;
 
     return RefreshIndicator(
       color: scheme.primary,
@@ -345,44 +391,39 @@ class _Loaded extends StatelessWidget {
         slivers: [
           SliverToBoxAdapter(
             child: Padding(
-              padding: const EdgeInsets.fromLTRB(16, 26, 16, 16),
+              padding: EdgeInsets.fromLTRB(context.rw(16), context.rh(46),
+                  context.rw(16), context.rh(16)),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  SizedBox(height: context.rh(20)),
                   const DepotSyncStatusBanner(),
 
-                  // Above the search bar, not below it. The search box acts on
-                  // whichever population is selected, so a rep has to be able
-                  // to see which one that is before typing into it.
-                  DepotAudienceFilter(
-                    selected: audience,
-                    onChanged: onAudienceChanged,
-                    depotCount: state.items.length,
-                  ),
-                  SizedBox(height: context.rh(12)),
+                  // Search and its filters first, then which list they act
+                  // on — the selected list stays in view just below.
                   DepotSearchBar(
                     query: state.query,
                     onSearchChanged: (q) =>
                         context.read<DepotsBloc>().add(DepotsSearchChanged(q)),
-                    // Registers a shop directly. This used to require picking
-                    // a won lead first, which meant a rep standing in a shop
-                    // that was never in the pipeline could not add it at all.
-                    onAddTap: () async {
-                      final submitted = await Navigator.of(context).push<bool>(
-                        MaterialPageRoute(
-                          settings: const RouteSettings(
-                            name: DepotCreateScreen.routeName,
-                          ),
-                          builder: (_) => const DepotCreateScreen(),
-                        ),
-                      );
-                      if (submitted == true && context.mounted) {
-                        context
-                            .read<DepotsBloc>()
-                            .add(const DepotsRefreshRequested());
-                      }
-                    },
+                    trailing: DepotAdvancedFilterButton(
+                      open: filtersOpen,
+                      activeCount: state.filter.activeCount,
+                      onTap: onToggleFilters,
+                    ),
+                  ),
+                  if (filtersOpen) ...[
+                    SizedBox(height: context.rh(10)),
+                    DepotAdvancedFilterPanel(
+                      filter: state.filter,
+                      onApply: (f) {
+                        context.read<DepotsBloc>().add(DepotsFilterChanged(f));
+                        onToggleFilters();
+                      },
+                    ),
+                  ],
+                  SizedBox(height: context.rh(12)),
+                  DepotAudienceFilter(
+                    selected: audience,
+                    onChanged: onAudienceChanged,
                   ),
                   SizedBox(height: context.rh(12)),
                 ],
@@ -400,12 +441,12 @@ class _Loaded extends StatelessWidget {
                       ? state.query.trim()
                       : null;
                   return DepotEmptyState(
-                    hasActiveSearchOrFilter: state.query.isNotEmpty,
-                    onClearSearchOrFilter: state.query.isNotEmpty
-                        ? () => context
-                            .read<DepotsBloc>()
-                            .add(const DepotsSearchChanged(''))
-                        : null,
+                    hasActiveSearchOrFilter:
+                        state.query.isNotEmpty || !state.filter.isEmpty,
+                    onClearSearchOrFilter:
+                        state.query.isNotEmpty || !state.filter.isEmpty
+                            ? () => _clearSearchAndFilters(context, state)
+                            : null,
                     lookupCode: code,
                     onLookupCode: code == null
                         ? null
@@ -418,10 +459,11 @@ class _Loaded extends StatelessWidget {
             )
           else
             SliverPadding(
-              padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+              padding: EdgeInsets.fromLTRB(
+                  context.rw(16), 0, context.rw(16), context.rh(16)),
               sliver: SliverList.separated(
                 itemCount: rows.length,
-                separatorBuilder: (_, __) => SizedBox(height: context.rh(10)),
+                separatorBuilder: (_, __) => SizedBox(height: context.rh(12)),
                 itemBuilder: (context, index) {
                   final row = rows[index];
                   return switch (row) {
@@ -430,18 +472,33 @@ class _Loaded extends StatelessWidget {
                         title: title,
                         count: count,
                       ),
-                    _DepotRow(:final depot) => DepotCard(
-                        key: ValueKey(depot.id),
-                        depot: depot,
-                        isFavorite: state.favoriteIds.contains(depot.id),
-                        onTap: () => onOpenDetail(depot.id),
-                        onFavoriteToggle: () => context
-                            .read<DepotsBloc>()
-                            .add(DepotsFavoriteToggled(depot.id)),
-                        onCreateQuotationTap: () => openQuotationForDepot(
-                          context,
-                          depotId: depot.id,
-                          depotName: context.localized(depot.displayName),
+                    _DepotRow(:final depot) => _withFirstCardAnchor(
+                        isFirst: depot.id == firstDepotId,
+                        child: DepotCard(
+                          key: ValueKey(depot.id),
+                          depot: depot,
+                          isFavorite: state.favoriteIds.contains(depot.id),
+                          onTap: () => onOpenDetail(depot.id),
+                          onFavoriteToggle: () => context
+                              .read<DepotsBloc>()
+                              .add(DepotsFavoriteToggled(depot.id)),
+                          // Hidden from the list: a quotation starts from a
+                          // visit. Shown only while the "quotation without a
+                          // visit" lesson runs, whose step taps it — and only
+                          // on a depot, as the other lists cannot quote.
+                          showQuotationAction: quotationLesson &&
+                              depot.listKind == DepotListKind.depot,
+                          onCreateQuotationTap: () => openQuotationForDepot(
+                            context,
+                            depotId: depot.id,
+                            depotName: context.localized(depot.displayName),
+                          ),
+                          quotationCoachAnchor: depot.id == firstDepotId
+                              ? CoachKeys.depotFirstCardQuotation
+                              : null,
+                          adHocAllowed:
+                              !adHocToday.contains(depot.adHocOutlet?.key),
+                          onAdHocAdded: onAdHocAdded,
                         ),
                       ),
                   };
@@ -456,43 +513,24 @@ class _Loaded extends StatelessWidget {
                     child: CircularProgressIndicator(color: scheme.primary)),
               ),
             ),
+          // The system navigation bar. `paddingOf`, not `viewPaddingOf`: under
+          // the shell's own bottom bar the Scaffold has already taken it, and
+          // this is zero.
+          // The system navigation bar, and room for Register Depot to float
+          // without covering the last card.
+          SliverToBoxAdapter(
+            child: SizedBox(
+                height: MediaQuery.paddingOf(context).bottom + context.rh(80)),
+          ),
         ],
       ),
     );
   }
 }
 
-class _QuickAccessRow extends StatelessWidget {
-  const _QuickAccessRow({required this.selected, required this.onChanged});
-  final _QuickAccess selected;
-  final ValueChanged<_QuickAccess> onChanged;
-
-  @override
-  Widget build(BuildContext context) {
-    return SizedBox(
-      // Must scale with the label inside it. At 36 fixed, the chips clipped on
-      // tablet the moment the type scale went up: a 12.5pt label becomes ~20pt
-      // at `expanded`, and with the chip's own vertical padding the row needs
-      // ~41pt. A horizontal ListView has to be height-bounded, so the bound
-      // scales rather than being removed (FS-A11Y-2).
-      height: context.rh(36),
-      child: ListView.separated(
-        scrollDirection: Axis.horizontal,
-        physics: const BouncingScrollPhysics(),
-        itemCount: _QuickAccess.values.length,
-        separatorBuilder: (_, __) => SizedBox(width: context.rw(8)),
-        itemBuilder: (context, index) {
-          final value = _QuickAccess.values[index];
-          return _Segment(
-            label: value.label,
-            selected: selected == value,
-            onTap: () => onChanged(value),
-          );
-        },
-      ),
-    );
-  }
-}
+/// Anchors the App Coach's "first depot" pointer on [child] when [isFirst].
+Widget _withFirstCardAnchor({required bool isFirst, required Widget child}) =>
+    isFirst ? CoachKeys.wrap(CoachKeys.depotFirstCard, child: child) : child;
 
 class _GroupHeader extends StatelessWidget {
   const _GroupHeader({super.key, required this.title, required this.count});
@@ -541,41 +579,30 @@ class _GroupHeader extends StatelessWidget {
   }
 }
 
-class _Segment extends StatelessWidget {
-  const _Segment(
-      {required this.label, required this.selected, required this.onTap});
-  final String label;
-  final bool selected;
-  final VoidCallback onTap;
+/// Registers a shop directly — a Non-BP depot when that list is on screen.
+/// The new record lives on the server: on success the depots are pulled,
+/// and the sync listener reloads the list.
+Future<void> _registerDepot(BuildContext context) async {
+  final state = context.read<DepotsBloc>().state;
+  final nonBp = state is DepotsLoaded &&
+      DepotAudience.of(state.filter.kind) == DepotAudience.nonBpDepots;
+  final submitted = await Navigator.of(context).push<bool>(MaterialPageRoute(
+    settings: const RouteSettings(name: DepotCreateScreen.routeName),
+    builder: (_) => DepotCreateScreen(
+      registrationType: nonBp ? DepotRegistrationType.nonBp : null,
+    ),
+  ));
+  if (submitted == true && context.mounted) {
+    unawaited(context.read<DepotSyncCubit>().refresh());
+  }
+}
 
-  @override
-  Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
-    final colors = context.appColors;
-    return InkWell(
-      onTap: onTap,
-      borderRadius: BorderRadius.circular(20),
-      child: Container(
-        // Scales with the label; fixed padding around scaled type is what makes
-        // a chip look cramped on tablet even once its row is tall enough.
-        padding: EdgeInsets.symmetric(
-          horizontal: context.rw(14),
-          vertical: context.rh(8),
-        ),
-        decoration: BoxDecoration(
-          color: selected ? scheme.primary : colors.surfaceSoft,
-          borderRadius: BorderRadius.circular(20),
-          border: Border.all(color: selected ? scheme.primary : colors.border),
-        ),
-        child: Text(
-          label,
-          style: TextStyle(
-            color: selected ? scheme.onPrimary : colors.textPrimary,
-            fontSize: context.rsp(12.5),
-            fontWeight: FontWeight.w700,
-          ),
-        ),
-      ),
-    );
+/// Empties the search and every advanced filter, staying on the same list.
+void _clearSearchAndFilters(BuildContext context, DepotsLoaded state) {
+  final bloc = context.read<DepotsBloc>();
+  if (state.query.isNotEmpty) bloc.add(const DepotsSearchChanged(''));
+  if (!state.filter.isEmpty) {
+    bloc.add(DepotsFilterChanged(
+        DepotFilter(kind: state.filter.kind, sortBy: state.filter.sortBy)));
   }
 }

@@ -7,7 +7,7 @@ import 'package:path_provider/path_provider.dart';
 /// Android/iOS document store. Selected by the conditional export in
 /// `pdf_file_store.dart` — never compiled on web.
 ///
-/// Security (`SECURITY.md` §3/§10): documents contain depot data and pricing,
+/// Security (`docs/skills/security.md` §3/§10): documents contain depot data and pricing,
 /// so they are written **only** inside the app sandbox
 /// ([getApplicationDocumentsDirectory] — never a public/cache/Downloads folder),
 /// under a dedicated `pdf/` subfolder.

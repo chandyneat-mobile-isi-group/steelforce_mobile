@@ -12,8 +12,7 @@ import 'package:steelforce/core/network/api/api_endpoints.dart';
 import 'package:steelforce/core/logging/debug_trace.dart';
 import 'package:steelforce/core/network/api/api_envelope.dart';
 import 'package:steelforce/core/network/api/api_error.dart';
-import 'package:steelforce/features/depots/domain/entities/bp_attachment.dart';
-import 'package:steelforce/features/depots/domain/entities/sap_option.dart';
+import 'package:steelforce/features/depots/data/models/bp_depot_form_data.dart';
 
 // -----------------------------------------------------------------------------
 // REMOTE

@@ -1,3 +1,4 @@
+import 'package:steelforce/core/error/failure_message.dart';
 import 'dart:async';
 
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -71,7 +72,7 @@ class DepotDetailCubit extends Cubit<DepotDetailState> {
               success: (a) => a, failure: (_) => const []),
         ));
       },
-      failure: (f) async => emit(DepotDetailError(f.message)),
+      failure: (f) async => emit(DepotDetailError(f.userMessage)),
     );
   }
 

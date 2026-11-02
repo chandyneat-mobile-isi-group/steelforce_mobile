@@ -164,6 +164,24 @@ the two must never render the same way.
 
 ---
 
+## Client rules for reading a price
+
+Carried over from the pricing upgrade guide (2026-09-10, since deleted). Each
+one is a way to show a wrong price with nothing on screen to hint at it.
+
+- **A price is a statement, not a number:** `price` `currency` per
+  `pricingUnit` `conditionUnit`. The catalogue uses eight units (`BAG`, `KG`,
+  `M`, `PAC`, `PC`, `ROL`, `SET`, `UNI`). **Never hard-code `pricingUnit = 1`**:
+  SAP routinely prices "per 100 KG".
+- **`US3` is a real SAP currency code** (3,867 of 3,869 records; `USD` on 2).
+  Show it as sent; do not assert `USD` or "correct" it.
+- **One material can return more than one price** (e.g. `2400000466` returns
+  two condition records). **Never take `items[0]`.** Which one wins is an open
+  business question; until it's decided, show both.
+- **Never bind a feature to `raw`.** It is `null` except on a row the mapper
+  could not read (that row also has `price: 0` and is counted in
+  `source.recordsUnmapped`).
+
 ## `POST /api/v1/pricing/depots/{depotId}/publish`
 
 Re-reads the depot's pricing from SAP and pushes `PricingUpdated` to everyone

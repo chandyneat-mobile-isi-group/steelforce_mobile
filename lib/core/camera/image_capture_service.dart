@@ -47,15 +47,6 @@ abstract interface class ImageCaptureService {
     int? imageQuality,
   });
 
-  /// Opens the photo library for several images at once, at most [limit].
-  /// Empty when the user backed out.
-  Future<List<XFile>> pickMultipleFromGallery({
-    int? maxWidth,
-    int? maxHeight,
-    int? imageQuality,
-    int? limit,
-  });
-
   /// Convenience for callers that already hold an [ImageCaptureSource].
   Future<XFile?> pick(
     ImageCaptureSource source, {

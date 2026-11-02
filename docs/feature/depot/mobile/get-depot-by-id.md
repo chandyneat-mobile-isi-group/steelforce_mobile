@@ -73,6 +73,7 @@ Note the extra nesting: `data.depot`, not `data`.
       "statusDisplay": "សកម្ម",
       "canTrade": true,
       "creditLimit":     { "amount": 0.0, "currency": "USD" },
+      "creditLimitDate": null,
       "creditBalance":   { "amount": 0.0, "currency": "USD" },
       "availableCredit": { "amount": 0.0, "currency": "USD" },
       "creditTermDays": 0,
@@ -152,6 +153,17 @@ re-deriving.
 `currency` is the single currency the depot trades in; all four amounts share it.
 
 `availableCredit` is computed as limit − balance. Do not recompute it.
+
+`creditLimitDate` is when **SAP** last set `creditLimit`, and is null until the
+nightly sync sees a dated limit — SAP sends `"00000000"` for one it has never dated,
+and that becomes null rather than a fabricated date. Read it as the age of the limit
+and show it beside the figure: a limit with no date cannot be reviewed. No endpoint on
+this platform writes it, so it is never something the handset changed.
+
+`cityCode` is the `City` catalogue key, present beside `city` when the depot was
+registered through the dropdown and null for every depot that came down from SAP —
+which carries a city name and no key. Render `city`; use `cityCode` to preselect the
+dropdown on an edit form.
 
 ### SAP classification — read-only
 
@@ -320,4 +332,4 @@ self-heals a stale local copy.
 
 - [get-depot.md](get-depot.md) — the list and the summary row
 - [edit-depot.md](edit-depot.md) — updating this record
-- [mobile.md](mobile.md) — the whole mobile depot surface
+- [mobile.md](api.md) — the whole mobile depot surface

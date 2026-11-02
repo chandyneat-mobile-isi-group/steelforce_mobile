@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
+import 'package:steelforce/core/localization/localization_services.dart';
 import 'package:steelforce/core/localization/localized_text.dart';
 import 'package:steelforce/core/localization/localized_text_context.dart';
 import 'package:steelforce/core/responsive/responsive_content_frame.dart';
@@ -193,7 +194,7 @@ class OutletHeroCard extends StatelessWidget {
                         borderRadius: BorderRadius.circular(context.rr(6)),
                       ),
                       child: Text(
-                        'CUS CODE',
+                        'outlet_info.customer_code'.tr,
                         style: TextStyle(
                           color: scheme.primary,
                           fontSize: context.rsp(10),
@@ -253,32 +254,38 @@ class OutletDetailsCard extends StatelessWidget {
     final rows = <_InfoRowSpec>[
       if (data.outletId case final v?)
         _InfoRowSpec(
-            icon: Icons.tag_rounded, label: 'Outlet ID (BP SAP)', value: v),
+            icon: Icons.tag_rounded,
+            label: 'outlet_info.outlet_id'.tr,
+            value: v),
       if (data.outletType case final v?)
         _InfoRowSpec(
-            icon: Icons.store_outlined, label: 'Outlet Type', value: v),
+            icon: Icons.store_outlined,
+            label: 'outlet_info.outlet_type'.tr,
+            value: v),
       if (data.outletTier case final v?)
         _InfoRowSpec(
             icon: Icons.workspace_premium_outlined,
-            label: 'Outlet Tier',
+            label: 'outlet_info.outlet_tier'.tr,
             value: v),
       if (data.outletAction case final v?)
         _InfoRowSpec(
-            icon: Icons.alt_route_rounded, label: 'Outlet Action', value: v),
+            icon: Icons.alt_route_rounded,
+            label: 'outlet_info.outlet_action'.tr,
+            value: v),
       if (data.contactPerson case final v?)
         _InfoRowSpec(
             icon: Icons.person_outline_rounded,
-            label: 'Owner / Contact Person (SAP)',
+            label: 'outlet_info.contact_person'.tr,
             value: v),
       if (data.assignedRep case final v?)
         _InfoRowSpec(
             icon: Icons.person_pin_circle_outlined,
-            label: 'Assigned Rep',
+            label: 'outlet_info.assigned_rep'.tr,
             value: v),
       if (phone != null && phone.isNotEmpty)
         _InfoRowSpec(
           icon: Icons.call_outlined,
-          label: 'Phone Number (SAP)',
+          label: 'outlet_info.phone'.tr,
           value: phone,
           onTap: onPhoneTap == null ? null : () => onPhoneTap!(phone),
           action: onPhoneTap == null
@@ -290,21 +297,29 @@ class OutletDetailsCard extends StatelessWidget {
                 ),
         ),
       if (data.telegram case final v?)
-        _InfoRowSpec(icon: Icons.send_rounded, label: 'Telegram', value: v),
+        _InfoRowSpec(
+            icon: Icons.send_rounded,
+            label: 'outlet_info.telegram'.tr,
+            value: v),
       if (data.email case final v?)
-        _InfoRowSpec(icon: Icons.email_outlined, label: 'Email', value: v),
+        _InfoRowSpec(
+            icon: Icons.email_outlined,
+            label: 'outlet_info.email'.tr,
+            value: v),
       if (data.address case final v?)
         _InfoRowSpec(
             icon: Icons.location_on_outlined,
-            label: 'Address Line (SAP)',
+            label: 'outlet_info.address'.tr,
             value: v),
       if (data.taxNumber case final v?)
         _InfoRowSpec(
-            icon: Icons.receipt_outlined, label: 'Tax / VAT No.', value: v),
+            icon: Icons.receipt_outlined,
+            label: 'outlet_info.tax_number'.tr,
+            value: v),
       if (data.hasCoordinates && lat != null && lng != null)
         _InfoRowSpec(
           icon: Icons.my_location_rounded,
-          label: 'Lat & Long (SAP)',
+          label: 'outlet_info.coordinates'.tr,
           value: '${lat.toStringAsFixed(5)}, ${lng.toStringAsFixed(5)}',
           onTap: onLocationTap == null ? null : () => onLocationTap!(lat, lng),
           action: onLocationTap == null
@@ -317,7 +332,9 @@ class OutletDetailsCard extends StatelessWidget {
         ),
       if (distanceLabel case final v?)
         _InfoRowSpec(
-            icon: Icons.straighten_rounded, label: 'Distance', value: v),
+            icon: Icons.straighten_rounded,
+            label: 'outlet_info.distance'.tr,
+            value: v),
     ];
 
     return _OutletCard(
@@ -328,7 +345,7 @@ class OutletDetailsCard extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const OutletSectionHeader(title: 'Outlet Details & Location'),
+          OutletSectionHeader(title: 'outlet_info.details_section'.tr),
           ..._renderRows(rows),
         ],
       ),
@@ -355,47 +372,53 @@ class OutletSalesHistoryCard extends StatelessWidget {
       if (data.paymentStatus case final v?)
         _InfoRowSpec(
             icon: Icons.verified_user_outlined,
-            label: 'Payment/Credit Status',
+            label: 'outlet_info.payment_status'.tr,
             value: v),
       if (data.creditLimit case final v?)
         _InfoRowSpec(
             icon: Icons.account_balance_wallet_outlined,
-            label: 'Credit Limit (SAP)',
+            label: 'outlet_info.credit_limit'.tr,
             value: v),
       if (data.paymentTerm case final v?)
         _InfoRowSpec(
             icon: Icons.calendar_month_outlined,
-            label: 'Payment Term (SAP)',
+            label: 'outlet_info.payment_term'.tr,
             value: v),
       if (data.lifetimeValue case final v?)
         _InfoRowSpec(
-            icon: Icons.payments_outlined, label: 'Lifetime Value', value: v),
+            icon: Icons.payments_outlined,
+            label: 'outlet_info.lifetime_value'.tr,
+            value: v),
       if (data.totalOrders case final v?)
         _InfoRowSpec(
-            icon: Icons.shopping_bag_outlined, label: 'Total Orders', value: v),
+            icon: Icons.shopping_bag_outlined,
+            label: 'outlet_info.total_orders'.tr,
+            value: v),
       if (data.averageRevenuePerOrder case final v?)
         _InfoRowSpec(
             icon: Icons.trending_up_rounded,
-            label: 'Avg Rev per Order',
+            label: 'outlet_info.avg_revenue'.tr,
             value: v),
       if (data.latestOrderDate case final v?)
         _InfoRowSpec(
             icon: Icons.history_toggle_off_rounded,
-            label: 'Latest Order Date (SAP)',
+            label: 'outlet_info.latest_order_date'.tr,
             value: v),
       if (data.openOpportunities case final v?)
         _InfoRowSpec(
             icon: Icons.trending_up_outlined,
-            label: 'Open Opportunities',
+            label: 'outlet_info.open_opportunities'.tr,
             value: v),
       if (data.lastSynced case final v?)
         _InfoRowSpec(
-            icon: Icons.update_rounded, label: 'Last Synced (SAP)', value: v),
+            icon: Icons.update_rounded,
+            label: 'outlet_info.last_synced'.tr,
+            value: v),
       if (onOrderHistoryTap != null)
         _InfoRowSpec(
           icon: Icons.receipt_long_rounded,
-          label: 'Order History (SAP)',
-          value: 'Tap to view outlet orders history',
+          label: 'outlet_info.order_history'.tr,
+          value: 'outlet_info.order_history_hint'.tr,
           onTap: onOrderHistoryTap,
           action: Icon(
             Icons.arrow_forward_ios_rounded,
@@ -413,7 +436,7 @@ class OutletSalesHistoryCard extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const OutletSectionHeader(title: 'Sales History Detail'),
+          OutletSectionHeader(title: 'outlet_info.sales_section'.tr),
           ..._renderRows(rows),
         ],
       ),
@@ -449,7 +472,7 @@ class OutletPromotionsCard extends StatelessWidget {
                     SizedBox(width: context.rw(8)),
                     Flexible(
                       child: Text(
-                        'Promotions',
+                        'outlet_info.promotions'.tr,
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                         style: TextStyle(
@@ -493,15 +516,18 @@ class OutletPromotionsCard extends StatelessWidget {
             runSpacing: context.rh(8),
             children: [
               _PromoBadge(
-                  label: 'ON-INVOICE (${promotions.onInvoice})',
+                  label: 'outlet_info.promo_on_invoice'
+                      .trParams({'count': promotions.onInvoice}),
                   color: Colors.blue.shade100,
                   textColor: Colors.blue.shade900),
               _PromoBadge(
-                  label: 'OFF-INVOICE (${promotions.offInvoice})',
+                  label: 'outlet_info.promo_off_invoice'
+                      .trParams({'count': promotions.offInvoice}),
                   color: Colors.grey.shade200,
                   textColor: Colors.grey.shade700),
               _PromoBadge(
-                  label: 'CONTRACT (${promotions.contract})',
+                  label: 'outlet_info.promo_contract'
+                      .trParams({'count': promotions.contract}),
                   color: Colors.teal.shade100,
                   textColor: Colors.teal.shade900),
             ],

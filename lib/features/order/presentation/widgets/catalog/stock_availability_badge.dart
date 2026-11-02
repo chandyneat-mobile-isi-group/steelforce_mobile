@@ -160,7 +160,7 @@ class StockAvailabilityBadge extends StatelessWidget {
 
     final plants = verdict.sellablePlants;
     if (plants.isNotEmpty) {
-      return plants.map((p) => '${p.plant} · ${p.band.name}').join('\n');
+      return plants.map((p) => '${p.plant} · ${_bandLabel(p.band)}').join('\n');
     }
 
     if (verdict.band != StockBand.unknown) return '';
@@ -169,4 +169,13 @@ class StockAvailabilityBadge extends StatelessWidget {
     // name. A stock read leaves this empty and the tooltip is dropped.
     return verdict.reason;
   }
+
+  // The band in the rep's language — the same words the badge itself uses.
+  static String _bandLabel(StockBand band) => switch (band) {
+        StockBand.high => 'products.status.high_stock'.tr,
+        StockBand.medium => 'products.status.in_stock'.tr,
+        StockBand.low => 'products.status.low_stock'.tr,
+        StockBand.none => 'products.status.none_on_hand'.tr,
+        StockBand.unknown => 'products.status.stock_unknown'.tr,
+      };
 }

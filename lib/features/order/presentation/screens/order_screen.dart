@@ -3,6 +3,7 @@ import 'package:steelforce/core/di/injection_container.dart';
 import 'package:steelforce/core/localization/localization_services.dart';
 import 'package:steelforce/core/usecase/usecase.dart';
 import 'package:steelforce/core/theme/theme_extensions.dart';
+import 'package:steelforce/features/app_coach/presentation/services/coach_keys.dart';
 import 'package:steelforce/features/order/domain/entities/quotation.dart';
 import 'package:steelforce/features/order/domain/entities/quotation_status.dart';
 import 'package:steelforce/features/order/domain/entities/sales_order.dart';
@@ -15,7 +16,8 @@ import 'package:steelforce/features/order/presentation/screens/quotation/quotati
 import 'package:steelforce/features/order/presentation/screens/sales_order/sales_order_detail_screen.dart';
 import 'package:steelforce/features/order/presentation/widgets/order_skeletons.dart';
 import 'package:steelforce/core/responsive/responsive_sizing.dart';
-import 'package:steelforce/features/shell/presentation/bloc/home_cubit.dart';
+import 'package:steelforce/features/shell/presentation/navigation/shell_tab_controller.dart';
+import 'package:steelforce/shared/widgets/brand_wallpaper_background.dart';
 
 enum _OrderStatusFilter {
   all,
@@ -54,8 +56,9 @@ class _OrderScreenState extends State<OrderScreen> {
       },
       child: Scaffold(
         // The shell's canvas, so every tab sits on the same ground as Home.
-        backgroundColor: context.appColors.canvas,
-        body: SafeArea(
+        backgroundColor: Colors.transparent,
+        body: BrandWallpaperBody(
+            child: SafeArea(
           child: Column(
             children: [
               // Fixed Filter Toolbar Header[cite: 6]
@@ -132,7 +135,7 @@ class _OrderScreenState extends State<OrderScreen> {
                 ),
             ],
           ),
-        ),
+        )),
       ),
     );
   }
@@ -262,7 +265,12 @@ class _RecentOrdersStreamListState extends State<_RecentOrdersStreamList> {
                   ),
                   itemCount: entries.length,
                   itemBuilder: (context, index) {
-                    return _OrderTile(entry: entries[index]);
+                    final tile = _OrderTile(entry: entries[index]);
+                    // The App Coach points at the newest document in "All".
+                    return index == 0 &&
+                            widget.selectedFilter == _OrderStatusFilter.all
+                        ? CoachKeys.wrap(CoachKeys.ordersFirstRow, child: tile)
+                        : tile;
                   },
                 );
               },

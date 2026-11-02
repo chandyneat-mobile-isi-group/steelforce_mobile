@@ -4,6 +4,7 @@ import 'package:steelforce/core/theme/theme_extensions.dart';
 import 'package:steelforce/features/authentication/presentation/widgets/login/gradient_button.dart';
 import 'package:steelforce/shared/widgets/aurora_background.dart';
 import 'package:steelforce/shared/widgets/glass_card.dart';
+import 'package:steelforce/shared/animations/coach_mascot.dart';
 
 class SuccessScreen extends StatelessWidget {
   const SuccessScreen({
@@ -15,6 +16,7 @@ class SuccessScreen extends StatelessWidget {
     this.icon = Icons.check_circle_outline,
     this.secondaryLabel,
     this.onSecondary,
+    this.showCoachMascot = false,
   });
 
   final String title;
@@ -24,6 +26,7 @@ class SuccessScreen extends StatelessWidget {
   final IconData icon;
   final String? secondaryLabel;
   final VoidCallback? onSecondary;
+  final bool showCoachMascot;
 
   @override
   Widget build(BuildContext context) {
@@ -50,7 +53,30 @@ class SuccessScreen extends StatelessWidget {
                       Column(
                         crossAxisAlignment: CrossAxisAlignment.center,
                         children: [
-                          _SuccessBadge(icon: icon),
+                          if (showCoachMascot)
+                            Stack(
+                              alignment: Alignment.center,
+                              children: [
+                                CoachMascot(size: context.rh(184), loop: false),
+                                PositionedDirectional(
+                                  end: context.rw(18),
+                                  top: context.rh(26),
+                                  child: Container(
+                                    width: context.rr(38),
+                                    height: context.rr(38),
+                                    decoration: const BoxDecoration(
+                                      color: Color(0xFF25C779),
+                                      shape: BoxShape.circle,
+                                    ),
+                                    child: Icon(Icons.check,
+                                        color: Colors.white,
+                                        size: context.rr(24)),
+                                  ),
+                                ),
+                              ],
+                            )
+                          else
+                            _SuccessBadge(icon: icon),
                           SizedBox(height: context.rh(22)),
                           Text(
                             title,
@@ -76,33 +102,39 @@ class SuccessScreen extends StatelessWidget {
                         ],
                       ),
                       SizedBox(height: context.rh(28)),
-                      GlassCard(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.stretch,
-                          children: [
-                            GradientButton(
-                              label: buttonLabel,
-                              onPressed: onContinue,
-                            ),
-                            if (secondaryLabel != null) ...[
-                              SizedBox(height: context.rh(12)),
-                              Center(
-                                child: TextButton(
-                                  onPressed: onSecondary,
-                                  child: Text(
-                                    secondaryLabel!,
-                                    style: TextStyle(
-                                      color: context.appColors.info,
-                                      fontSize: context.rsp(14),
-                                      fontWeight: FontWeight.w600,
+                      if (showCoachMascot)
+                        GradientButton(
+                          label: buttonLabel,
+                          onPressed: onContinue,
+                        )
+                      else
+                        GlassCard(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.stretch,
+                            children: [
+                              GradientButton(
+                                label: buttonLabel,
+                                onPressed: onContinue,
+                              ),
+                              if (secondaryLabel != null) ...[
+                                SizedBox(height: context.rh(12)),
+                                Center(
+                                  child: TextButton(
+                                    onPressed: onSecondary,
+                                    child: Text(
+                                      secondaryLabel!,
+                                      style: TextStyle(
+                                        color: context.appColors.info,
+                                        fontSize: context.rsp(14),
+                                        fontWeight: FontWeight.w600,
+                                      ),
                                     ),
                                   ),
                                 ),
-                              ),
+                              ],
                             ],
-                          ],
+                          ),
                         ),
-                      ),
                     ],
                   ),
                 ),

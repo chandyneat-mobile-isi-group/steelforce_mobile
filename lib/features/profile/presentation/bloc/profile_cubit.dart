@@ -1,4 +1,5 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:steelforce/core/error/failure_message.dart';
 import 'package:steelforce/core/error/failures.dart';
 import 'package:steelforce/core/session/unsent_work.dart';
 import 'package:steelforce/core/usecase/usecase.dart';
@@ -58,8 +59,8 @@ class ProfileCubit extends Cubit<ProfileState> {
     result.when(
       success: (profile) => emit(ProfileLoaded(profile: profile)),
       failure: (f) => current is ProfileLoaded
-          ? emit(current.copyWith(actionError: () => f.message))
-          : emit(ProfileError(f.message)),
+          ? emit(current.copyWith(actionError: () => f.userMessage))
+          : emit(ProfileError(f.userMessage)),
     );
   }
 
@@ -99,7 +100,8 @@ class ProfileCubit extends Cubit<ProfileState> {
         return true;
       },
       failure: (f) {
-        emit(current.copyWith(isSaving: false, actionError: () => f.message));
+        emit(current.copyWith(
+            isSaving: false, actionError: () => f.userMessage));
         return false;
       },
     );
@@ -117,7 +119,7 @@ class ProfileCubit extends Cubit<ProfileState> {
         return true;
       },
       failure: (f) {
-        emit(ProfileError(f.message));
+        emit(ProfileError(f.userMessage));
         return false;
       },
     );

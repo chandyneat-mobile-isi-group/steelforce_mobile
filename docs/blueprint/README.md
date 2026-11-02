@@ -39,9 +39,7 @@
 
 | Document | Scope |
 |---|---|
-| [master-plan.md](master-plan.md) | Full architecture analysis against the baseline blueprint; phase and sprint spine. |
-| [migration-plan.md](migration-plan.md) | Task-level `sqflite` → Drift roadmap with acceptance criteria and a risk register. |
-| [web-migration-plan.md](web-migration-plan.md) | The web plan as written before the work. Historical — [web-architecture.md](web-architecture.md) describes what shipped and wins on any conflict. |
+| [migration-plan.md](migration-plan.md) | **The one roadmap.** Task-level `sqflite` → Drift roadmap with acceptance criteria and a risk register. (The earlier `master-plan.md` analysis and the pre-build `web-migration-plan.md` were removed 2026-10-24; both are in git history.) |
 
 ### Assets
 

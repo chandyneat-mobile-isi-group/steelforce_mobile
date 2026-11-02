@@ -58,7 +58,7 @@ class DepotFilterCubit extends Cubit<DepotFilterState> {
   void reset() {
     emit(
       state.copyWith(
-        draft: DepotFilter(sortBy: state.draft.sortBy),
+        draft: DepotFilter(sortBy: state.draft.sortBy, kind: state.draft.kind),
         openSection: () => null,
         territoryQuery: '',
       ),

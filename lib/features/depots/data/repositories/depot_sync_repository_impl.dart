@@ -8,6 +8,7 @@ import 'package:steelforce/core/network/connectivity/network_info.dart';
 import 'package:steelforce/core/utils/result.dart';
 import 'package:steelforce/core/utils/typedefs.dart';
 import 'package:steelforce/features/depots/data/local/depot_local_data_source.dart';
+import 'package:steelforce/features/depots/data/local/depot_batch_shape.dart';
 import 'package:steelforce/features/depots/data/remote/depot_remote_data_source.dart';
 import 'package:steelforce/features/depots/domain/entities/depot.dart';
 import 'package:steelforce/features/depots/domain/entities/depot_code_lookup.dart';
@@ -88,6 +89,7 @@ class DepotSyncRepositoryImpl implements DepotSyncRepository {
         // points at the moment the run began.
         watermark ??= result.syncTimestamp;
 
+        _warnSkipped('initial', result.skippedWithoutId);
         _logger.debug('depots.sync.initial.page', fields: {
           'page': page,
           'rows': result.items.length,
@@ -97,12 +99,17 @@ class DepotSyncRepositoryImpl implements DepotSyncRepository {
         });
 
         if (result.items.isNotEmpty) {
+          _logger.debug('depots.sync.batch',
+              fields: depotBatchShape(result.items));
           await _local.upsertDepots(result.items);
           total += result.items.length;
         }
+        if (result.completeIds case final ids?) await _retainOnly(ids);
         if (!result.hasMore) break;
         page++;
       }
+
+      await _dropEmptyIdRow();
 
       if (watermark == null) {
         // Without a server timestamp the next delta has to fall back to the
@@ -144,11 +151,43 @@ class DepotSyncRepositoryImpl implements DepotSyncRepository {
       });
       return Failed(_failure(e.error));
     } on ServerException catch (e) {
+      _logger.error('depots.sync.initial.rejected', fields: {
+        'status': e.statusCode,
+        'detail': _short(e.message),
+      });
       return Failed(
           ServerFailure(message: e.message, statusCode: e.statusCode));
     } on CacheException catch (e) {
+      _logCacheFailure('initial', e);
       return Failed(CacheFailure(message: e.message));
     }
+  }
+
+  /// The database's own reason (e.g. `UNIQUE constraint failed: …`) — it
+  /// names columns, never values. Without it the log said nothing at all.
+  void _logCacheFailure(String run, CacheException e) {
+    _logger.error('depots.sync.$run.saveFailed',
+        fields: {'detail': _short(e.message)});
+  }
+
+  /// Builds before the id check stored every id-less row under `''`, each
+  /// overwriting the last — one row holding the final record's fields, which
+  /// no screen can open by id. Soft-deleted; a no-op once it is gone.
+  Future<void> _dropEmptyIdRow() => _local.markDeleted(const ['']);
+
+  /// Rows the server listed without an id are not stored; a count, never a
+  /// value. Non-zero means the API contract regressed.
+  void _warnSkipped(String run, int skipped) {
+    if (skipped == 0) return;
+    _logger
+        .warning('depots.sync.$run.rowsWithoutId', fields: {'rows': skipped});
+  }
+
+  /// A failure's own reason, one line and bounded. Names columns or payload
+  /// keys, never values.
+  static String _short(String message) {
+    final detail = message.replaceAll(RegExp(r'\s+'), ' ');
+    return detail.length <= 300 ? detail : detail.substring(0, 300);
   }
 
   @override
@@ -180,6 +219,14 @@ class DepotSyncRepositoryImpl implements DepotSyncRepository {
         return runInitialSync();
       }
 
+      // Rows synced before the lists were typed all read as Depots, leaving
+      // Non-BP and Waiting for Approval empty. A delta re-sends only what the
+      // server changed, so it would never type them: pull the book once.
+      if (await _local.hasUntypedDepots()) {
+        _logger.info('depots.sync.delta.untypedRows');
+        return runInitialSync();
+      }
+
       _logger.info('depots.sync.delta.start',
           fields: {'since': since.toIso8601String()});
 
@@ -196,6 +243,7 @@ class DepotSyncRepositoryImpl implements DepotSyncRepository {
         );
         watermark ??= delta.syncTimestamp;
 
+        _warnSkipped('delta', delta.skippedWithoutId);
         _logger.debug('depots.sync.delta.page', fields: {
           'page': page,
           'upserted': delta.upserted.length,
@@ -206,6 +254,8 @@ class DepotSyncRepositoryImpl implements DepotSyncRepository {
         });
 
         if (delta.upserted.isNotEmpty) {
+          _logger.debug('depots.sync.batch',
+              fields: depotBatchShape(delta.upserted));
           await _local.upsertDepots(delta.upserted);
           upserted += delta.upserted.length;
         }
@@ -215,10 +265,15 @@ class DepotSyncRepositoryImpl implements DepotSyncRepository {
           await _local.markDeleted(delta.deletedIds);
           deleted += delta.deletedIds.length;
         }
+        if (delta.completeIds case final ids?) {
+          deleted += await _retainOnly(ids);
+        }
 
         if (!delta.hasMore) break;
         page++;
       }
+
+      await _dropEmptyIdRow();
 
       // Fall back to the previous watermark rather than to `now`. A server
       // that returned no timestamp must not cause the window between `since`
@@ -270,11 +325,30 @@ class DepotSyncRepositoryImpl implements DepotSyncRepository {
       });
       return Failed(_failure(e.error));
     } on ServerException catch (e) {
+      _logger.error('depots.sync.delta.rejected', fields: {
+        'status': e.statusCode,
+        'detail': _short(e.message),
+      });
       return Failed(
           ServerFailure(message: e.message, statusCode: e.statusCode));
     } on CacheException catch (e) {
+      _logCacheFailure('delta', e);
       return Failed(CacheFailure(message: e.message));
     }
+  }
+
+  /// A grouped answer is the rep's whole book: anything held locally that it
+  /// no longer lists — a draft approved or rejected away, a depot reassigned —
+  /// is dropped. An empty answer is not taken as "drop everything": a server
+  /// fault looks the same, and losing the book offline is worse than a stale
+  /// row.
+  Future<int> _retainOnly(Set<String> ids) async {
+    if (ids.isEmpty) return 0;
+    final removed = await _local.retainOnly(ids);
+    if (removed > 0) {
+      _logger.info('depots.sync.stale_removed', fields: {'rows': removed});
+    }
+    return removed;
   }
 
   @override

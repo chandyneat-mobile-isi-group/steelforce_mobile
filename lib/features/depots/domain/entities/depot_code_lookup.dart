@@ -15,7 +15,7 @@ import 'package:steelforce/features/depots/domain/entities/portal_depot.dart';
 ///
 /// Making them separate variants means a caller cannot accidentally treat the
 /// second as the first — the switch will not compile until both are handled.
-/// See `docs/feature/depot/mobile/mobile.md` §Statuses.
+/// See `docs/feature/depot/mobile/api.md` §Statuses.
 sealed class DepotCodeLookup {
   const DepotCodeLookup();
 }

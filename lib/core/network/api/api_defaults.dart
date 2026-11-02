@@ -12,16 +12,15 @@ abstract final class ApiDefaults {
   /// The material list is one-based, like every other paged mobile endpoint.
   static const int firstPage = 1;
 
-  /// One catch-up page. Comfortably inside the server's clamp of
-  /// [maxPageSize] and large enough that a rep returning from a week offline
-  /// drains in a handful of round trips (§6.1).
-  static const int notificationPageSize = 100;
+  /// One inbox page: the server's maximum `limit`. `GET /me/notifications`
+  /// rejects anything above 50 with a 400 rather than clamping it.
+  static const int notificationPageSize = 50;
 
   /// Safety stop on the catch-up loop.
   ///
   /// A paging bug — a server that always reports `hasNextPage`, or a cursor that
   /// never advances — would otherwise spin until the app is killed, on a rep's
-  /// mobile data. Ten pages is 1,000 notifications, far past any real backlog;
+  /// mobile data. Ten pages is 500 notifications, far past any real backlog;
   /// hitting it is a defect and is logged as one rather than silently truncated.
   static const int notificationMaxCatchUpPages = 10;
 

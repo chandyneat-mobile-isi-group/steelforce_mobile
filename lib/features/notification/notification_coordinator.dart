@@ -203,6 +203,7 @@ class NotificationCoordinator implements NotificationLifecycle {
     await _connectivity.refresh();
     await _drainAndReport();
     await _catchUpQuietly();
+    await _registerQuietly();
   }
 
   /// Call after a successful sign-in.

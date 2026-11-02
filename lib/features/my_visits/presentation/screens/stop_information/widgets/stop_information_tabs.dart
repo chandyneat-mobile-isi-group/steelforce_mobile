@@ -62,7 +62,7 @@ class _OverviewTab extends StatelessWidget {
               _CompactTile(
                   icon: Icons.alt_route_rounded,
                   label: 'my_visits.stop_info.outlet_action'.tr,
-                  value: 'Attack',
+                  value: 'my_visits.stop_info.example_outlet_action'.tr,
                   isExample: true),
               _CompactTile(
                 icon: Icons.person_outline_rounded,
@@ -150,7 +150,7 @@ class _SalesTab extends StatelessWidget {
               _CompactTile(
                   icon: Icons.verified_user_outlined,
                   label: 'my_visits.stop_info.payment_status'.tr,
-                  value: 'Good Standing',
+                  value: 'my_visits.stop_info.example_payment_status'.tr,
                   isExample: true),
               _CompactTile(
                   icon: Icons.account_balance_wallet_outlined,
@@ -260,7 +260,7 @@ class _PromosTab extends StatelessWidget {
                   // `GET /mobile/depots/{id}/promotions`, which this tab does
                   // not call — `PromotionsScreen` below does.
                   _PillBadge(
-                      label: '25 Available',
+                      label: 'promotions.summary'.trParams({'count': 25}),
                       color: Colors.amber.shade100,
                       textColor: Colors.amber.shade900,
                       isExample: true),
@@ -272,17 +272,20 @@ class _PromosTab extends StatelessWidget {
                 runSpacing: context.rh(8),
                 children: [
                   _PillBadge(
-                      label: 'ON-INVOICE (20)',
+                      label: 'my_visits.stop_info.promo_on_invoice'
+                          .trParams({'count': 20}),
                       color: Colors.blue.shade100,
                       textColor: Colors.blue.shade900,
                       isExample: true),
                   _PillBadge(
-                      label: 'OFF-INVOICE (0)',
+                      label: 'my_visits.stop_info.promo_off_invoice'
+                          .trParams({'count': 0}),
                       color: Colors.grey.shade200,
                       textColor: Colors.grey.shade700,
                       isExample: true),
                   _PillBadge(
-                      label: 'CONTRACT (5)',
+                      label: 'my_visits.stop_info.promo_contract'
+                          .trParams({'count': 5}),
                       color: Colors.teal.shade100,
                       textColor: Colors.teal.shade900,
                       isExample: true),

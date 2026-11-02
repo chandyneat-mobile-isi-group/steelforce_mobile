@@ -4,7 +4,7 @@
     "start_url": ".",
     "display": "standalone",
     "background_color": "#FFFFFF",
-    "theme_color": "#021C50",
+    "theme_color": "#004A98",
     "description": "SteelForce — offline-first field sales CRM for KIC Group.",
     "orientation": "portrait-primary",
     "prefer_related_applications": false,

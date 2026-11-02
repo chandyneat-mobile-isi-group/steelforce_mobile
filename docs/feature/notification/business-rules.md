@@ -87,4 +87,4 @@ notifications entirely.
 ## Related
 
 - [Workflow](workflow.md) · [Data model](data-model.md) · [Security](security.md)
-- [Notification architecture](../../blueprint/notification-architecture.md)
+- Notification architecture (`notification-architecture.md` ⧉ backend repo)

@@ -1,5 +1,7 @@
+import 'package:steelforce/features/depots/data/local/division_names.dart';
 import 'package:steelforce/core/error/exceptions.dart';
 import 'package:steelforce/core/error/failures.dart';
+import 'package:steelforce/core/logging/app_logger.dart';
 import 'package:steelforce/core/utils/result.dart';
 import 'package:steelforce/core/utils/typedefs.dart';
 import 'package:steelforce/features/depots/data/local/depot_local_data_source.dart';
@@ -14,8 +16,19 @@ import 'package:steelforce/features/depots/domain/repositories/depot_repository.
 
 /// Local-read only. Network-backed creation and sync live in the sync repository.
 class DepotRepositoryImpl implements DepotRepository {
-  const DepotRepositoryImpl(this._local);
+  const DepotRepositoryImpl(this._local,
+      {AppLogger? logger, DivisionNames? divisionNames})
+      : _logger = logger,
+        _divisionNames = divisionNames;
   final DepotLocalDataSource _local;
+
+  /// The server sends a sales area's division as a bare code.
+  final DivisionNames? _divisionNames;
+
+  /// Counts only — which list, which page, how many rows — never a name,
+  /// code or the search term. "The sync stored 207 rows but the list is
+  /// empty" cannot be told apart from the log without it.
+  final AppLogger? _logger;
 
   @override
   ResultFuture<DepotPagedResult> browse({
@@ -32,6 +45,13 @@ class DepotRepositoryImpl implements DepotRepository {
         filter: filter,
       );
       final hasMore = rows.length > pageSize;
+      _logger?.debug('depots.list.read', fields: {
+        'kind': filter.kind.name,
+        'page': page,
+        'rows': hasMore ? pageSize : rows.length,
+        'hasMore': hasMore,
+        'searching': query.trim().isNotEmpty,
+      });
       return Success(
         DepotPagedResult(
           items: hasMore ? rows.sublist(0, pageSize) : rows,
@@ -40,6 +60,12 @@ class DepotRepositoryImpl implements DepotRepository {
         ),
       );
     } on CacheException catch (e) {
+      // The database's own reason names columns, never values.
+      _logger?.error('depots.list.readFailed', fields: {
+        'kind': filter.kind.name,
+        'detail':
+            e.message.length <= 200 ? e.message : e.message.substring(0, 200),
+      });
       return Failed(CacheFailure(message: e.message));
     }
   }
@@ -49,11 +75,20 @@ class DepotRepositoryImpl implements DepotRepository {
     try {
       final depot = await _local.getById(id);
       return depot == null
-          ? const Failed(CacheFailure(message: 'Depot not found.'))
-          : Success(depot);
+          ? const Failed(CacheFailure(message: 'depots.error.not_found'))
+          : Success(_namedDivisions(depot));
     } on CacheException catch (e) {
       return Failed(CacheFailure(message: e.message));
     }
+  }
+
+  Depot _namedDivisions(Depot depot) {
+    final names = _divisionNames;
+    final areas = depot.salesAreas;
+    if (names == null || areas == null || areas.isEmpty) return depot;
+    return depot.copyWith(salesAreas: [
+      for (final a in areas) a.withDivisionName(names.nameOf(a.division)),
+    ]);
   }
 
   @override

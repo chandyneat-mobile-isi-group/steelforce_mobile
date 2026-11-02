@@ -109,7 +109,7 @@ BAPI, not the platform's own model.
 > `SALESBLOCK` and `BLOCKFLAG` are **UPPER CASE** while their neighbours are
 > PascalCase. Preserved verbatim from the SAP contract.
 
-**Only `Name1` is required** — see [`../../api.md`](../../api.md) §"Only `name1` is required".
+**Only `Name1` is required** — see [`../../api.md`](../../mobile/api.md) §"Only `name1` is required".
 
 | Field | Type | Required | Notes |
 |---|---|---|---|

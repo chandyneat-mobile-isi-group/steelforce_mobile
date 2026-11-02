@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:lottie/lottie.dart';
+import 'package:steelforce/core/assets/app_assets.dart';
 
 enum CoachMood { idle, cheer, talk }
 
@@ -27,17 +28,32 @@ class CoachMascot extends StatefulWidget {
   });
 
   /// Under `assets/lotties/`, the folder `pubspec.yaml` declares.
-  static const asset = 'assets/lotties/coach-letsgo.json';
+  static const asset = AppLotties.coachLetsGo;
 
   /// The same mascot acting out "photo submitted": it snaps a photo, the
   /// photo flies into its speech bubble, an upload bar fills and a green
   /// check lands. Same 480 × 600 frame and the same `intro` / `loop` markers,
   /// so it drops into [animationAsset] unchanged.
-  static const inventorySuccessAsset = 'assets/lotties/inventory-success.json';
+  static const inventorySuccessAsset = AppLotties.inventorySuccess;
 
-  /// Shown if [asset] fails to load, so the coach is never left without a
-  /// face.
-  static const fallbackAsset = 'assets/lotties/Live chatbot.json';
+  /// Password reset, step 1: a phone rings in the speech bubble while a
+  /// number types into a field, 3-3-3, and the phone turns green.
+  static const phoneEntryAsset = AppLotties.phoneEntry;
+
+  /// Password reset, step 2: six code boxes fill one by one, turn green
+  /// together and a check lands on the bubble.
+  static const verifyCodeAsset = AppLotties.verifyCode;
+
+  /// Password reset, step 3: a password types in as a strength bar climbs
+  /// red → amber → green, then the open padlock snaps shut.
+  static const newPasswordAsset = AppLotties.newPassword;
+
+  /// The "coming soon" panel's sticker (`ComingSoonView`).
+  static const comingSoonAsset = AppLotties.comingSoon;
+
+  /// Shown if [animationAsset] fails to load, so the coach is never left
+  /// without a face. The default sticker, which every build bundles.
+  static const fallbackAsset = asset;
 
   /// The sticker's frame is 480 × 600 — taller than wide.
   static const aspectRatio = 480 / 600;
@@ -50,8 +66,9 @@ class CoachMascot extends StatefulWidget {
   /// stops moving competes with the text the rep has to read.
   final bool loop;
 
-  /// Which sticker to play — [asset] or [inventorySuccessAsset]. Both share
-  /// the frame size and markers this widget reads.
+  /// Which sticker to play — [asset], [inventorySuccessAsset] or one of the
+  /// password-reset stickers. All share the frame size and markers this
+  /// widget reads.
   final String animationAsset;
 
   final CoachMood mood;
@@ -82,8 +99,12 @@ class _CoachMascotState extends State<CoachMascot>
     super.didUpdateWidget(oldWidget);
     if (oldWidget.mood != widget.mood ||
         oldWidget.animate != widget.animate ||
-        oldWidget.loop != widget.loop) {
+        oldWidget.loop != widget.loop ||
+        oldWidget.animationAsset != widget.animationAsset) {
       _current = widget.mood;
+      _intro = null;
+      _loop = null;
+      _controller.stop();
       _start();
     }
   }
@@ -178,6 +199,10 @@ class _CoachMascotState extends State<CoachMascot>
         height: widget.size,
         fit: BoxFit.contain,
         animate: widget.animate,
+        // If the fallback fails too, hold the space empty rather than
+        // surface a second load error.
+        errorBuilder: (_, __, ___) =>
+            SizedBox(width: width, height: widget.size),
       ),
     );
   }

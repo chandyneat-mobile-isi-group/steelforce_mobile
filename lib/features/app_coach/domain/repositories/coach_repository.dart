@@ -1,3 +1,4 @@
+import 'package:steelforce/features/app_coach/domain/entities/coach_module.dart';
 import 'package:steelforce/features/app_coach/domain/entities/coach_progress.dart';
 import 'package:steelforce/features/app_coach/domain/entities/coach_step.dart';
 
@@ -7,8 +8,11 @@ import 'package:steelforce/features/app_coach/domain/entities/coach_step.dart';
 /// non-failing UX feature whose implementation swallows storage errors and
 /// falls back to sane defaults, so the coach can never crash the app.
 abstract interface class CoachRepository {
-  /// The ordered tutorial script (const catalog — cheap, synchronous).
+  /// The first-run tour's ordered steps (const catalog — cheap, synchronous).
   List<CoachStep> getSteps();
+
+  /// Every lesson, the tour first.
+  List<CoachModule> getModules();
 
   /// Current coach schema version (bumped when [getSteps] changes materially).
   int get version;

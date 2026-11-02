@@ -9,7 +9,7 @@ import 'package:equatable/equatable.dart';
 ///
 /// There is no SAP branch. The app never sends a quotation to SAP — the rep's
 /// part ends at Admin Review, and an administrator puts it into SAP from the
-/// portal (`docs/feature/quotation-orders/api/mobile.md`, rule 3).
+/// portal (`docs/feature/order/quotation/api/mobile.md`, rule 3).
 sealed class AdminSubmitResult extends Equatable {
   const AdminSubmitResult();
   @override

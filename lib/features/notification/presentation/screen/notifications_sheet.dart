@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:get_it/get_it.dart';
-import 'package:steelforce/core/config/feature_flags.dart';
 import 'package:steelforce/core/localization/localization_services.dart';
 import 'package:steelforce/core/localization/localized_builder.dart';
 import 'package:steelforce/core/responsive/responsive_sizing.dart';
@@ -11,7 +10,7 @@ import 'package:steelforce/features/notification/presentation/bloc/notification_
 import 'package:steelforce/features/notification/presentation/bloc/push_permission_cubit.dart';
 import 'package:steelforce/features/notification/presentation/widgets/notification_inbox_view.dart';
 import 'package:steelforce/shared/widgets/app_bottom_sheet.dart';
-import 'package:steelforce/shared/widgets/coming_soon_view.dart';
+import 'package:steelforce/shared/widgets/brand_wallpaper_background.dart';
 
 /// Opens the notifications sheet.
 ///
@@ -23,7 +22,7 @@ import 'package:steelforce/shared/widgets/coming_soon_view.dart';
 ///
 /// [onOpenNotification] receives a tapped notification so the caller — which
 /// owns a `Navigator` and knows it must pop the sheet first — can route on its
-/// `deep_link`. Null leaves rows tappable for the read gesture only, which is
+/// link. Null leaves rows tappable for the read gesture only, which is
 /// the correct behaviour for a surface with nowhere to send them.
 Future<void> showNotificationsSheet({
   required BuildContext context,
@@ -32,21 +31,6 @@ Future<void> showNotificationsSheet({
   void Function(NotificationMessage notification)? onOpenNotification,
   VoidCallback? onOpenSettings,
 }) {
-  if (!FeatureFlags.notifications) {
-    return showAppBottomSheet<void>(
-      context: context,
-      builder: (sheetContext) => LocalizedBuilder(
-        builder: (_) => ComingSoonView(
-          icon: Icons.notifications_active_rounded,
-          title: 'notifications.coming_soon.title'.tr,
-          subtitle: 'notifications.coming_soon.subtitle'.tr,
-          actionLabel: 'common.close'.tr,
-          actionIcon: Icons.close_rounded,
-          onAction: () => Navigator.of(sheetContext).pop(),
-        ),
-      ),
-    );
-  }
   return showAppBottomSheet<void>(
     context: context,
     heightFactor: 0.75,
@@ -75,27 +59,36 @@ class _NotificationsSheet extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return LocalizedBuilder(
-      builder: (context) => Padding(
-        padding: EdgeInsets.fromLTRB(
-          context.pagePadding,
-          context.rh(16),
-          context.pagePadding,
-          context.rh(12),
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            _Header(showMarkAllRead: !isGuest),
-            SizedBox(height: context.rh(12)),
-            Expanded(
-              child: isGuest
-                  ? _GuestMessage(onLogin: onLogin)
-                  : _SheetInbox(
-                      onOpenNotification: onOpenNotification,
-                      onOpenSettings: onOpenSettings,
-                    ),
-            ),
-          ],
+      // Keep the modal's own surface and rounded shape; draw only the faint
+      // zigzag over it so the sheet shares the brand texture without a second
+      // competing background gradient.
+      builder: (context) => BrandWallpaperBackground(
+        style: BrandWallpaperStyle.subtle,
+        top: Colors.transparent,
+        bottom: Colors.transparent,
+        lineColor: context.appColors.wallpaperSubtleLine,
+        child: Padding(
+          padding: EdgeInsets.fromLTRB(
+            context.pagePadding,
+            context.rh(16),
+            context.pagePadding,
+            context.rh(12),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const _Header(),
+              SizedBox(height: context.rh(12)),
+              Expanded(
+                child: isGuest
+                    ? _GuestMessage(onLogin: onLogin)
+                    : _SheetInbox(
+                        onOpenNotification: onOpenNotification,
+                        onOpenSettings: onOpenSettings,
+                      ),
+              ),
+            ],
+          ),
         ),
       ),
     );
@@ -151,59 +144,35 @@ class _SheetInboxState extends State<_SheetInbox> {
         BlocProvider.value(value: _inbox),
         BlocProvider.value(value: _permission),
       ],
-      child: NotificationInboxView(
-        onOpenNotification: widget.onOpenNotification,
-        onOpenSettings: widget.onOpenSettings,
-        // Tabs are shown here too: "Action needed" is the one surface a rep must
-        // be able to reach, and hiding it on a phone would hide the whole point
-        // of `requires_ack` (§5.4).
+      // Its own messenger, so a snackbar shows inside the sheet rather than on
+      // the page underneath, where the sheet would hide it.
+      child: ScaffoldMessenger(
+        child: Scaffold(
+          backgroundColor: Colors.transparent,
+          body: NotificationInboxView(
+            onOpenNotification: widget.onOpenNotification,
+            onOpenSettings: widget.onOpenSettings,
+          ),
+        ),
       ),
     );
   }
 }
 
+/// The sheet's title. Mark all as read sits in [NotificationInboxView],
+/// beneath the inbox cubit it needs — up here it had no cubit to read.
 class _Header extends StatelessWidget {
-  const _Header({required this.showMarkAllRead});
-
-  final bool showMarkAllRead;
+  const _Header();
 
   @override
   Widget build(BuildContext context) {
-    final colors = context.appColors;
-
-    return Row(
-      children: [
-        Expanded(
-          child: Text(
-            'notifications.title'.tr,
-            style: TextStyle(
-              color: colors.textPrimary,
-              fontSize: context.rsp(17),
-              fontWeight: FontWeight.w800,
-            ),
-          ),
-        ),
-        if (showMarkAllRead)
-          // Scoped to the active category filter by the cubit, per §8.2: the
-          // button clears what the rep can see, not what they cannot.
-          Builder(
-            builder: (context) => TextButton(
-              onPressed: () =>
-                  context.read<NotificationInboxCubit>().markAllRead(),
-              style: TextButton.styleFrom(
-                minimumSize: Size(0, context.rh(36)),
-                padding: EdgeInsets.symmetric(horizontal: context.rw(10)),
-              ),
-              child: Text(
-                'notifications.mark_all_read'.tr,
-                style: TextStyle(
-                  fontSize: context.rsp(12),
-                  fontWeight: FontWeight.w700,
-                ),
-              ),
-            ),
-          ),
-      ],
+    return Text(
+      'notifications.title'.tr,
+      style: TextStyle(
+        color: context.appColors.textPrimary,
+        fontSize: context.rsp(17),
+        fontWeight: FontWeight.w800,
+      ),
     );
   }
 }

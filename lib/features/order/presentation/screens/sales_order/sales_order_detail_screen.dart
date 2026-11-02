@@ -8,6 +8,7 @@ import 'package:steelforce/core/theme/theme_extensions.dart';
 import 'package:steelforce/features/order/domain/entities/cart_item.dart';
 import 'package:steelforce/features/order/domain/entities/sales_order.dart';
 import 'package:steelforce/features/order/presentation/widgets/sales_order/sales_order_status_chip.dart';
+import 'package:steelforce/features/order/presentation/widgets/quotation/off_visit_reason_sheet.dart';
 import 'package:steelforce/shared/widgets/back_to_home.dart';
 
 /// One sales order in full: who it is for, what is on it, and what it came to.
@@ -153,7 +154,7 @@ class _Header extends StatelessWidget {
           _IconLine(icon: Icons.event_rounded, text: date),
           if (order.offVisitReason != null) ...[
             SizedBox(height: context.rh(12)),
-            _OffVisitNotice(reason: order.offVisitReason!.name),
+            _OffVisitNotice(reason: order.offVisitReason!.localizedLabel),
           ],
         ],
       ),

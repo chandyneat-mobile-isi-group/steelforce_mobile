@@ -53,7 +53,7 @@
 -keepattributes InnerClasses
 -keepattributes EnclosingMethod
 
-# ── Strip logging from release binaries (docs/SECURITY.md §11) ──────────────
+# ── Strip logging from release binaries (docs/skills/security.md §11) ──────────────
 # Belt-and-braces: the Dart side already has zero `print()` calls, this covers
 # native/plugin logging that would otherwise survive into a release build.
 -assumenosideeffects class android.util.Log {

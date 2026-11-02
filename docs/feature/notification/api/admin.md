@@ -156,4 +156,4 @@ returned in a response.
 ## Related
 
 - [API — mobile](mobile.md) · [Security](../security.md) · [Business rules](../business-rules.md)
-- [Notification architecture](../../../blueprint/notification-architecture.md)
+- Notification architecture (`notification-architecture.md` ⧉ backend repo)

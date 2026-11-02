@@ -45,6 +45,7 @@ class LanguageCubit extends Cubit<Locale> {
   /// instantly), persists the choice, then emits the new [Locale] so
   /// `MaterialApp` updates locale/font.
   Future<void> changeLanguage(String languageCode) async {
+    if (state.languageCode == languageCode) return;
     await _changeLanguage(languageCode);
     emit(Locale(languageCode));
     if (_onLanguageChanged case final notify?) {

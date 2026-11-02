@@ -17,21 +17,28 @@ works offline, and where the code lives.
 | Feature | `lib/features/` | Entry point | Coverage |
 |---|---|---|---|
 | **Authentication** | `authentication` | [authentication/README.md](authentication/README.md) | Full 15-document package — the reference standard for this directory |
-| **Depot** | `depots` | [depot/README.md](depot/README.md) | API contract, UI/UX step design, SAP BP registration sub-package |
-| **My Visits** | `my_visits` | [my-visits/README.md](my-visits/README.md) | Architecture, workflow, backend API proposal |
-| **Order & Quotation** | `order` | [order/README.md](order/README.md) | Workflow, guided product selection, stock availability |
-| **Notification** | `notification` | [notification/README.md](notification/README.md) | Full mobile integration guide (inbox, push, preferences, deep links) |
+| **Depot** | `depots` ¹ | [depot/README.md](depot/README.md) | API contract ([mobile/api.md](depot/mobile/api.md)) with one page per operation, UI/UX step design, SAP BP registration, backend spec, use cases, user stories |
+| **My Visits** | `my_visits` | [my-visits/README.md](my-visits/README.md) | API (implemented), check-in/out, ad-hoc visits, architecture, workflow |
+| **Order & Quotation** | `order` | [order/README.md](order/README.md) | Workflow, product selection, and three sub-areas: [pricing/](order/pricing/README.md), [quotation/](order/quotation/README.md), [promotions/](order/promotions/README.md) |
+| **Notification** | `notification` | [notification/README.md](notification/README.md) | Mobile contract (inbox, push, preferences, devices) plus backend design references |
 | **App Coach** | `app_coach` | [app-coach/README.md](app-coach/README.md) | Feature overview and interaction model |
-| **Shell** | `shell` | [shell/README.md](shell/README.md) | UI upgrade plan (proposed, not started) |
-| **Localization** | `localization` | [localization/README.md](localization/README.md) | Migration analysis; the how-to guide is [../skills/localization.md](../skills/localization.md) |
+| **Shell** | `shell` | [shell/README.md](shell/README.md) | UI upgrade plan (in progress — phase 0.1 shipped) |
+| **Profile** | `profile` | [profile/README.md](profile/README.md) | Profile and avatar API; screens and sign-out not yet documented |
+| **Localization** | `localization` | [localization/README.md](localization/README.md) | Status notes; the how-to guide is [../skills/localization.md](../skills/localization.md) |
 | **Geo location** | `geo_location` | [geo-location/README.md](geo-location/README.md) | Bundled offline gazetteer, tables, seeding, address selector |
 | **Camera** | `core/camera` | [camera/README.md](camera/README.md) | The capture seam: real camera on a device, bundled test images on the iOS Simulator |
+
+¹ The one naming exception, kept for history: `lib/features/depots` → `depot/`.
+
+Order sub-areas (pricing, quotation, promotions) live **inside** `order/`
+because their code lives in `lib/features/order/`. Several of their pages were
+written by the backend team; each says so with ⧉.
 
 ### Not yet documented
 
 | Feature | `lib/features/` | Why it matters |
 |---|---|---|
-| Profile | `profile` | Rep identity surface and the sign-out path, which coordinates `SessionResetService`. |
+| Profile (screens, sign-out) | `profile` | Only the API is documented ([profile/](profile/README.md)). The sign-out path coordinates `SessionResetService`. |
 | Home / KPI | `home`, `shell` | The landing dashboard every rep sees first. |
 | Settings / Theme | `settings` | Theme-mode persistence. |
 | About | `about` | About hub and informational pages. |

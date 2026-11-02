@@ -56,7 +56,7 @@ extension _SharedTilesExtension on _AddDepotBottomSheetState {
               Icon(
                 expanded ? Icons.expand_less : Icons.expand_more,
                 size: _fontSize(20),
-                color: Theme.of(context).colorScheme.secondary,
+                color: Theme.of(context).colorScheme.primary,
               ),
               const SizedBox(width: 6),
               Text(
@@ -64,7 +64,7 @@ extension _SharedTilesExtension on _AddDepotBottomSheetState {
                     ? 'add_depot.show_less'.tr
                     : (labelCollapsed ?? 'add_depot.more_details'.tr),
                 style: TextStyle(
-                  color: Theme.of(context).colorScheme.secondary,
+                  color: Theme.of(context).colorScheme.primary,
                   fontSize: _fontSize(14),
                   fontWeight: FontWeight.w700,
                 ),
@@ -128,15 +128,17 @@ extension _SharedTilesExtension on _AddDepotBottomSheetState {
         ),
         decoration: BoxDecoration(
           color: hasError
-              ? const Color(0xFFFEF2F2)
-              : (completed ? const Color(0xFFF0FDF4) : Colors.white),
+              ? Theme.of(context).colorScheme.error.withValues(alpha: 0.08)
+              : (completed
+                  ? context.appColors.success.withValues(alpha: 0.08)
+                  : context.appColors.card),
           borderRadius: BorderRadius.circular(14),
           border: Border.all(
             color: hasError
                 ? Theme.of(context).colorScheme.error
                 : (completed
                     ? context.appColors.success
-                    : const Color(0xFFE2E8F0)),
+                    : context.appColors.border),
             width: (completed || hasError) ? 1.5 : 1.1,
           ),
           boxShadow: [
@@ -160,7 +162,10 @@ extension _SharedTilesExtension on _AddDepotBottomSheetState {
                         .withValues(alpha: 0.12)
                     : (completed
                         ? context.appColors.success.withValues(alpha: 0.12)
-                        : const Color(0xFFEFF6FF)),
+                        : Theme.of(context)
+                            .colorScheme
+                            .primary
+                            .withValues(alpha: 0.10)),
                 borderRadius: BorderRadius.circular(8),
               ),
               child: Center(
@@ -199,8 +204,8 @@ extension _SharedTilesExtension on _AddDepotBottomSheetState {
                       color: hasError
                           ? Theme.of(context).colorScheme.error
                           : (isUploading
-                              ? const Color(0xFF2563EB)
-                              : const Color(0xFF64748B)),
+                              ? Theme.of(context).colorScheme.primary
+                              : context.appColors.textSecondary),
                       fontSize: _fontSize(11),
                       fontWeight: (isUploading || hasError)
                           ? FontWeight.w600
@@ -228,7 +233,7 @@ extension _SharedTilesExtension on _AddDepotBottomSheetState {
                     ? Theme.of(context).colorScheme.error
                     : (completed
                         ? context.appColors.success
-                        : const Color(0xFF94A3B8)),
+                        : context.appColors.textHint),
                 size: _fontSize(18),
               ),
           ],

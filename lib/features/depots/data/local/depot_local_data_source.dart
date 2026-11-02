@@ -35,6 +35,14 @@ abstract interface class DepotLocalDataSource {
   Future<void> upsertDepots(List<DepotModel> depots);
   Future<void> markDeleted(List<String> ids);
 
+  /// Removes every row not in [ids]; returns how many. For an answer that is
+  /// the rep's complete book.
+  Future<int> retainOnly(Set<String> ids);
+
+  /// Whether any row predates the list types (`depot_type` null). Such a
+  /// book needs one full pull: a delta never re-sends unchanged rows.
+  Future<bool> hasUntypedDepots();
+
   Future<DateTime?> getLastSyncedAt(String entity);
   Future<void> setLastSyncedAt(String entity, DateTime at, {String? language});
 

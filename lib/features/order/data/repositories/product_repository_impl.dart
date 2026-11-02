@@ -96,7 +96,7 @@ class ProductRepositoryImpl implements ProductRepository {
     try {
       final product = await _local.getById(id);
       if (product == null) {
-        return const Failed(CacheFailure(message: 'Product not found.'));
+        return const Failed(CacheFailure(message: 'products.error.not_found'));
       }
       return Success(product);
     } on CacheException catch (e) {
@@ -110,7 +110,7 @@ class ProductRepositoryImpl implements ProductRepository {
       final product = await _local.getByBarcode(barcode);
       if (product == null) {
         return const Failed(
-            CacheFailure(message: 'No product matches that barcode.'));
+            CacheFailure(message: 'products.error.barcode_not_found'));
       }
       return Success(product);
     } on CacheException catch (e) {
@@ -123,7 +123,7 @@ class ProductRepositoryImpl implements ProductRepository {
     try {
       final product = await _local.getById(id);
       if (product == null) {
-        return const Failed(CacheFailure(message: 'Product not found.'));
+        return const Failed(CacheFailure(message: 'products.error.not_found'));
       }
       return Success(product.pricing.priceFor(tier));
     } on CacheException catch (e) {

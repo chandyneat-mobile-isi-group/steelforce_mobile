@@ -19,8 +19,7 @@ Conventions and the worked layering example: `docs/skills/ai-engineering-playboo
 - Business logic, API calls, or database access inside widgets.
 - Hardcoded API URLs, tokens, or secrets — see `security.md`.
 - Duplicate API clients or duplicate models for the same payload.
-- Global mutable state, and new dependencies when an existing one suffices
-  (`dependencies.md`).
+- Global mutable state, and new dependencies when an existing one suffices.
 - Copy-pasted implementations; extract the shared piece instead.
 
 ---
@@ -52,8 +51,8 @@ strings.
 - Use `cached_network_image` for remote images; size them.
 - Cache and debounce; do not re-request the same data per rebuild.
 
-Measuring, budgets, isolates, startup, battery, and lifecycle:
-`performance.md`. Never claim a speed-up without a measurement.
+Full guidance: `docs/skills/feature-ui-standard.md` §4 and
+`docs/skills/ai-engineering-playbook.md` §9.
 
 ---
 

@@ -13,8 +13,8 @@
 | Document | What it covers | Status |
 |---|---|---|
 | [android-release.md](android-release.md) | Release keystore, local/CI signing, signed AAB, Firebase App Distribution, release notes, future GitLab CI variables | ✅ Describes what exists |
+| [../ANDROID_PLAY_STORE_RELEASE.md](../ANDROID_PLAY_STORE_RELEASE.md) | The 1.0.0+1 Play release record: verified build values, Play Console checklist, device test list, troubleshooting | ✅ Verified 2026-10-29 |
 | [environment.md](environment.md) | Envied configuration, every `.env` key, iOS `Env.xcconfig` generation, and the web build's deliberate absence of secrets | ✅ Describes what exists |
-| [demo-mode.md](demo-mode.md) | Building and presenting the app with static demo data and no backend (`USE_MOCK_DATA=true`), the online/offline switch, and its limits | ✅ Describes what exists |
 | [ci-cd.md](ci-cd.md) | The intended CI/CD pipeline — branch strategy, PR gates, Fastlane, store distribution | ⚠ **Largely aspirational** — see below |
 
 ---
@@ -88,13 +88,12 @@ dart format --set-exit-if-changed .
 flutter analyze
 flutter test
 
-# Android
-flutter build apk   --release
-flutter build appbundle --release
+# Android — obfuscated, symbols split out (docs/security/README.md §5)
+tool/build_release.sh apk
+tool/build_release.sh appbundle
 
-# iOS  (regenerate the xcconfig first)
-dart run tool/generate_ios_env.dart
-flutter build ipa   --release
+# iOS — the script regenerates the xcconfig first
+tool/build_release.sh ipa
 
 # Web
 flutter build web --release --base-href /isi-steel-sales-mobile/

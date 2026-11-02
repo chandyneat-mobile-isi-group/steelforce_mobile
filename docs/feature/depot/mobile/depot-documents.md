@@ -462,4 +462,4 @@ Errors are RFC 9457 problem documents — branch on `errorCode`, never on `detai
 
 - [create-depot.md](create-depot.md) — the registration this evidence completes
 - [get-depot-by-id.md](get-depot-by-id.md) — the depot record itself
-- [mobile.md](mobile.md) — the whole mobile depot surface
+- [mobile.md](api.md) — the whole mobile depot surface

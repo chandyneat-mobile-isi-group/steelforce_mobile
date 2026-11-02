@@ -1,6 +1,9 @@
+import 'dart:async';
+import 'dart:math' as math;
 import 'dart:ui';
 
 import 'package:flutter/material.dart';
+import 'package:flutter/scheduler.dart';
 import 'package:steelforce/features/app_coach/domain/entities/coach_step.dart';
 import 'package:steelforce/features/app_coach/presentation/services/coach_anchor_registry.dart';
 import 'package:steelforce/features/app_coach/presentation/widgets/assistant_bubble.dart';
@@ -17,6 +20,17 @@ import 'package:steelforce/core/responsive/responsive_sizing.dart';
 /// Robust by design: when the target key isn't laid out (deleted screen, not
 /// scrolled into view, orientation change mid-frame) it degrades to a centered,
 /// target-less bubble instead of crashing or pointing at nothing.
+///
+/// A **non-blocking** step ([CoachStep.blocking] false — every lesson step)
+/// draws no scrim, no blur and no absorbers: the rep is filling a real form,
+/// so the whole screen stays live and the coach only rings the target and
+/// explains.
+///
+/// Every step's target can appear late and move — on a first sign-in the
+/// tour starts while the shell is still sliding in and Home is still filling;
+/// a lesson's form scrolls; autoplay scrolls the target into view — so its
+/// position is followed every frame while it moves, then checked a few times
+/// a second until it moves again.
 class AssistantOverlay extends StatefulWidget {
   const AssistantOverlay({
     super.key,
@@ -28,9 +42,28 @@ class AssistantOverlay extends StatefulWidget {
     required this.onCta,
     required this.onSkip,
     required this.onClose,
+    this.lessonTitleKey,
+    this.failureKey,
+    this.onMinimize,
+    this.autoplay,
+    this.onToggleAutoplay,
   });
 
   final CoachStep step;
+
+  /// Practice lessons: whether the coach is performing the steps itself.
+  /// Null for the tour, which has no autoplay.
+  final bool? autoplay;
+  final VoidCallback? onToggleAutoplay;
+
+  /// The lesson's name, shown above the step title. Null for the tour.
+  final String? lessonTitleKey;
+
+  /// Retry guidance after the step's operation failed.
+  final String? failureKey;
+
+  /// Collapses a non-blocking guide to a chip so it covers nothing.
+  final VoidCallback? onMinimize;
   final int stepNumber;
   final int totalSteps;
   final double progress;
@@ -44,13 +77,16 @@ class AssistantOverlay extends StatefulWidget {
 }
 
 class _AssistantOverlayState extends State<AssistantOverlay>
-    with SingleTickerProviderStateMixin {
+    with TickerProviderStateMixin {
   late final AnimationController _glow = AnimationController(
     vsync: this,
     duration: const Duration(milliseconds: 1400),
   );
 
   Rect? _rect;
+  final GlobalKey _bubbleKey = GlobalKey();
+  Offset? _bubblePosition;
+  Size _bubbleSize = Size.zero;
 
   /// Captured from the [CoachAnchorScope] above the shell, so `_syncRect` can
   /// read anchor bounds from post-frame callbacks (where an inherited-widget
@@ -61,10 +97,83 @@ class _AssistantOverlayState extends State<AssistantOverlay>
   static const double _gap = 12; // space between target and bubble
   static const double _holeRadius = 20; // shared with the backdrop clip
 
+  /// Follows the target every frame while it moves; stops once it has held
+  /// still for [_settledFrames].
+  late final Ticker _follow = createTicker((_) => _onFrame());
+  int _stillFrames = 0;
+  static const int _settledFrames = 20;
+
+  /// While [_follow] is stopped, notices the target moving again.
+  Timer? _watch;
+
+  bool get _blocking => widget.step.blocking;
+
+  void _startBubbleDrag(DragStartDetails _) {
+    final renderObject = _bubbleKey.currentContext?.findRenderObject();
+    if (renderObject is! RenderBox) return;
+    _bubbleSize = renderObject.size;
+    setState(() => _bubblePosition = renderObject.localToGlobal(Offset.zero));
+  }
+
+  void _moveBubble(DragUpdateDetails details, MediaQueryData media) {
+    final current = _bubblePosition;
+    if (current == null) return;
+
+    const edge = 4.0;
+    final maxLeft = math.max(edge, media.size.width - _bubbleSize.width - edge);
+    final minTop = media.padding.top + edge;
+    final maxTop = math.max(
+      minTop,
+      media.size.height -
+          media.padding.bottom -
+          media.viewInsets.bottom -
+          _bubbleSize.height -
+          edge,
+    );
+    setState(() {
+      _bubblePosition = Offset(
+        (current.dx + details.delta.dx).clamp(edge, maxLeft).toDouble(),
+        (current.dy + details.delta.dy).clamp(minTop, maxTop).toDouble(),
+      );
+    });
+  }
+
   @override
   void initState() {
     super.initState();
     if (!widget.reduceMotion) _glow.repeat(reverse: true);
+    _startTracking();
+  }
+
+  void _startTracking() {
+    _follow.stop();
+    _watch?.cancel();
+    if (widget.step.targetKeyId == null) return;
+    _stillFrames = 0;
+    _follow.start();
+    _watch = Timer.periodic(const Duration(milliseconds: 250), (_) {
+      if (!mounted || _follow.isActive || !_readRect()) return;
+      _stillFrames = 0;
+      _follow.start();
+    });
+  }
+
+  void _onFrame() {
+    if (!mounted) return;
+    if (_readRect()) {
+      _stillFrames = 0;
+    } else if (++_stillFrames >= _settledFrames) {
+      _follow.stop();
+    }
+  }
+
+  /// Re-reads the target's bounds; true when they changed.
+  bool _readRect() {
+    final id = widget.step.targetKeyId;
+    final latest = id == null ? null : _registry?.rectFor(id);
+    if (latest == _rect) return false;
+    setState(() => _rect = latest);
+    return true;
   }
 
   @override
@@ -72,44 +181,32 @@ class _AssistantOverlayState extends State<AssistantOverlay>
     super.didChangeDependencies();
     _registry = CoachAnchorScope.maybeOf(context);
     // First rect read happens here (not initState) because it needs the scope.
-    _syncRect();
+    _readRect();
   }
 
   @override
   void didUpdateWidget(AssistantOverlay old) {
     super.didUpdateWidget(old);
-    if (old.step.id != widget.step.id) _syncRect();
+    if (old.step.id != widget.step.id) {
+      _readRect();
+      _startTracking();
+    }
   }
 
   @override
   void dispose() {
+    _watch?.cancel();
+    _follow.dispose();
     _glow.dispose();
     super.dispose();
-  }
-
-  /// Re-reads the target's bounds and, while layout is still settling (target
-  /// scrolling into view), re-checks next frame. Self-terminating: once the rect
-  /// stops changing, no further rebuilds are scheduled.
-  void _syncRect() {
-    final id = widget.step.targetKeyId;
-    final next = id == null ? null : _registry?.rectFor(id);
-    if (next != _rect && mounted) {
-      setState(() => _rect = next);
-    }
-    if (id != null) {
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        if (!mounted) return;
-        final latest = _registry?.rectFor(id);
-        if (latest != _rect) setState(() => _rect = latest);
-      });
-    }
   }
 
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
     final media = MediaQuery.of(context);
-    final scrim = Colors.black.withValues(alpha: 0.62);
+    final scrim =
+        _blocking ? Colors.black.withValues(alpha: 0.62) : Colors.transparent;
 
     // Clamp the cutout to the visible area so a partially-scrolled target never
     // paints the hole off-screen.
@@ -124,17 +221,18 @@ class _AssistantOverlayState extends State<AssistantOverlay>
       children: [
         // 1. Soft backdrop blur — glass depth cue behind the scrim. Clipped to
         // exclude the cutout so the real, focused target stays perfectly sharp.
-        Positioned.fill(
-          child: IgnorePointer(
-            child: ClipPath(
-              clipper: _ScrimClipper(hole, _holeRadius),
-              child: BackdropFilter(
-                filter: ImageFilter.blur(sigmaX: 4, sigmaY: 4),
-                child: const SizedBox.expand(),
+        if (_blocking)
+          Positioned.fill(
+            child: IgnorePointer(
+              child: ClipPath(
+                clipper: _ScrimClipper(hole, _holeRadius),
+                child: BackdropFilter(
+                  filter: ImageFilter.blur(sigmaX: 4, sigmaY: 4),
+                  child: const SizedBox.expand(),
+                ),
               ),
             ),
           ),
-        ),
 
         // 2. Scrim + glow — never intercepts touches.
         Positioned.fill(
@@ -154,8 +252,9 @@ class _AssistantOverlayState extends State<AssistantOverlay>
           ),
         ),
 
-        // 3. Touch handling: absorb everywhere except the cutout.
-        ..._buildAbsorbers(hole),
+        // 3. Touch handling: absorb everywhere except the cutout. A
+        // non-blocking guide absorbs nothing.
+        if (_blocking) ..._buildAbsorbers(hole),
 
         // 4. Tap-pointer over the target.
         if (hole != null)
@@ -223,6 +322,11 @@ class _AssistantOverlayState extends State<AssistantOverlay>
       onCta: widget.onCta,
       onSkip: widget.onSkip,
       onClose: widget.onClose,
+      lessonTitleKey: widget.lessonTitleKey,
+      failureKey: widget.failureKey,
+      onMinimize: widget.onMinimize,
+      autoplay: widget.autoplay,
+      onToggleAutoplay: widget.onToggleAutoplay,
     );
 
     // Cross-fade + gentle pop between steps, instead of the content just
@@ -242,12 +346,41 @@ class _AssistantOverlayState extends State<AssistantOverlay>
       ),
       child: bubble,
     );
+    final draggableContent = GestureDetector(
+      key: _bubbleKey,
+      onPanStart: _startBubbleDrag,
+      onPanUpdate: (details) => _moveBubble(details, media),
+      child: content,
+    );
 
     final hMargin = context.rw(16);
     final safeTop = media.padding.top + context.rh(8);
     final safeBottom = media.padding.bottom + context.rh(8);
     final moveDuration =
         widget.reduceMotion ? Duration.zero : const Duration(milliseconds: 260);
+
+    final dragged = _bubblePosition;
+    if (dragged != null) {
+      return Positioned(
+        left: dragged.dx,
+        top: dragged.dy,
+        width: media.size.width - hMargin * 2,
+        child: draggableContent,
+      );
+    }
+
+    if (hole == null && !_blocking) {
+      // Docked at the bottom, clear of the keyboard: a centred card would sit
+      // on the middle of the form the rep is filling in.
+      return AnimatedPositioned(
+        duration: moveDuration,
+        curve: Curves.easeOutCubic,
+        left: hMargin,
+        right: hMargin,
+        bottom: safeBottom + media.viewInsets.bottom,
+        child: draggableContent,
+      );
+    }
 
     if (hole == null) {
       // Centered card, respecting safe areas and keyboard.
@@ -258,7 +391,7 @@ class _AssistantOverlayState extends State<AssistantOverlay>
         right: hMargin,
         top: safeTop,
         bottom: safeBottom + media.viewInsets.bottom,
-        child: Center(child: content),
+        child: Center(child: draggableContent),
       );
     }
 
@@ -273,7 +406,7 @@ class _AssistantOverlayState extends State<AssistantOverlay>
       right: hMargin,
       top: placeBelow ? hole.bottom + _gap : null,
       bottom: placeBelow ? null : media.size.height - hole.top + _gap,
-      child: content,
+      child: draggableContent,
     );
   }
 }

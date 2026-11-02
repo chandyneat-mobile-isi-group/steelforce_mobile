@@ -79,7 +79,7 @@ extension SharedComponentsExtension on _AddDepotBottomSheetState {
       width: size,
       height: size,
       decoration: BoxDecoration(
-        color: const Color(0xFFEFF6FF),
+        color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.10),
         borderRadius: BorderRadius.circular(8),
       ),
       child: Center(
@@ -107,12 +107,12 @@ extension SharedComponentsExtension on _AddDepotBottomSheetState {
         vertical: widget.isTablet ? 10 : context.rh(8),
       ),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: context.appColors.card,
         borderRadius: BorderRadius.circular(14),
         border: Border.all(
           color: hasError
               ? Theme.of(context).colorScheme.error
-              : const Color(0xFFE2E8F0),
+              : context.appColors.border,
           width: 1.1,
         ),
         boxShadow: [
@@ -222,13 +222,13 @@ extension SharedComponentsExtension on _AddDepotBottomSheetState {
       hintText: hint,
       counterText: '',
       hintStyle: TextStyle(
-        color: const Color(0xFF94A3B8),
+        color: context.appColors.textHint,
         fontSize: _fontSize(12),
       ),
       filled: true,
       fillColor: readOnly
           ? context.appColors.border.withValues(alpha: 0.2)
-          : const Color(0xFFF8FAFC),
+          : context.appColors.surfaceSoft,
       contentPadding: EdgeInsets.symmetric(
         horizontal: widget.isTablet ? 12 : context.rw(10),
         vertical: widget.isTablet ? 10 : context.rh(7),
@@ -237,7 +237,7 @@ extension SharedComponentsExtension on _AddDepotBottomSheetState {
       enabledBorder: border(
         error != null
             ? Theme.of(context).colorScheme.error
-            : const Color(0xFFE2E8F0),
+            : context.appColors.border,
       ),
       focusedBorder: border(Theme.of(context).colorScheme.primary),
       errorBorder: border(Theme.of(context).colorScheme.error),

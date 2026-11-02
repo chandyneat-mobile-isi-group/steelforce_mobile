@@ -204,7 +204,7 @@ class VisitPhotos extends Table with SyncableTable {
   /// Filesystem path or remote URL. Legacy column was named `url`.
   // TODO(release-gate): the referenced file is not yet encrypted at rest —
   // blocked on the encrypted file store (MIGRATION_PLAN.md §8). Must not ship
-  // to production as-is (SECURITY.md §11 release checklist).
+  // to production as-is (docs/skills/security.md §11 release checklist).
   TextColumn get path => text()();
   TextColumn get caption => text().withDefault(const Constant(''))();
   DateTimeColumn get takenAt => dateTime()();

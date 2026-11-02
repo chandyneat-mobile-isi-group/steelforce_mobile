@@ -17,6 +17,8 @@ extension DepotStatusL10n on DepotStatus {
   String get localizedLabel => switch (this) {
         DepotStatus.draft => 'depots.status.draft'.tr,
         DepotStatus.pendingApproval => 'depots.status.pending_approval'.tr,
+        DepotStatus.approved => 'depots.status.approved'.tr,
+        DepotStatus.rejected => 'depots.status.rejected'.tr,
         DepotStatus.active => 'depots.status.active'.tr,
         DepotStatus.suspended => 'depots.status.suspended'.tr,
         DepotStatus.closed => 'depots.status.closed'.tr,
@@ -45,6 +47,10 @@ class DepotStatusBadge extends StatelessWidget {
         DepotStatus.draft ||
         DepotStatus.pendingApproval =>
           colors.textSecondary,
+        // Accepted, though not trading yet.
+        DepotStatus.approved => scheme.primary,
+        // Turned down: the rep has to act on it.
+        DepotStatus.rejected => scheme.error,
         // Blocked from trading, which a rep needs to notice before they start
         // writing an order.
         DepotStatus.suspended ||

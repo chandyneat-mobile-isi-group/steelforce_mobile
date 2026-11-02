@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:steelforce/core/localization/localization_services.dart';
 import 'package:steelforce/core/localization/localized_text_context.dart';
 import 'package:steelforce/core/theme/theme_extensions.dart';
 import 'package:steelforce/features/order/domain/entities/material_category.dart';
@@ -111,7 +112,9 @@ class _CategorySelectorState extends State<CategorySelector> {
                     mainAxisSize: MainAxisSize.min,
                     children: [
                       Text(
-                        _isExpanded ? 'Show Less' : 'Read More',
+                        _isExpanded
+                            ? 'orders.catalog.show_less'.tr
+                            : 'orders.catalog.read_more'.tr,
                         style: TextStyle(
                           color: scheme.primary,
                           fontSize: context.rsp(11.5),

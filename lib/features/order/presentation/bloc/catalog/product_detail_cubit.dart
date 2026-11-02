@@ -1,4 +1,5 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:steelforce/core/error/failure_message.dart';
 import 'package:steelforce/core/usecase/usecase.dart';
 import 'package:steelforce/features/order/domain/usecases/catalog_params.dart';
 import 'package:steelforce/features/order/domain/usecases/fetch_favorites.dart';
@@ -55,7 +56,7 @@ class ProductDetailCubit extends Cubit<ProductDetailState> {
           ),
         ));
       },
-      failure: (f) async => emit(ProductDetailError(f.message)),
+      failure: (f) async => emit(ProductDetailError(f.userMessage)),
     );
   }
 

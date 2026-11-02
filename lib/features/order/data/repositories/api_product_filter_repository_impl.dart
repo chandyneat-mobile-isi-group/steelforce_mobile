@@ -226,7 +226,7 @@ class ApiProductFilterRepositoryImpl implements ProductFilterRepository {
   /// be reported as a transport problem, and (per the platform's rule) must
   /// never sign the user out.
   static Failure _failure(ApiException e) => ServerFailure(
-        message: e.error.message ?? 'Could not load materials.',
+        message: e.error.message ?? 'orders.guided_filter.error_materials_load',
         statusCode: e.statusCode,
       );
 }

@@ -24,4 +24,26 @@ abstract final class SecureStorageKeys {
 
   /// Secure-storage key holding the device-key version (for rotation).
   static const String kDbDeviceKeyVersion = 'isi.db_device_key_version';
+
+  /// The AES key for Hive's encrypted box. The `kic_` name predates the
+  /// `isi.` prefix and must not change: renaming it orphans the box.
+  static const String kHiveEncryptionKey = 'kic_hive_encryption_key';
+
+  /// Version of the iOS Keychain accessibility migration that has completed
+  /// (`KeychainAccessibilityMigration`). Absent means "not yet run".
+  static const String kKeychainAccessibilityVersion =
+      'isi.keychain_accessibility_version';
+
+  /// Every value-bearing key above. The accessibility migration rewrites
+  /// exactly these, so a new key must be added here too.
+  static const List<String> all = [
+    kAccessToken,
+    kRefreshToken,
+    kCachedUser,
+    kRememberedPhone,
+    kDeviceId,
+    kDbDeviceKey,
+    kDbDeviceKeyVersion,
+    kHiveEncryptionKey,
+  ];
 }

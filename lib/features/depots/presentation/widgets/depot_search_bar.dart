@@ -8,12 +8,15 @@ class DepotSearchBar extends StatefulWidget {
     super.key,
     required this.query,
     required this.onSearchChanged,
-    required this.onAddTap,
+    this.trailing,
   });
 
   final String query;
   final ValueChanged<String> onSearchChanged;
-  final VoidCallback onAddTap;
+
+  /// Beside the field — the Advanced Filters button. Registering a depot
+  /// moved to the screen's floating button.
+  final Widget? trailing;
 
   @override
   State<DepotSearchBar> createState() => _DepotSearchBarState();
@@ -22,9 +25,6 @@ class DepotSearchBar extends StatefulWidget {
 class _DepotSearchBarState extends State<DepotSearchBar> {
   late final TextEditingController _controller;
   late final FocusNode _focusNode;
-
-  bool _isHoveringAdd = false;
-  bool _isPressedAdd = false;
 
   @override
   void initState() {
@@ -129,76 +129,10 @@ class _DepotSearchBarState extends State<DepotSearchBar> {
             ),
           ),
         ),
-        SizedBox(width: context.rw(10)), //[cite: 24]
-        // Premium Hover & Tap Animated Button
-        MouseRegion(
-          onEnter: (_) => setState(() => _isHoveringAdd = true),
-          onExit: (_) => setState(() => _isHoveringAdd = false),
-          child: GestureDetector(
-            onTapDown: (_) => setState(() => _isPressedAdd = true),
-            onTapUp: (_) {
-              setState(() => _isPressedAdd = false);
-              widget.onAddTap(); //[cite: 24]
-            },
-            onTapCancel: () => setState(() => _isPressedAdd = false),
-            child: AnimatedScale(
-              duration: const Duration(milliseconds: 150),
-              curve: Curves.easeInOut,
-              // Shrinks slightly on press, grows slightly on hover for tactile feel
-              scale: _isPressedAdd ? 0.95 : (_isHoveringAdd ? 1.02 : 1.0),
-              child: AnimatedContainer(
-                duration: const Duration(milliseconds: 200),
-                height: context.rh(44), //[cite: 24]
-                // Dynamic padding instead of fixed 44 width to prevent text overflow
-                padding: EdgeInsets.symmetric(horizontal: context.rw(12)),
-                alignment: Alignment.center, //[cite: 24]
-                decoration: BoxDecoration(
-                  color: _isHoveringAdd
-                      ? scheme.primary.withValues(alpha: 0.05)
-                      : colors.card,
-                  borderRadius: BorderRadius.circular(14), //[cite: 24]
-                  border: Border.all(
-                    color: _isHoveringAdd
-                        ? scheme.primary.withValues(alpha: 0.5)
-                        : colors.border,
-                  ),
-                  boxShadow: _isHoveringAdd
-                      ? [
-                          BoxShadow(
-                              color: scheme.primary.withValues(alpha: 0.1),
-                              blurRadius: 8,
-                              offset: const Offset(0, 2))
-                        ]
-                      : [],
-                ),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min, //[cite: 24]
-                  children: [
-                    Icon(
-                      Icons.add_rounded, //[cite: 24]
-                      color:
-                          _isHoveringAdd ? scheme.primary : colors.textPrimary,
-                      size: context.rr(20), //[cite: 24]
-                    ),
-                    SizedBox(width: context.rw(4)), //[cite: 24]
-                    Text(
-                      'add_depot.title'.tr, //[cite: 24]
-                      style: TextStyle(
-                        color: _isHoveringAdd
-                            ? scheme.primary
-                            : colors.textPrimary,
-                        fontSize: context.rsp(13.5), //[cite: 24]
-                        fontWeight: _isHoveringAdd
-                            ? FontWeight.w600
-                            : FontWeight.normal,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-          ),
-        ),
+        if (widget.trailing case final trailing?) ...[
+          SizedBox(width: context.rw(10)),
+          trailing,
+        ],
       ],
     );
   }

@@ -10,6 +10,8 @@ import 'package:steelforce/features/authentication/data/models/auth_token_model.
 import 'package:steelforce/features/authentication/data/models/user_model.dart';
 
 abstract interface class AuthLocalDataSource {
+  // Password-reset state is intentionally absent here: the Firebase ID token
+  // and backend reset grant stay in memory for the active reset route only.
   Future<void> cacheSession({
     required AuthTokenModel token,
     required AuthProfileModel profile,

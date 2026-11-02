@@ -9,7 +9,12 @@ import 'package:steelforce/features/depots/domain/entities/pending_depot_registr
 import 'package:steelforce/features/depots/presentation/bloc/depot_registration_queue_cubit.dart';
 import 'package:steelforce/features/depots/presentation/widgets/sync/depot_registration_actions.dart';
 import 'package:steelforce/features/depots/presentation/widgets/sync/depot_registration_status_view.dart';
+import 'package:steelforce/features/depots/domain/entities/depot_document.dart';
 import 'package:steelforce/shared/widgets/app_bottom_sheet.dart';
+import 'package:steelforce/shared/widgets/brand_wallpaper_background.dart';
+import 'package:steelforce/shared/widgets/sheet_close_button.dart';
+import 'package:steelforce/shared/widgets/info_section_card.dart';
+import 'package:steelforce/shared/widgets/photo_gallery.dart';
 
 /// Opens what one queued registration holds, over the Sync Center. [context]
 /// must be under the [DepotRegistrationQueueCubit].
@@ -66,14 +71,25 @@ class _PendingDepotRegistrationDetailsSheetState
       builder: (context, state) {
         final item = _find(state);
         if (item == null) return const SizedBox.shrink();
-        return SingleChildScrollView(
-          padding: EdgeInsets.fromLTRB(
-            context.rw(16),
-            context.rh(4),
-            context.rw(16),
-            context.rh(16),
-          ),
-          child: _Details(item: item),
+        // The brand pattern fills behind; the content sets the sheet height.
+        return Stack(
+          children: [
+            const Positioned.fill(
+              // Subtle, not vivid: this sheet's text sits on it directly,
+              // and grey or dark text is unreadable on the vivid blue.
+              child:
+                  BrandWallpaperBackground(style: BrandWallpaperStyle.subtle),
+            ),
+            SingleChildScrollView(
+              padding: EdgeInsets.fromLTRB(
+                context.rw(16),
+                context.rh(4),
+                context.rw(16),
+                context.rh(16),
+              ),
+              child: _Details(item: item),
+            ),
+          ],
         );
       },
     );
@@ -100,23 +116,37 @@ class _Details extends StatelessWidget {
       mainAxisSize: MainAxisSize.min,
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        Text(
-          'sync_center.depot.detail.title'.tr,
-          style: TextStyle(
-            fontSize: context.rsp(12),
-            color: colors.textSecondary,
-          ),
-        ),
-        SizedBox(height: context.rh(4)),
-        Text(
-          item.depotName.isEmpty
-              ? 'sync_center.depot.unnamed'.tr
-              : item.depotName,
-          style: TextStyle(
-            fontSize: context.rsp(17),
-            fontWeight: FontWeight.w800,
-            color: scheme.onSurface,
-          ),
+        Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'sync_center.depot.detail.title'.tr,
+                    style: TextStyle(
+                      fontSize: context.rsp(12),
+                      color: colors.textSecondary,
+                    ),
+                  ),
+                  SizedBox(height: context.rh(4)),
+                  Text(
+                    item.depotName.isEmpty
+                        ? 'sync_center.depot.unnamed'.tr
+                        : item.depotName,
+                    style: TextStyle(
+                      fontSize: context.rsp(17),
+                      fontWeight: FontWeight.w800,
+                      color: scheme.onSurface,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(width: 8),
+            const SheetCloseButton(),
+          ],
         ),
         if (kh != null && kh != item.depotName) ...[
           SizedBox(height: context.rh(2)),
@@ -172,53 +202,79 @@ class _Details extends StatelessWidget {
           ),
         ),
         SizedBox(height: context.rh(12)),
-        if (item.phone != null)
-          _Row(
-            icon: Icons.phone_outlined,
-            label: 'sync_center.depot.detail.phone'.tr,
-            value: item.phone!,
-          ),
-        if (item.address != null)
-          _Row(
-            icon: Icons.home_outlined,
-            label: 'sync_center.depot.detail.address'.tr,
-            value: item.address!,
-          ),
-        if (lat != null && lng != null)
-          _Row(
-            icon: Icons.my_location_rounded,
-            label: 'sync_center.depot.detail.location'.tr,
-            value: '${lat.toStringAsFixed(5)}, ${lng.toStringAsFixed(5)}',
-          ),
-        if (number != null && number.isNotEmpty)
-          _Row(
-            icon: Icons.tag_rounded,
-            label: 'sync_center.depot.detail.depot_number'.tr,
-            value: number,
-          ),
-        if (item.photosOutstanding > 0)
-          _Row(
-            icon: Icons.photo_library_outlined,
-            label: 'sync_center.depot.detail.photos'.tr,
-            value: '${item.photosOutstanding}',
-          ),
-        _Row(
-          icon: Icons.schedule_rounded,
-          label: 'sync_center.depot.detail.saved_at'.tr,
-          value: time.format(item.createdAt.toLocal()),
+        InfoSectionCard(
+          icon: Icons.info_outline_rounded,
+          title: 'sync_center.detail.information'.tr,
+          children: [
+            if (item.phone != null)
+              _Row(
+                icon: Icons.phone_outlined,
+                label: 'sync_center.depot.detail.phone'.tr,
+                value: item.phone!,
+              ),
+            if (item.address != null)
+              _Row(
+                icon: Icons.home_outlined,
+                label: 'sync_center.depot.detail.address'.tr,
+                value: item.address!,
+              ),
+            if (lat != null && lng != null)
+              _Row(
+                icon: Icons.my_location_rounded,
+                label: 'sync_center.depot.detail.location'.tr,
+                value: '${lat.toStringAsFixed(5)}, ${lng.toStringAsFixed(5)}',
+              ),
+            if (number != null && number.isNotEmpty)
+              _Row(
+                icon: Icons.tag_rounded,
+                label: 'sync_center.depot.detail.depot_number'.tr,
+                value: number,
+              ),
+            if (item.photosOutstanding > 0)
+              _Row(
+                icon: Icons.cloud_upload_outlined,
+                label: 'sync_center.depot.detail.photos'.tr,
+                value: '${item.photosOutstanding}',
+              ),
+            _Row(
+              icon: Icons.schedule_rounded,
+              label: 'sync_center.depot.detail.saved_at'.tr,
+              value: time.format(item.createdAt.toLocal()),
+            ),
+            if (lastAttempt != null)
+              _Row(
+                icon: Icons.history_rounded,
+                label: 'sync_center.depot.detail.last_attempt'.tr,
+                value: time.format(lastAttempt.toLocal()),
+              ),
+            if (item.attempts > 0)
+              _Row(
+                icon: Icons.repeat_rounded,
+                label: 'sync_center.depot.detail.attempts'.tr,
+                value: '${item.attempts}',
+              ),
+          ],
         ),
-        if (lastAttempt != null)
-          _Row(
-            icon: Icons.history_rounded,
-            label: 'sync_center.depot.detail.last_attempt'.tr,
-            value: time.format(lastAttempt.toLocal()),
+        if (item.photos.isNotEmpty) ...[
+          SizedBox(height: context.rh(12)),
+          InfoSectionCard(
+            icon: Icons.photo_library_outlined,
+            title: 'sync_center.detail.documents'.tr,
+            count: item.photos.length,
+            children: [
+              PhotoGallery(
+                photos: [
+                  for (final p in item.photos)
+                    GalleryPhoto(
+                      path: p.path,
+                      label: depotDocumentLabel(p.type),
+                      takenAt: p.capturedAt,
+                    ),
+                ],
+              ),
+            ],
           ),
-        if (item.attempts > 0)
-          _Row(
-            icon: Icons.repeat_rounded,
-            label: 'sync_center.depot.detail.attempts'.tr,
-            value: '${item.attempts}',
-          ),
+        ],
         SizedBox(height: context.rh(16)),
         DepotRegistrationActions(item: item),
       ],
@@ -275,3 +331,13 @@ class _Row extends StatelessWidget {
     );
   }
 }
+
+/// The name the add-depot form gives each document photo, so the rep sees
+/// the same words here as when they took it.
+String depotDocumentLabel(DepotDocumentType type) => switch (type) {
+      DepotDocumentType.storefront => 'add_depot.photo_front'.tr,
+      DepotDocumentType.insideStore => 'add_depot.photo_inside'.tr,
+      DepotDocumentType.idCard => 'add_depot.photo_id'.tr,
+      DepotDocumentType.patentTax => 'add_depot.photo_patent'.tr,
+      DepotDocumentType.vatCertificate => 'add_depot.photo_vat'.tr,
+    };

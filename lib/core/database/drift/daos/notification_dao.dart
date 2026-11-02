@@ -77,6 +77,26 @@ class NotificationDao extends DatabaseAccessor<AppDatabase>
   Future<NotificationRow?> findById(String id) =>
       (select(notifications)..where((t) => t.id.equals(id))).getSingleOrNull();
 
+  /// True once the mirror holds any notification.
+  Future<bool> hasRows() async {
+    final query = selectOnly(notifications)
+      ..addColumns([notifications.id])
+      ..limit(1);
+    return (await query.get()).isNotEmpty;
+  }
+
+  /// Which of [ids] the mirror already holds — where a keyset walk of the
+  /// inbox meets what an earlier walk stored.
+  Future<Set<String>> knownIds(Iterable<String> ids) async {
+    final wanted = ids.toSet();
+    if (wanted.isEmpty) return const {};
+    final query = selectOnly(notifications)
+      ..addColumns([notifications.id])
+      ..where(notifications.id.isIn(wanted));
+    final rows = await query.get();
+    return {for (final row in rows) row.read(notifications.id)!};
+  }
+
   /// Watches the persisted cursor/count row. Emits null until the first sync
   /// writes it, which is the honest answer for a device that has never synced.
   Stream<NotificationSyncMetaRow?> watchSyncMeta() =>

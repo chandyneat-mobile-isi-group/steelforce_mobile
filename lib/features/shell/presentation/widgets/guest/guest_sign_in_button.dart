@@ -3,7 +3,8 @@ import 'package:steelforce/core/localization/localization_services.dart';
 import 'package:steelforce/core/responsive/responsive_sizing.dart';
 import 'package:steelforce/core/theme/app_colors.dart';
 
-/// The guest landing's one call to action: a full-width brand-blue pill.
+/// The guest landing's one call to action: a white button with navy text,
+/// the brightest thing on the navy panel.
 class GuestSignInButton extends StatelessWidget {
   const GuestSignInButton({super.key, required this.onPressed});
 
@@ -11,56 +12,22 @@ class GuestSignInButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final radius = BorderRadius.circular(context.rr(30));
-
-    return Semantics(
-      button: true,
-      child: DecoratedBox(
-        decoration: BoxDecoration(
-          borderRadius: radius,
-          gradient: const LinearGradient(
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-            colors: [AppColors.primary, AppColors.brandNavyDark],
-          ),
-          boxShadow: [
-            BoxShadow(
-              color: AppColors.primary.withValues(alpha: 0.28),
-              blurRadius: 18,
-              offset: const Offset(0, 8),
-            ),
-          ],
+    return FilledButton(
+      onPressed: onPressed,
+      style: FilledButton.styleFrom(
+        backgroundColor: Colors.white,
+        foregroundColor: AppColors.brandNavy,
+        minimumSize: Size.fromHeight(context.rh(54).clamp(48.0, 64.0)),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(context.rr(12)),
         ),
-        child: Material(
-          type: MaterialType.transparency,
-          child: InkWell(
-            onTap: onPressed,
-            borderRadius: radius,
-            child: ConstrainedBox(
-              constraints: BoxConstraints(minHeight: context.rh(56)),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Icon(Icons.login_rounded,
-                      color: Colors.white, size: context.rr(24)),
-                  SizedBox(width: context.rw(12)),
-                  Flexible(
-                    child: Text(
-                      'auth.login_btn'.tr,
-                      overflow: TextOverflow.ellipsis,
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontSize: context.rsp(18),
-                        fontWeight: FontWeight.w700,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
+        // From the theme, so the label keeps the app's Latin/Khmer family.
+        textStyle: Theme.of(context).textTheme.labelLarge?.copyWith(
+              fontSize: context.rsp(17),
+              fontWeight: FontWeight.w700,
             ),
-          ),
-        ),
       ),
+      child: Text('auth.login_btn'.tr),
     );
   }
 }

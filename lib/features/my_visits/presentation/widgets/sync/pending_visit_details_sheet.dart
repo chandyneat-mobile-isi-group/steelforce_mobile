@@ -9,6 +9,10 @@ import 'package:steelforce/features/my_visits/domain/entities/pending_visit_sync
 import 'package:steelforce/features/my_visits/presentation/bloc/cubit/pending_visit_sync_cubit.dart';
 import 'package:steelforce/features/my_visits/presentation/widgets/sync/pending_visit_actions.dart';
 import 'package:steelforce/shared/widgets/app_bottom_sheet.dart';
+import 'package:steelforce/shared/widgets/brand_wallpaper_background.dart';
+import 'package:steelforce/shared/widgets/sheet_close_button.dart';
+import 'package:steelforce/shared/widgets/info_section_card.dart';
+import 'package:steelforce/shared/widgets/photo_gallery.dart';
 
 /// Opens the details of one visit waiting in the Sync Center, over the Sync
 /// Center itself. [context] must be under the [PendingVisitSyncCubit].
@@ -56,14 +60,25 @@ class _PendingVisitDetailsSheetState extends State<PendingVisitDetailsSheet> {
       builder: (context, state) {
         final stop = state.stop(widget.stopId);
         if (stop == null) return const SizedBox.shrink();
-        return SingleChildScrollView(
-          padding: EdgeInsets.fromLTRB(
-            context.rw(16),
-            context.rh(4),
-            context.rw(16),
-            context.rh(16),
-          ),
-          child: _Details(stop: stop),
+        // The brand pattern fills behind; the content sets the sheet height.
+        return Stack(
+          children: [
+            const Positioned.fill(
+              // Subtle, not vivid: this sheet's text sits on it directly,
+              // and grey or dark text is unreadable on the vivid blue.
+              child:
+                  BrandWallpaperBackground(style: BrandWallpaperStyle.subtle),
+            ),
+            SingleChildScrollView(
+              padding: EdgeInsets.fromLTRB(
+                context.rw(16),
+                context.rh(4),
+                context.rw(16),
+                context.rh(16),
+              ),
+              child: _Details(stop: stop),
+            ),
+          ],
         );
       },
     );
@@ -112,75 +127,140 @@ class _Details extends StatelessWidget {
       ),
     ].where((k) => k.$3 > 0).toList();
 
-    final sectionStyle = TextStyle(
-      fontSize: context.rsp(12.5),
-      fontWeight: FontWeight.w800,
-      color: colors.textSecondary,
-    );
-
     return Column(
       mainAxisSize: MainAxisSize.min,
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        Text(
-          'sync_center.visit.details_title'.tr,
-          style: TextStyle(
-            fontSize: context.rsp(12),
-            color: colors.textSecondary,
-          ),
-        ),
-        SizedBox(height: context.rh(4)),
-        Text(
-          pendingVisitShopName(context, stop),
-          style: TextStyle(
-            fontSize: context.rsp(17),
-            fontWeight: FontWeight.w800,
-            color: scheme.onSurface,
-          ),
-        ),
-        SizedBox(height: context.rh(16)),
-        _Row(
-          icon: Icons.login_rounded,
-          label: 'sync_center.visit.check_in_label'.tr,
-          value: at(stop.checkInAt),
-          muted: stop.checkInAt == null,
-        ),
-        _Row(
-          icon: Icons.logout_rounded,
-          label: 'sync_center.visit.check_out_label'.tr,
-          value: at(stop.checkOutAt),
-          muted: stop.checkOutAt == null,
-        ),
-        if (stop.checkOutWaitsForCheckIn) ...[
-          SizedBox(height: context.rh(4)),
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Icon(
-                Icons.format_list_numbered_rounded,
-                size: context.rr(16),
-                color: colors.textSecondary,
-              ),
-              SizedBox(width: context.rw(8)),
-              Expanded(
-                child: Text(
-                  'sync_center.visit.after_check_in'.tr,
-                  style: TextStyle(
-                    color: colors.textSecondary,
-                    fontSize: context.rsp(12),
-                    height: 1.35,
+        Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'sync_center.visit.details_title'.tr,
+                    style: TextStyle(
+                      fontSize: context.rsp(12),
+                      color: colors.textSecondary,
+                    ),
                   ),
-                ),
+                  SizedBox(height: context.rh(4)),
+                  Text(
+                    pendingVisitShopName(context, stop),
+                    style: TextStyle(
+                      fontSize: context.rsp(17),
+                      fontWeight: FontWeight.w800,
+                      color: scheme.onSurface,
+                    ),
+                  ),
+                ],
               ),
+            ),
+            const SizedBox(width: 8),
+            const SheetCloseButton(),
+          ],
+        ),
+        SizedBox(height: context.rh(12)),
+        InfoSectionCard(
+          icon: Icons.event_available_rounded,
+          title: 'sync_center.detail.visit'.tr,
+          children: [
+            _Row(
+              icon: Icons.login_rounded,
+              label: 'sync_center.visit.check_in_label'.tr,
+              value: at(stop.checkInAt),
+              muted: stop.checkInAt == null,
+            ),
+            _Row(
+              icon: Icons.logout_rounded,
+              label: 'sync_center.visit.check_out_label'.tr,
+              value: at(stop.checkOutAt),
+              muted: stop.checkOutAt == null,
+            ),
+            if (stop.checkOutWaitsForCheckIn) ...[
+              SizedBox(height: context.rh(4)),
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Icon(
+                    Icons.format_list_numbered_rounded,
+                    size: context.rr(16),
+                    color: colors.textSecondary,
+                  ),
+                  SizedBox(width: context.rw(8)),
+                  Expanded(
+                    child: Text(
+                      'sync_center.visit.after_check_in'.tr,
+                      style: TextStyle(
+                        color: colors.textSecondary,
+                        fontSize: context.rsp(12),
+                        height: 1.35,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ],
+        ),
+        if (kinds.isNotEmpty) ...[
+          SizedBox(height: context.rh(12)),
+          InfoSectionCard(
+            icon: Icons.fact_check_outlined,
+            title: 'sync_center.visit.captures_title'.tr,
+            children: [
+              for (final (icon, label, count) in kinds)
+                _Row(icon: icon, label: label, value: '$count'),
             ],
           ),
         ],
-        if (kinds.isNotEmpty) ...[
-          SizedBox(height: context.rh(16)),
-          Text('sync_center.visit.captures_title'.tr, style: sectionStyle),
-          SizedBox(height: context.rh(6)),
-          for (final (icon, label, count) in kinds)
-            _Row(icon: icon, label: label, value: '$count'),
+        if (stop.noteTexts.isNotEmpty) ...[
+          SizedBox(height: context.rh(12)),
+          InfoSectionCard(
+            icon: Icons.notes_rounded,
+            title: 'sync_center.visit.kind.notes'.tr,
+            count: stop.noteTexts.length,
+            children: [
+              for (final note in stop.noteTexts)
+                Padding(
+                  padding: EdgeInsets.symmetric(vertical: context.rh(4)),
+                  child: Text(
+                    note,
+                    style: TextStyle(
+                      fontSize: context.rsp(13.5),
+                      color: scheme.onSurface,
+                      height: 1.4,
+                    ),
+                  ),
+                ),
+            ],
+          ),
+        ],
+        if (stop.photoFiles.isNotEmpty) ...[
+          SizedBox(height: context.rh(12)),
+          InfoSectionCard(
+            icon: Icons.photo_library_outlined,
+            title: 'sync_center.visit.kind.photos'.tr,
+            count: stop.photoFiles.length,
+            children: [
+              PhotoGallery(
+                photos: [
+                  for (final (i, p) in stop.photoFiles.indexed)
+                    GalleryPhoto(
+                      path: p.path,
+                      takenAt: p.takenAt,
+                      label: p.caption.trim().isNotEmpty
+                          ? p.caption.trim()
+                          : p.isSignature
+                              ? 'sync_center.detail.signature'.tr
+                              : 'sync_center.detail.photo_n'
+                                  .trParams({'n': i + 1}),
+                    ),
+                ],
+              ),
+            ],
+          ),
         ],
         SizedBox(height: context.rh(16)),
         PendingVisitActions(stop: stop),

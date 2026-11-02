@@ -25,7 +25,7 @@ import 'package:drift/drift.dart';
 /// A saved quotation. Local-first: created offline, submitted to the Admin
 /// backend for review through [SyncQueue]. The app never reaches SAP — an
 /// administrator does that from the portal after approving
-/// (`docs/feature/quotation-orders/api/mobile.md`, rule 3).
+/// (`docs/feature/order/quotation/api/mobile.md`, rule 3).
 class Quotations extends Table {
   @override
   String get tableName => 'quotations';

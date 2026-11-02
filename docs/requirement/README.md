@@ -2,11 +2,21 @@
 
 > **Purpose:** what the application must do, stated from the user and business
 > perspective, with testable acceptance criteria.
-> **Status: empty.** No requirement documents exist for any feature.
+> **Status: partial.** Promotions has business-supplied requirement documents;
+> no other feature does yet.
+
+## Index
+
+| Feature | Documents | Used by |
+|---|---|---|
+| Promotions & discounts | [promotions/promotions-requirements-document.docx](promotions/promotions-requirements-document.docx) — BRD/SRS v1.0 · [promotions/discount-incentive-user-stories-and-ui-workflow.docx](promotions/discount-incentive-user-stories-and-ui-workflow.docx) — discount console user stories and UI workflow | [../feature/order/promotions/plan.md](../feature/order/promotions/plan.md), [../feature/order/quotation/plan.md](../feature/order/quotation/plan.md) |
+
+`.docx` files cannot be diffed or reviewed in a PR. When one changes, add a
+line to the feature's `changelog.md` (or the plan) saying what changed.
 
 This directory is deliberately not padded with placeholder files. What follows
-is an honest account of the gap, where the information currently lives instead,
-and which feature to start with.
+is an honest account of the gap for every other feature, where the information
+currently lives instead, and which feature to start with.
 
 ---
 

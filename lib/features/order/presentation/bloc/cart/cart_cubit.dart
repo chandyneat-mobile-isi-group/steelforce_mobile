@@ -1,4 +1,5 @@
 import 'dart:math';
+import 'package:steelforce/core/error/failure_message.dart';
 
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:steelforce/core/usecase/usecase.dart';
@@ -60,7 +61,7 @@ class CartCubit extends Cubit<CartState> {
     final result = await _fetchCart(const NoParams());
     result.when(
       success: (items) => emit(CartLoaded(items: items)),
-      failure: (f) => emit(CartError(f.message)),
+      failure: (f) => emit(CartError(f.userMessage)),
     );
   }
 

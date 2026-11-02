@@ -1,3 +1,4 @@
+import 'package:steelforce/core/error/failure_message.dart';
 import 'package:bloc_concurrency/bloc_concurrency.dart';
 import 'package:equatable/equatable.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -70,7 +71,7 @@ class GeoLocationBloc extends Bloc<GeoLocationEvent, GeoLocationState> {
     final seeded = await _ensureReady(const NoParams());
     final seedFailure = seeded.when(
       success: (_) => null,
-      failure: (f) => f.message,
+      failure: (f) => f.userMessage,
     );
     if (seedFailure != null) {
       emit(state.copyWith(
@@ -150,7 +151,7 @@ class GeoLocationBloc extends Bloc<GeoLocationEvent, GeoLocationState> {
         level,
         state.levelState(level).copyWith(
               status: GeoLevelStatus.failure,
-              failureMessage: f.message,
+              failureMessage: f.userMessage,
               query: query,
             ),
       ),

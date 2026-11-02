@@ -1,3 +1,4 @@
+import 'package:steelforce/core/error/failure_message.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:steelforce/core/auth/protected_feature.dart';
 import 'package:steelforce/core/logging/app_logger.dart';
@@ -95,7 +96,7 @@ class DepotSyncCubit extends Cubit<DepotSyncState> with ProtectedFeature {
     result.when(
       success: (r) => emit(DepotSyncSucceeded(
           upserted: r.upserted, deleted: r.deleted, syncedAt: r.syncedAt)),
-      failure: (f) => emit(DepotSyncFailed(f.message)),
+      failure: (f) => emit(DepotSyncFailed(f.userMessage)),
     );
   }
 }

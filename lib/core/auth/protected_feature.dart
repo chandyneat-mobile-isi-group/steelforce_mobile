@@ -57,10 +57,17 @@ mixin ProtectedFeature {
   /// `isAuthenticated`: a request raised during a token rotation is fine — the
   /// interceptor holds it until the new token lands — whereas one raised while
   /// still booting, as a guest, or after expiry can only fail.
+  ///
+  /// A profile with **no** permissions at all says nothing either way —
+  /// `/mobile/auth/profile` sends none — so it is not read as "denied": the
+  /// request goes, and the server's own 403 decides. Gating on it blocked the
+  /// depot sync for every rep on that backend.
   bool get canLoad {
     if (!session.canCallProtectedApi) return false;
     final required = requiredPermissions;
-    return required.isEmpty || session.hasAnyPermission(required);
+    return required.isEmpty ||
+        session.permissions.isEmpty ||
+        session.hasAnyPermission(required);
   }
 
   /// Why [canLoad] is false, for a log line or an empty-state message.
@@ -91,14 +98,12 @@ mixin ProtectedFeature {
       return Failed(AuthenticationFailure(
         message: switch (session.state) {
           AuthenticationState.sessionExpired =>
-            'Your session expired. Please sign in again.',
-          AuthenticationState.initializing =>
-            'Still starting up. Try again in a moment.',
+            'auth.validation.session_expired',
+          AuthenticationState.initializing => 'common.starting_up',
           // Authenticated but not permitted — a different problem, and telling
           // this user to sign in would send them round a loop they cannot win.
-          _ when session.canCallProtectedApi =>
-            'Your account does not have access to this.',
-          _ => 'Sign in to continue.',
+          _ when session.canCallProtectedApi => 'auth.error.no_access_feature',
+          _ => 'auth.error.sign_in_to_continue',
         },
         statusCode: 401,
       ));

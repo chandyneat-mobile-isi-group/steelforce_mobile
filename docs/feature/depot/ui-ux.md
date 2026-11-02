@@ -192,7 +192,7 @@ Depot Code · Reconciliation Account · Company Code · FI Payment Term · Credi
 
 ## 5. Code
 
-The capture model is pure Dart in `lib/features/depots/domain/entities/` — `bp_form_step.dart` (steps enum), `sap_bp_const.dart` (SAP constants), `sap_master_data.dart` / `sap_option.dart` (master data), `rep_sales_context.dart`, `geo_fix.dart`, `bp_attachment.dart`, and `bp_depot_draft.dart` (per-step validation and `toSapPayload()`, shaped to mirror the SAP structure so the middleware maps 1:1). Until 2026-10-08 these lived together in `data/models/bp_depot_form_data.dart`.
+`bp_depot_form_data.dart` (attached) is pure Dart — steps enum, SAP constants, master data, per-step validation, and `toSapPayload()` shaped to mirror the SAP structure so the middleware maps 1:1.
 
 ### Wiring it into the existing sheet
 

@@ -562,7 +562,7 @@ All five steps are done: `GET /routes`, `POST /push` (all eight lists), photos
 4. **Wire the telemetry push** (§6.3), with chunking.
 5. **Mount the four unmounted capture forms** — order lines, stock updates,
    returns, collections. The endpoint has accepted all four since day one; nothing
-   arrives until a screen fills them. See backend-integration.md §6.
+   arrives until a screen fills them. See §12.2 below.
 
 The client now calls these endpoints for real: `ApiRouteRemoteDataSource` and
 `ApiVisitSyncRemoteDataSource` are the only implementations of the two
@@ -570,3 +570,63 @@ interfaces above. The bundled fixture sources they replaced have been removed,
 so there is no longer a mock path that can make a missing or misbehaving
 endpoint look healthy — the app shows what the API returns, or shows the
 failure. Tests script the HTTP transport instead of substituting a fake feed.
+
+---
+
+## 12. Integration notes
+
+Carried over from `backend-integration.md` (deleted 2026-10-24; its endpoint
+inventory, decisions and build order duplicated this file).
+
+### 12.1 Device-only state
+
+**Resume / Continue Working** (`ActiveWorkflow`) is navigation state: which
+screen the rep was on and the arguments to rebuild it. At most one row exists
+and it is meaningless anywhere else. Syncing it would mean restoring one rep's
+half-finished visit onto a colleague's handset.
+
+### 12.2 Which push lists carry data today
+
+The push contract defines eight lists. **Four of them are always empty in the
+shipped build** — not because the plumbing is missing, but because no screen is
+wired to the use cases that fill them.
+
+| Push list | Status today | Why |
+|---|---|---|
+| `checkIns` | ✅ Live | `stops_check_in_screen` dispatches `CheckInRequested` |
+| `checkOuts` | ✅ Live | `CompleteVisitCheckOut`, from the inventory flow and the Continue-Working card |
+| `notes` | ✅ Live | Written by the *skip stop* flow on the dashboard |
+| `photos` | ⚠️ Captured, never sent | **No longer blocked** — endpoint 4 is live; needs the upload-then-push step in §5.1 |
+| `orderLines` | ❌ Always empty | `OrderCaptureForm` is not mounted on any screen |
+| `stockUpdates` | ❌ Always empty | `StockUpdateForm` unmounted; `DepotStockCountCubit` is registered in DI but consumed by nothing, and `inventory_visible_screen.dart` renders a hardcoded item list and persists nothing on submit |
+| `returns` | ❌ Always empty | `ReturnsForm` is not mounted |
+| `collections` | ❌ Always empty | `CollectionsForm` is not mounted |
+
+**What this means for you.** Build the endpoint to accept all eight — the
+contract is settled and the client already serialises all of them. But when you
+test against a real device, expect only check-ins, check-outs and notes to
+arrive. If you are waiting on a stock count to validate your handler, it will
+never come until the client wires that UI.
+
+These gaps are tracked in [README.md](README.md) → *Known gaps*. They are client
+work, not backend work.
+
+### 12.3 Testing against the client
+
+There is no mock route feed any more. The bundled fixtures were deleted when the
+real endpoints landed, so no code path can make a missing or misbehaving
+endpoint look healthy — the app shows what the API returns, or shows the
+failure.
+
+```bash
+# Point a build at a different host without rebuilding config
+flutter run --dart-define=API_BASE_URL=https://your-tunnel.example.com
+
+# Log real request/response bodies (redacted; ignored in release builds)
+flutter run --dart-define=API_LOG_BODIES=true
+```
+
+`test/features/my_visits/route_feed_fixture.dart` builds the exact JSON the
+client expects to parse, and drives the real `ApiRouteRemoteDataSource` over a
+scripted transport. It is the fastest way to check a payload shape against the
+client without a device.

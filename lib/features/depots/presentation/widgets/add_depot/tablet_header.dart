@@ -8,24 +8,20 @@ extension _TabletHeaderExtension on _AddDepotBottomSheetState {
   Widget _buildTabletFormHeader(AddDepotState state) {
     final stageTitles = [
       (
-        title:
-            '${'add_depot.steps.identity'.tr} & ${'add_depot.steps.address'.tr}',
+        title: 'add_depot.tablet.stage_general'.tr,
         subtitle: 'add_depot.subtitle'.tr,
       ),
       (
-        title:
-            '${'add_depot.steps.contact'.tr} & ${'add_depot.steps.sales_terms'.tr}',
-        subtitle:
-            'Configure contact details, commercial pricing & tax classification',
+        title: 'add_depot.tablet.stage_contact'.tr,
+        subtitle: 'add_depot.tablet.stage_contact_subtitle'.tr,
       ),
       (
         title: 'add_depot.steps.documents'.tr,
-        subtitle: 'Upload required verification photos and internal remarks',
+        subtitle: 'add_depot.tablet.stage_documents_subtitle'.tr,
       ),
       (
-        title: '${'add_depot.review'.tr} & ${'add_depot.send_to_hq'.tr}',
-        subtitle:
-            'Verify all registered depot information before final submission',
+        title: 'add_depot.tablet.stage_review'.tr,
+        subtitle: 'add_depot.tablet.stage_review_subtitle'.tr,
       ),
     ];
     final current = stageTitles[_tabletStage.clamp(0, 3)];
@@ -33,6 +29,10 @@ extension _TabletHeaderExtension on _AddDepotBottomSheetState {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
+        if (widget.isFullScreen) ...[
+          _buildExitButton(onBrand: false),
+          const SizedBox(width: 12),
+        ],
         Expanded(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -76,9 +76,12 @@ extension _TabletHeaderExtension on _AddDepotBottomSheetState {
             border: Border.all(color: context.appColors.border),
           ),
           child: Text(
-            'Step ${_tabletStage + 1} / 4',
+            'add_depot.step_indicator'.trParams({
+              'current': '${_tabletStage + 1}',
+              'total': '4',
+            }),
             style: TextStyle(
-              color: Theme.of(context).colorScheme.secondary,
+              color: Theme.of(context).colorScheme.primary,
               fontSize: _fontSize(13),
               fontWeight: FontWeight.w800,
             ),
@@ -90,10 +93,10 @@ extension _TabletHeaderExtension on _AddDepotBottomSheetState {
 
   Widget _buildTabletStepProgress(AddDepotState state) {
     final stages = [
-      '1. General & Location',
-      '2. Contact & Terms',
-      '3. Documents & Notes',
-      '4. Preview & Submit',
+      'add_depot.tablet.progress_general'.tr,
+      'add_depot.tablet.progress_contact'.tr,
+      'add_depot.tablet.progress_documents'.tr,
+      'add_depot.tablet.progress_preview'.tr,
     ];
 
     return Container(

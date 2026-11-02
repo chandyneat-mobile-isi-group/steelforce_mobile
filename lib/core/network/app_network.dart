@@ -1,12 +1,13 @@
 import 'package:dio/dio.dart';
 import 'package:steelforce/core/config/app_config.dart';
-import 'package:steelforce/core/config/data_source_mode.dart';
 import 'package:steelforce/core/network/api/api_defaults.dart';
 import 'package:steelforce/core/logging/app_logger.dart';
 import 'package:steelforce/core/network/interceptors/api_headers_interceptor.dart';
 import 'package:steelforce/core/network/interceptors/auth_interceptor.dart';
 import 'package:steelforce/core/network/interceptors/api_log_interceptor.dart';
-import 'package:steelforce/core/network/interceptors/demo_network_guard.dart';
+import 'package:steelforce/core/network/interceptors/work_mode_interceptor.dart';
+import 'package:steelforce/core/network/work_mode/work_mode_service.dart';
+import 'package:steelforce/core/network/transport/http_transport.dart';
 
 /// Factory for the app's Dio clients. Keeping construction here means the
 /// timeout / header policy lives in exactly one place.
@@ -36,12 +37,17 @@ class AppNetwork {
   ///
   /// [logger] is optional so the refresh client can be built without one;
   /// when supplied, every call through this client is traced.
-  static Dio createBareClient({AppLogger? logger}) =>
-      _guarded(Dio(_baseOptions))
-        ..interceptors.addAll([
-          const ApiHeadersInterceptor(),
-          if (logger != null) ApiLogInterceptor(logger),
-        ]);
+  static Dio createBareClient({AppLogger? logger}) {
+    final dio = Dio(_baseOptions)
+      ..interceptors.addAll([
+        const ApiHeadersInterceptor(),
+        if (logger != null) ApiLogInterceptor(logger),
+      ]);
+    // Pins the API's CAs when configured (`api_trust_anchors.dart`) and names
+    // the certificate when verification fails; still rejects it.
+    configureHttpTransport(dio, logger);
+    return dio;
+  }
 
   /// Authenticated client used by feature data sources. Auto-attaches and
   /// refreshes the bearer token.
@@ -53,9 +59,14 @@ class AppNetwork {
     required DeviceIdReader deviceId,
     AppLogger? logger,
     void Function()? onSessionExpired,
+    WorkModeService? workMode,
   }) {
-    return _guarded(Dio(_baseOptions))
+    final dio = Dio(_baseOptions)
       ..interceptors.addAll([
+        // First, so a request offline mode refuses is never stamped, logged
+        // as sent, or given a token. Only this client: the bare one carries
+        // sign-in and token refresh, which offline mode must not block.
+        if (workMode != null) WorkModeInterceptor(workMode),
         const ApiHeadersInterceptor(),
         // Ahead of [AuthInterceptor] so a 401 is logged as it happens, before
         // the refresh-and-replay swallows it. Otherwise a successfully
@@ -69,15 +80,9 @@ class AppNetwork {
           onSessionExpired: onSessionExpired,
         ),
       ]);
-  }
-
-  /// A demo build sends nothing: every client gets a transport that refuses
-  /// the request, so a data source without a demo counterpart fails as offline
-  /// instead of contacting a real host.
-  static Dio _guarded(Dio dio) {
-    if (DataSourceMode.useMocks) {
-      dio.httpClientAdapter = const DemoNetworkGuardAdapter();
-    }
+    // Pins the API's CAs when configured (`api_trust_anchors.dart`) and names
+    // the certificate when verification fails; still rejects it.
+    configureHttpTransport(dio, logger);
     return dio;
   }
 }

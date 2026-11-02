@@ -12,11 +12,12 @@ part 'steps/schema_steps_v02_v12.dart';
 part 'steps/schema_steps_v13_v18.dart';
 part 'steps/schema_steps_v19_v24.dart';
 part 'steps/schema_steps_v25_v30.dart';
+part 'steps/schema_steps_v31_v36.dart';
 
 /// The single source of truth for the encrypted database's schema version.
 /// Bump this by exactly one whenever a schema change ships, and add the matching
 /// step to [_stepwiseMigrations].
-const int kCurrentSchemaVersion = 28;
+const int kCurrentSchemaVersion = 32;
 
 /// Keys under which the migrator records bookkeeping in `app_metadata`, so the
 /// on-device schema history is auditable and a failed/partial upgrade is
@@ -46,6 +47,7 @@ final Map<int, SchemaMigrationStep> _stepwiseMigrations =
   ..._stepsV13toV18,
   ..._stepsV19toV24,
   ..._stepsV25toV30,
+  ..._stepsV31toV36,
 };
 
 /// Builds the [MigrationStrategy] for [db]: creates the schema on first run,

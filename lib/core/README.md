@@ -7,6 +7,7 @@ one home — do not open a second folder for something listed here.
 | Folder | Holds |
 |---|---|
 | `animations/` | Transitions and interaction motion |
+| `assets/` | `app_assets.dart`: every bundled file's path (logos, images, Lotties, font files, data), named for what it shows — never a raw `'assets/…'` string in a widget |
 | `auth/` | Route guards and the "sign in to continue" surfaces |
 | `bootstrap/` | App start-up and the top-level error boundary |
 | `camera/` | Image capture seam; `mock/` is the debug/QA stand-in, never shipped |
@@ -24,6 +25,7 @@ one home — do not open a second folder for something listed here.
 | `pdf/` | `pdf_service.dart` plus `document/` (building), `storage/` (saving), `sharing/` (opening, sharing) |
 | `permissions/` | Location permission service and the permission primer cubit |
 | `platform/` | OS capability probes: `device/`, `storage/`, `environment/` |
+| `practice/` | Practice sessions for App Coach lessons: a GetIt scope of in-memory stand-ins each feature contributes, and the shared demo ids |
 | `responsive/` | Breakpoints and responsive sizing |
 | `session/` | Session state and per-rep data reset on sign-out |
 | `sync/` | Planned unified sync engine (ADR-006) — tracked empty stubs |
@@ -36,6 +38,7 @@ one home — do not open a second folder for something listed here.
 - **Platform splits** keep the three files together in one folder: `x.dart`
   (the conditional export), `x_native.dart`, `x_web.dart`.
 - **Constants live with their concern**, not in a catch-all: API routes in
-  `network/api/api_endpoints.dart`, storage keys beside their storage.
+  `network/api/api_endpoints.dart`, storage keys beside their storage, asset
+  paths in `assets/app_assets.dart`.
 - **A file past ~400 lines** is a signal to split by responsibility; use `part`
   files when the pieces share private names (see `database/drift/migrations/`).

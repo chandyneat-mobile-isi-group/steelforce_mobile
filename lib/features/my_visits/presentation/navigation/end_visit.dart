@@ -1,17 +1,18 @@
 import 'dart:async';
 
 import 'package:flutter/widgets.dart';
-import 'package:steelforce/core/config/data_source_mode.dart';
 import 'package:steelforce/core/di/injection_container.dart';
 import 'package:steelforce/core/logging/app_logger.dart';
 import 'package:steelforce/core/usecase/usecase.dart';
+import 'package:steelforce/core/utils/result.dart';
+import 'package:steelforce/features/app_coach/domain/entities/coach_action.dart';
+import 'package:steelforce/features/app_coach/presentation/services/app_coach.dart';
 import 'package:steelforce/features/my_visits/domain/usecases/complete_visit_check_out.dart';
 import 'package:steelforce/features/my_visits/domain/usecases/push_pending_visit_data.dart';
 import 'package:steelforce/features/my_visits/presentation/navigation/ask_how_visit_ended.dart';
-import 'package:steelforce/features/shell/presentation/bloc/home_cubit.dart';
 
-/// "Complete Visit": closes the deferred check-out, returns to Home, and
-/// drains the outbound queue to
+/// "Complete Visit": closes the deferred check-out, leaves the guided-visit
+/// stack, and drains the outbound queue to
 /// `POST /api/v1/mobile/visits/push`.
 ///
 /// One function rather than two copies, because the Inventory completion
@@ -51,27 +52,22 @@ import 'package:steelforce/features/shell/presentation/bloc/home_cubit.dart';
 /// ## The rep says how it ended
 ///
 /// First, the check-out sheet: with an order (which) or without (why). Backing
-/// out of it leaves the visit open and the rep where they were. The demo
-/// build skips the sheet ([visitEndedWithoutAsking]).
+/// out of it leaves the visit open and the rep where they were.
 Future<void> endVisitAndSync(BuildContext context) async {
   // Captured before the await — after it, `context` may be gone.
   final navigator = Navigator.of(context);
 
-  // The demo build ends the visit in one tap; live builds ask, because the
-  // server needs the rep's answer.
-  final decision = DataSourceMode.useMocks
-      ? await visitEndedWithoutAsking()
-      : await askHowVisitEnded(context);
+  final decision = await askHowVisitEnded(context);
   if (decision == null) return;
 
-  await sl<CompleteVisitCheckOut>()(decision.choice);
+  final completed = await sl<CompleteVisitCheckOut>()(decision.choice);
+  // Success(false) means there was no checked-in visit to close: nothing was
+  // completed, so it is not reported as a completion.
+  AppCoach.notify(switch (completed) {
+    Success(data: true) => CoachAction.completeVisitSucceeded,
+    _ => CoachAction.completeVisitFailed,
+  });
 
-  // The visit is over: land on Home, not on the tab the visit started from.
-  // The shell is the first route; switching its tab before popping means
-  // the rep never sees the old tab flash past.
-  if (sl.isRegistered<ShellTabController>()) {
-    sl<ShellTabController>().goTo(ShellTab.home);
-  }
   navigator.popUntil((route) => route.isFirst);
 
   // Fire-and-forget by design. `PushPendingVisitData` returns a `Result` and

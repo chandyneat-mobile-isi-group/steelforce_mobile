@@ -1,187 +1,129 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:steelforce/core/localization/localization_services.dart';
-import 'package:steelforce/core/platform/device/device_identity.dart';
 import 'package:steelforce/core/responsive/responsive_sizing.dart';
 import 'package:steelforce/core/theme/app_colors.dart';
-import 'package:steelforce/core/theme/theme_extensions.dart';
-import 'package:steelforce/features/shell/presentation/widgets/guest/guest_fade_in.dart';
-import 'package:steelforce/features/shell/presentation/widgets/guest/guest_feature_strip.dart';
-import 'package:steelforce/features/shell/presentation/widgets/guest/guest_landing_brand.dart';
-import 'package:steelforce/features/shell/presentation/widgets/guest/guest_landing_footer.dart';
-import 'package:steelforce/features/shell/presentation/widgets/guest/guest_landing_hero.dart';
-import 'package:steelforce/features/shell/presentation/widgets/guest/guest_sign_in_button.dart';
+import 'package:steelforce/features/shell/presentation/widgets/guest/guest_landing_photo.dart';
+import 'package:steelforce/features/shell/presentation/widgets/guest/guest_panel_content.dart';
+import 'package:steelforce/features/shell/presentation/widgets/guest/guest_photo_edge.dart';
 
-/// The guest (signed-out) home: a full-screen landing — brand, illustration,
-/// what the app does, and one way in.
+/// The guest (signed-out) home: the ISI tube mill above, a navy panel below
+/// with the brand, the pitch, the work areas and one way in.
 ///
-/// Fits one portrait phone screen without scrolling; on a short screen or
-/// with large text it scrolls rather than clipping. On a wide window the
-/// content keeps a phone-like width, centred, while the background and the
-/// footer sweep run edge to edge.
+/// The same in light and dark themes — photo and Ironclad navy read in both.
+///
+/// - **Portrait** (phones, tablets): photo on top, cut by the brand chevron;
+///   the panel takes what its content needs and the photo the rest. Fits one
+///   phone screen; with large text it scrolls rather than clipping.
+/// - **Landscape** (wide tablets, desktop): photo on the left, the panel on
+///   the right behind an Apex Blue rule.
 class GuestHomeScreen extends StatelessWidget {
   const GuestHomeScreen({super.key, required this.onLogin});
 
   /// Opens the shared login prompt.
   final VoidCallback onLogin;
 
-  /// Stagger step between sections.
-  static const _step = Duration(milliseconds: 90);
-
-  /// Content width cap on tablets and desktop.
-  static const _maxContentWidth = 520.0;
-
-  /// The smallest the illustration is drawn before the page scrolls.
-  static const _minHeroHeight = 130.0;
-
-  /// `1.0.0+1` → `1.0.0`: the build number means nothing to a rep.
-  static String get _version => DeviceIdentity.appVersion.split('+').first;
+  /// Panel content never runs wider than a comfortable reading measure.
+  static const _maxContentWidth = 560.0;
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final scheme = theme.colorScheme;
-    final colors = context.appColors;
-    final isDark = theme.brightness == Brightness.dark;
-    final media = MediaQuery.of(context);
-    final footerHeight = media.size.width / GuestLandingFooter.aspectRatio;
+    final size = MediaQuery.sizeOf(context);
+    final isLandscape = size.width > size.height && size.width >= 800;
 
     return AnnotatedRegion<SystemUiOverlayStyle>(
-      value: isDark ? SystemUiOverlayStyle.light : SystemUiOverlayStyle.dark,
-      child: DecoratedBox(
-        decoration: BoxDecoration(
-          // White in light mode, as the artwork is drawn on white — so the
-          // illustration blends in instead of sitting in a visible box.
-          // The pale sky wash in the top-right corner of the artwork.
-          gradient: LinearGradient(
-            begin: Alignment.topRight,
-            end: Alignment.center,
-            colors: [
-              // Blended to an opaque colour: a translucent stop would let the
-              // shell's grey canvas show through.
-              Color.alphaBlend(
-                scheme.primary.withValues(alpha: isDark ? 0.18 : 0.10),
-                colors.card,
-              ),
-              colors.card,
-            ],
-          ),
-        ),
-        child: Stack(
-          children: [
-            const Positioned(
-              left: 0,
-              right: 0,
-              bottom: 0,
-              child: GuestLandingFooter(),
-            ),
-            SafeArea(
-              // Laid out to the screen's height, with the illustration taking
-              // whatever is left — so a phone shows it all without scrolling.
-              // When even the smallest illustration does not leave room (a
-              // short screen, large accessibility text) the page scrolls
-              // rather than squeezing or clipping.
-              child: CustomScrollView(
-                slivers: [
-                  SliverFillRemaining(
-                    hasScrollBody: false,
-                    child: Center(
-                      child: ConstrainedBox(
-                        constraints:
-                            const BoxConstraints(maxWidth: _maxContentWidth),
-                        child: Padding(
-                          // Vertical only: the illustration runs edge to edge,
-                          // everything else is inset (see [_inset]).
-                          padding: EdgeInsets.only(
-                            top: context.rh(16),
-                            // Clear of the footer sweep's coloured part.
-                            bottom: footerHeight * 0.55,
-                          ),
-                          child: _content(context, colors, isDark),
-                        ),
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ],
-        ),
+      // White status-bar icons over the photo's darkened top.
+      value: SystemUiOverlayStyle.light,
+      child: ColoredBox(
+        color: AppColors.brandNavy,
+        child:
+            isLandscape ? _landscape(context, size) : _portrait(context, size),
       ),
     );
   }
 
-  /// The side margin for everything except the illustration.
-  static Widget _inset(BuildContext context, Widget child) => Padding(
-        padding: EdgeInsets.symmetric(horizontal: context.rw(28)),
-        child: child,
-      );
+  Widget _portrait(BuildContext context, Size size) {
+    final insets = MediaQuery.viewPaddingOf(context);
+    // The photo never shrinks below the status bar, the chevron and a strip
+    // of factory — past that the page scrolls instead.
+    final minPhoto =
+        insets.top + GuestPhotoEdge.heightFor(size.width) + context.rh(120);
 
-  Widget _content(BuildContext context, AppThemeColors colors, bool isDark) {
-    final taglineInk =
-        isDark ? Theme.of(context).colorScheme.onSurface : AppColors.brandNavy;
+    return CustomScrollView(
+      slivers: [
+        SliverFillRemaining(
+          hasScrollBody: false,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Expanded(
+                child: SizedBox(
+                  height: minPhoto,
+                  child: const Stack(
+                    fit: StackFit.expand,
+                    children: [
+                      // Stops short of the bottom, so no sliver of photo
+                      // can show under the chevron's anti-aliased edge.
+                      Positioned(
+                        left: 0,
+                        right: 0,
+                        top: 0,
+                        bottom: 2,
+                        child: GuestLandingPhoto(
+                          alignment: Alignment(0.2, -0.2),
+                        ),
+                      ),
+                      Positioned(
+                        left: 0,
+                        right: 0,
+                        bottom: 0,
+                        child: GuestPhotoEdge(),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+              Center(
+                child: ConstrainedBox(
+                  constraints: const BoxConstraints(maxWidth: _maxContentWidth),
+                  child: GuestPanelContent(onLogin: onLogin),
+                ),
+              ),
+              SizedBox(height: insets.bottom),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
 
-    return Column(
+  Widget _landscape(BuildContext context, Size size) {
+    return Row(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        _inset(context, const GuestFadeIn(child: GuestLandingBrand())),
-        SizedBox(height: context.rh(8)),
-        // The illustration absorbs the spare height. The SizedBox is its
-        // *minimum*: Expanded overrides its height when there is more room,
-        // but it is what the page reports as the least it needs — below
-        // that, the page scrolls.
-        Expanded(
-          child: SizedBox(
-            height: context.rh(_minHeroHeight),
-            child: Center(
-              child: GuestFadeIn(
-                delay: _step,
-                child: GuestLandingHero(maxHeight: context.rh(360)),
-              ),
+        const Expanded(child: GuestLandingPhoto()),
+        Container(
+          width: (size.width * 0.44).clamp(380.0, _maxContentWidth),
+          decoration: const BoxDecoration(
+            color: AppColors.brandNavy,
+            border: Border(
+              left: BorderSide(color: AppColors.primary, width: 8),
             ),
           ),
-        ),
-        SizedBox(height: context.rh(16)),
-        _inset(
-          context,
-          GuestFadeIn(
-            delay: _step * 2,
-            child: Text(
-              'shell.guest.tagline'.tr,
-              textAlign: TextAlign.center,
-              style: TextStyle(
-                color: taglineInk,
-                fontSize: context.rsp(21),
-                fontWeight: FontWeight.w800,
-                height: 1.3,
-                letterSpacing: -0.3,
-              ),
+          child: SafeArea(
+            left: false,
+            child: CustomScrollView(
+              slivers: [
+                SliverFillRemaining(
+                  hasScrollBody: false,
+                  child: Center(
+                    child: GuestPanelContent(
+                      onLogin: onLogin,
+                      headlineSize: 34,
+                    ),
+                  ),
+                ),
+              ],
             ),
-          ),
-        ),
-        SizedBox(height: context.rh(20)),
-        _inset(
-          context,
-          GuestFadeIn(
-            delay: _step * 3,
-            child: GuestFeatureStrip(onRequireLogin: onLogin),
-          ),
-        ),
-        SizedBox(height: context.rh(24)),
-        _inset(
-          context,
-          GuestFadeIn(
-            delay: _step * 4,
-            child: GuestSignInButton(onPressed: onLogin),
-          ),
-        ),
-        SizedBox(height: context.rh(14)),
-        Text(
-          'shell.guest.version'.trParams({'version': _version}),
-          textAlign: TextAlign.center,
-          style: TextStyle(
-            color: colors.textSecondary,
-            fontSize: context.rsp(13),
           ),
         ),
       ],

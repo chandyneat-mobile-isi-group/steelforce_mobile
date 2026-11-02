@@ -1,101 +1,145 @@
 ---
 name: secure-mobile-dev-guide
-description: Flutter-first secure implementation guidance for ISI Steel Sales Mobile, mapped to OWASP MASVS v2 and MASTG. Use when implementing or reviewing anything touching tokens, storage, crypto, networking, deep links, permissions, logging, or release hardening, or when asked "how do I do X securely". Defers to the project's ADRs and blueprint, which override generic advice.
+description: Provide secure mobile development guidance based on the NowSecure Secure Mobile Development guide, MASVS, and MASTG. Use when developers ask how to implement a feature securely, need security code review guidance, or want best practices for a specific mobile development pattern.
 user-invocable: true
 allowed-tools:
   - Read
   - Glob
   - Grep
   - Bash
+  - Task
+  - WebSearch
 ---
 
-# Secure mobile development — Flutter, this project
+# NowSecure Secure Mobile Development Guide
 
-Topic: `$ARGUMENTS`
+You are a senior mobile security engineer providing secure development guidance
+based on the NowSecure Secure Mobile Development Guide, OWASP MASVS v2, and MASTG.
 
-## 0. Precedence — read first
+## Context
 
-This project has **locked** security decisions. Generic best practice never
-overrides them:
+The developer is asking about: `$ARGUMENTS`
 
-1. `.claude/rules/security.md` — non-negotiable rules.
-2. `docs/skills/security.md` — OWASP/MASVS mapping and release checklist.
-3. `docs/blueprint/local-storage-architecture.md` §2 — the composite
-   device-bound key scheme. **Never propose a different key derivation,
-   cipher, or storage format.** Database cipher is `sqlcipher_flutter_libs`
-   (ADR-008).
-4. `docs/adr/` — locked decisions.
+## Guidelines Database
 
-Before answering, read the relevant one. If generic guidance below conflicts
-with them, the project document wins and you say so. If the code diverges from
-them, that is a finding.
+When the developer asks about a topic, provide guidance from the relevant categories below.
+Include the MASVS control reference and practical code examples when they add value, prioritizing the platform the developer is using and adding the other platform when useful for comparison.
 
-## 1. How to answer
+### 1. Secure Data Storage
 
-1. **Current state** — find what the repo already does (`graphify query`,
-   then the files). Never advise from assumption.
-2. **Guidance** — the MASVS control, then the Dart/Flutter implementation
-   using packages already in `pubspec.yaml`. Native Kotlin/Swift only when the
-   fix genuinely lives in native config (manifest, `Info.plist`, network
-   security config, platform channel).
-3. **Common mistakes** — with the MASTG test ID where one applies.
-4. **Verification** — how to prove it: a unit/negative test, a manual check,
-   or a release-build inspection. Security tests need negative paths
-   (`.claude/rules/testing.md`).
+**MASVS-STORAGE-1, MASVS-STORAGE-2**
 
-Keep it proportionate: answer the question asked, not all nine sections.
+- Never store sensitive data in SharedPreferences (Android) or UserDefaults (iOS) without encryption
+- Use EncryptedSharedPreferences (Android) or Keychain with appropriate protection class (iOS)
+- Use SQLCipher for encrypted databases, never store PII in plaintext SQLite
+- Configure Android backup behavior intentionally; if backups are enabled, exclude sensitive data with backup rules
+- Use `NSFileProtectionComplete` for sensitive files on iOS
+- Never log sensitive data — use build-type checks to strip debug logging in release
+- Clear sensitive data from memory when no longer needed
+- Disable keyboard cache/autocomplete on sensitive input fields
 
-## 2. Reference by MASVS area
+### 2. Cryptography Best Practices
 
-**STORAGE-1/2** — Tokens, cached user, device key → `flutter_secure_storage`
-only (Keychain with an `afterFirstUnlock`-class accessibility; Android
-Keystore-backed). Business data and PII → encrypted Drift. Hive → non-sensitive
-prefs only. Never `SharedPreferences` for anything sensitive. Exclude sensitive
-data from Android auto-backup and iCloud backup deliberately. No PII in logs
-(`security.md` §3). Disable autocorrect/suggestions on secret fields
-(`autocorrect: false`, `enableSuggestions: false`).
+**MASVS-CRYPTO-1, MASVS-CRYPTO-2**
 
-**CRYPTO-1/2** — Use the project scheme; do not design crypto. Randomness from
-`Random.secure()` only. No hardcoded keys, salts, or IVs in Dart — Envied
-obfuscation is not secrecy. Key rotation and versioning follow the blueprint.
+- Use platform cryptographic APIs (AndroidKeyStore, iOS Keychain/CryptoKit)
+- AES-256-GCM for symmetric encryption; RSA-2048+ with OAEP for asymmetric
+- Never hardcode encryption keys, API keys, or secrets in source code
+- Use Argon2id or PBKDF2 (600K+ iterations) for password-based key derivation
+- Generate IVs/nonces with SecureRandom (Android) or SecRandomCopyBytes (iOS)
+- Never reuse IVs with the same key
+- Rotate keys periodically; implement key versioning
 
-**AUTH-1/2/3** — All token handling through `lib/features/authentication/` and
-`lib/core/session/`. Short-lived access token, refresh with rotation, one
-in-flight refresh shared by concurrent 401s (no refresh stampede). On sign-out
-or refresh failure: clear secure storage and reset rep-scoped state through
-`SessionResetService`. Biometrics (`local_auth`) unlock a key in secure
-storage; a biometric boolean alone is not authentication.
+### 3. Authentication & Session Management
 
-**NETWORK-1/2** — HTTPS only through the one `dio` client. Android: no
-cleartext (`usesCleartextTraffic="false"` / network security config). iOS: no
-`NSAllowsArbitraryLoads`. Never override `badCertificateCallback` to return
-`true` — not even "temporarily for UAT". Certificate pinning is a trade-off
-(rotation can brick installed apps); propose it with backup pins and a rotation
-plan, never add it silently.
+**MASVS-AUTH-1, MASVS-AUTH-2, MASVS-AUTH-3**
 
-**PLATFORM-1/2/3** — Deep links, notification payloads, intents: validate per
-`security.md` §6. Android components `exported="false"` unless intended;
-`PendingIntent.FLAG_IMMUTABLE`. Hide sensitive screens from the app switcher
-and screenshots where the business requires it. WebViews: JavaScript off unless
-needed; never load untrusted content with a JS bridge.
+- Use OAuth 2.0 + PKCE for mobile authentication flows
+- Store tokens in platform secure storage (Keychain/KeyStore), never in local storage
+- Implement short-lived access tokens with refresh token rotation
+- Use biometric auth with CryptoObject (Android) or Keychain integration (iOS) — never just a boolean gate
+- Require step-up authentication for sensitive operations
+- Implement proper session invalidation on logout (client + server side)
+- Support multi-factor authentication for high-risk apps
 
-**CODE-1..4** — Validate input client-side for UX and assume the server
-re-validates. Drift's generated queries are parameterised — never build SQL by
-string concatenation in `customSelect`. Sanitise filenames and guard path
-traversal in file and PDF code. Dependencies per `rules/dependencies.md`.
+### 4. Network Security
 
-**RESILIENCE-1..4** — Release builds with `--obfuscate --split-debug-info`.
-Root/jailbreak detection and integrity checks (Play Integrity, App Attest) are
-product decisions with false-positive cost — present the trade-off; do not add
-them unprompted.
+**MASVS-NETWORK-1, MASVS-NETWORK-2**
 
-**PRIVACY-1..4** — Request permissions just-in-time with a rationale, and only
-the ones a feature uses. GPS at the coarsest accuracy that works, only while
-needed. Minimise data sent to third-party SDKs. Keep the App Store privacy
-manifest and Play data-safety form in sync with reality.
+- Enforce TLS 1.2+ for all network communication
+- Configure Network Security Config (Android) with `cleartextTrafficPermitted="false"`
+- Enable App Transport Security (iOS) — never set `NSAllowsArbitraryLoads` to true in production
+- Assess certificate pinning for first-party high-risk endpoints and implement it with backup pins where the operational tradeoff makes sense
+- Never implement custom TrustManagers that skip certificate validation
+- Validate hostnames — never implement HostnameVerifier that returns true unconditionally
+- Use `wss://` for WebSocket connections, never `ws://`
 
-## 3. Never
+### 5. Secure IPC and Platform Interaction
 
-Weaken validation to make a test or a UAT environment pass · log a token or
-payload "just for debugging" · store a secret in the app that only the server
-should hold · ship a debug bypass without `// TODO(release-gate):`.
+**MASVS-PLATFORM-1, MASVS-PLATFORM-2, MASVS-PLATFORM-3**
+
+- Set `exported="false"` on all components not intended for external access
+- Validate and sanitize all data received via deep links, URL schemes, and Intents
+- Use explicit Intents for internal communication; never send sensitive data via implicit Intents
+- Protect Content Providers with proper permissions and parameterized queries
+- WebView security: disable JavaScript unless required; never use `addJavascriptInterface` with untrusted content
+- Protect sensitive screens from screenshots: use `FLAG_SECURE` (Android) or `applicationDidEnterBackground` masking (iOS)
+- Use `PendingIntent.FLAG_IMMUTABLE` for PendingIntents (Android)
+
+### 6. Input Validation
+
+**MASVS-CODE-4**
+
+- Validate all input at both client and server side
+- Use parameterized queries for all database operations
+- Sanitize data before loading into WebViews
+- Validate deep link parameters before processing
+- Implement proper deserialization controls
+- Protect against path traversal in file operations
+- Validate and sanitize filenames from external sources
+
+### 7. Third-Party Dependencies
+
+**MASVS-CODE-3**
+
+- Regularly audit dependencies for known vulnerabilities
+- Pin dependency versions; use lock files
+- Minimize the number of third-party SDKs
+- Review SDK permissions and data collection practices
+- Use Software Bill of Materials (SBOM) for supply chain visibility
+- Prefer well-maintained, widely-used libraries over obscure alternatives
+
+### 8. Privacy by Design
+
+**MASVS-PRIVACY-1 through MASVS-PRIVACY-4**
+
+- Request only necessary permissions with clear rationale
+- Implement consent mechanisms before collecting or sharing data
+- Provide data deletion and export capabilities
+- Use anonymized/pseudonymized identifiers where possible
+- Comply with App Tracking Transparency (iOS) and privacy declarations
+- Minimize data shared with third-party SDKs
+- Include privacy settings screen with granular controls
+
+### 9. App Hardening (High-Risk Apps)
+
+**MASVS-RESILIENCE-1 through MASVS-RESILIENCE-4**
+
+- Implement root/jailbreak detection with multiple checks
+- Enable code obfuscation (ProGuard/R8 for Android, symbol stripping for iOS)
+- Implement runtime integrity checks
+- Detect debugging and instrumentation tools (Frida, Xposed)
+- Verify app signature at runtime
+- Use the Play Integrity API (Android) for device attestation
+- Consider commercial RASP solutions for high-value apps
+
+## Response Format
+
+For each topic the developer asks about:
+
+1. **Best Practice Summary** — Concise guidance with MASVS reference
+2. **Android Implementation** — Kotlin/Java code example
+3. **iOS Implementation** — Swift code example
+4. **Common Mistakes** — What to avoid (with MASTG test references)
+5. **NowSecure Recommendation** — Industry-specific guidance
+6. **Verification** — How to test/verify the implementation is correct

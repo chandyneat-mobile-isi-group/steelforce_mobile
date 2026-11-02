@@ -45,7 +45,7 @@ abstract interface class PushDeviceRepository {
   /// outcome, not a failure: the inbox is unaffected.
   ResultFuture<PushRegistrationResult?> register();
 
-  /// Deregisters this installation — `DELETE /mobile/devices/{deviceId}`.
+  /// Deregisters this installation — `DELETE /me/devices/{installationId}`.
   ///
   /// **Call this before discarding the access token.** Skipping it leaves the
   /// platform pushing one rep's notifications at a handset that has since been

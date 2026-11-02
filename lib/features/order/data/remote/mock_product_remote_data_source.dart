@@ -11,6 +11,7 @@ import 'package:steelforce/features/order/data/remote/product_remote_data_source
 import 'package:steelforce/features/order/data/remote/remote_sync_page.dart';
 import 'package:steelforce/features/order/domain/entities/product_pricing.dart';
 import 'package:steelforce/features/order/domain/entities/sync_scope.dart';
+import 'package:steelforce/core/assets/app_assets.dart';
 
 /// Simulates an SAP catalog feed: loads the generated
 /// `assets/mock/products.json` once (falling back to generating it in-memory
@@ -19,13 +20,7 @@ import 'package:steelforce/features/order/domain/entities/sync_scope.dart';
 /// demo stand-in, but shaped exactly like a real paginated REST source would
 /// be so swapping in a Dio-backed implementation later is mechanical.
 class MockProductRemoteDataSource implements ProductRemoteDataSource {
-  /// [remoteImages] false blanks every row's `imageUrl`: the bundled rows
-  /// point at an internet placeholder service, and a demo build must make no
-  /// request at all.
-  MockProductRemoteDataSource({bool remoteImages = true})
-      : _remoteImages = remoteImages;
-
-  final bool _remoteImages;
+  MockProductRemoteDataSource();
 
   List<ProductModel>? _products;
   List<CategoryModel>? _categories;
@@ -33,7 +28,7 @@ class MockProductRemoteDataSource implements ProductRemoteDataSource {
   Future<void> _ensureLoaded() async {
     if (_products != null) return;
     try {
-      final raw = await rootBundle.loadString('assets/mock/products.json');
+      final raw = await rootBundle.loadString(AppDataAssets.mockProducts);
       final decoded = jsonDecode(raw) as Map<String, dynamic>;
       _products = _parseProducts(decoded['products'] as List);
       _categories = _parseCategories(decoded['categories'] as List);
@@ -45,11 +40,8 @@ class MockProductRemoteDataSource implements ProductRemoteDataSource {
     _mergeIsiDemoLines();
   }
 
-  List<ProductModel> _parseProducts(List raw) => raw
-      .map((e) => ProductModel.fromJson(_remoteImages
-          ? e as Map<String, dynamic>
-          : {...e as Map<String, dynamic>, 'imageUrl': ''}))
-      .toList();
+  List<ProductModel> _parseProducts(List raw) =>
+      raw.map((e) => ProductModel.fromJson(e as Map<String, dynamic>)).toList();
 
   List<CategoryModel> _parseCategories(List raw) => raw
       .map((e) => CategoryModel.fromJson(e as Map<String, dynamic>))

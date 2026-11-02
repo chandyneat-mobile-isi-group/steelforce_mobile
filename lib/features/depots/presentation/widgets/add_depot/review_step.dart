@@ -27,9 +27,9 @@ extension ReviewStepExtension on _AddDepotBottomSheetState {
             vertical: widget.isTablet ? 12 : context.rh(8),
           ),
           decoration: BoxDecoration(
-            color: Colors.white,
+            color: context.appColors.card,
             borderRadius: BorderRadius.circular(12),
-            border: Border.all(color: const Color(0xFFE2E8F0), width: 1.1),
+            border: Border.all(color: context.appColors.border, width: 1.1),
             boxShadow: [
               BoxShadow(
                 color: Colors.black.withValues(alpha: 0.02),
@@ -45,7 +45,10 @@ extension ReviewStepExtension on _AddDepotBottomSheetState {
                 width: 32,
                 height: 32,
                 decoration: BoxDecoration(
-                  color: const Color(0xFFEFF6FF),
+                  color: Theme.of(context)
+                      .colorScheme
+                      .primary
+                      .withValues(alpha: 0.10),
                   borderRadius: BorderRadius.circular(8),
                 ),
                 child: Center(
@@ -65,7 +68,7 @@ extension ReviewStepExtension on _AddDepotBottomSheetState {
                       step.titleKey.tr,
                       style: TextStyle(
                         fontSize: _fontSize(11),
-                        color: const Color(0xFF64748B),
+                        color: context.appColors.textSecondary,
                         fontWeight: FontWeight.w600,
                       ),
                     ),
@@ -88,7 +91,7 @@ extension ReviewStepExtension on _AddDepotBottomSheetState {
                 icon: Icon(
                   Icons.edit_rounded,
                   size: _fontSize(18),
-                  color: const Color(0xFF94A3B8),
+                  color: context.appColors.textHint,
                 ),
                 onPressed: () => _bloc.add(GoToStep(step)),
                 padding: EdgeInsets.zero,
@@ -105,7 +108,8 @@ extension ReviewStepExtension on _AddDepotBottomSheetState {
       children: [
         buildAnimatedCard(
           step: BpFormStep.identity,
-          value: '${draft.nameEn}\n${draft.nameKh}',
+          value: '${draft.registrationType.labelKey.tr} · ${draft.nameEn}\n'
+              '${draft.nameKh}',
           index: 0,
           icon: Icons.person_rounded,
         ),
@@ -151,13 +155,39 @@ extension ReviewStepExtension on _AddDepotBottomSheetState {
           icon: Icons.storefront_rounded,
         ),
         buildAnimatedCard(
-          step: BpFormStep.documents,
-          value:
-              '${draft.attachments.length} document(s) attached\n${draft.remark.isEmpty ? '' : 'Remark: ${draft.remark}'}',
+          step: BpFormStep.salesPerformance,
+          value: _surveySummary(draft.salesSurvey),
           index: 4,
+          icon: Icons.insights_rounded,
+        ),
+        buildAnimatedCard(
+          step: BpFormStep.documents,
+          value: [
+            'add_depot.documents_attached'
+                .trParams({'count': '${draft.attachments.length}'}),
+            if (draft.remark.isEmpty)
+              ''
+            else
+              'add_depot.remark_line'.trParams({'remark': draft.remark}),
+          ].join('\n'),
+          index: 5,
           icon: Icons.attach_file_rounded,
         ),
       ],
     );
+  }
+
+  /// "Steel, Construction materials · $12,000.00 / month" — what the depot
+  /// sells and how much, the two answers a reviewer checks first.
+  String _surveySummary(DepotSalesSurvey survey) {
+    if (survey.productLines.isEmpty) return '';
+    final lines = survey.productLines
+        .map((l) => 'add_depot.survey.line.${l.name}'.tr)
+        .join(', ');
+    final total = NumberFormat.simpleCurrency(name: 'USD', decimalDigits: 2)
+        .format(survey.totalMonthlySales);
+    return '$lines\n${'add_depot.survey.per_month'.trParams({
+          'amount': total
+        })}';
   }
 }

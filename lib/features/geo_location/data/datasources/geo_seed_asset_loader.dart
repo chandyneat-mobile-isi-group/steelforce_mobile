@@ -4,6 +4,7 @@ import 'package:drift/drift.dart';
 import 'package:flutter/services.dart' show AssetBundle, rootBundle;
 import 'package:steelforce/core/database/drift/app_database.dart';
 import 'package:steelforce/core/error/exceptions.dart';
+import 'package:steelforce/core/assets/app_assets.dart';
 
 /// The bundled gazetteer, and the code that gets it into the database.
 ///
@@ -20,7 +21,7 @@ import 'package:steelforce/core/error/exceptions.dart';
 /// `c`/`p`/`en`/`km`/`u`/`z`. Long keys would add roughly 900 KB to a file that
 /// is repeated 16,000 times, which is app size and parse time spent on
 /// self-documentation that belongs — and lives — in this class and in
-/// `docs/features/geo-location/architecture.md`.
+/// `docs/feature/geo-location/README.md`.
 class GeoSeedAssetLoader {
   const GeoSeedAssetLoader({AssetBundle? bundle}) : _bundle = bundle;
 
@@ -32,7 +33,7 @@ class GeoSeedAssetLoader {
   /// container is built before one exists in some entry points.
   AssetBundle get _assets => _bundle ?? rootBundle;
 
-  static const String assetPath = 'assets/geo/kh_geo_seed_v1.json';
+  static const String assetPath = AppDataAssets.cambodiaGeoSeed;
 
   /// Parses the asset into Drift companions, ready for one batched insert.
   ///

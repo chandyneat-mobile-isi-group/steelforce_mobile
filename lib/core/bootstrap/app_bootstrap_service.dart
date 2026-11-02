@@ -1,5 +1,7 @@
 import 'dart:async';
 
+import 'package:flutter/foundation.dart'
+    show TargetPlatform, defaultTargetPlatform, kIsWeb;
 import 'package:steelforce/core/config/app_config.dart';
 import 'package:steelforce/core/database/drift/app_database.dart';
 import 'package:steelforce/core/database/drift/migrations/legacy/legacy_orders_importer.dart';
@@ -7,6 +9,8 @@ import 'package:steelforce/core/database/drift/migrations/legacy/legacy_source_f
 import 'package:steelforce/core/database/drift/migrations/legacy/legacy_routes_importer.dart';
 import 'package:steelforce/core/database/drift/migrations/master_data_locale_backfill.dart';
 import 'package:steelforce/core/database/hive/hive_service.dart';
+import 'package:steelforce/core/database/secure/app_secure_storage.dart';
+import 'package:steelforce/core/database/secure/keychain_accessibility_migration.dart';
 import 'package:steelforce/core/di/injection_container.dart';
 import 'package:steelforce/core/logging/app_logger.dart';
 import 'package:steelforce/core/network/connectivity/connectivity_service.dart';
@@ -61,6 +65,13 @@ class AppBootstrapService {
     logger.info('bootstrap.started', fields: {
       'apiHost': Uri.tryParse(AppConfig.apiBaseUrl)?.host,
       'hostOverridden': AppConfig.hasOverride,
+      // Which code-sending path "Forgot password" takes — the dart-defines are
+      // otherwise invisible, and a plain Run silently uses the backend SMS.
+      'resetFlow': AppConfig.firebasePhoneCheckOnly
+          ? 'firebase-check-only'
+          : AppConfig.passwordResetViaFirebase
+              ? 'firebase'
+              : 'backend-sms',
     });
 
     try {
@@ -82,7 +93,16 @@ class AppBootstrapService {
       await initializeDateFormatting();
       logger.info('bootstrap.intl_ready');
 
-      // 3. Key-value store. Must precede DI (see class doc).
+      // 3a. Move pre-existing Keychain items to device-only protection before
+      //     anything reads them. Never throws; a no-op off iOS. Foreground
+      //     only, so two isolates never rewrite the same item at once.
+      await KeychainAccessibilityMigration(
+        storage: appSecureStorage(),
+        isIos: !kIsWeb && defaultTargetPlatform == TargetPlatform.iOS,
+        logger: logger,
+      ).run();
+
+      // 3b. Key-value store. Must precede DI (see class doc).
       await HiveService.init();
       logger.info('bootstrap.hive_ready');
 

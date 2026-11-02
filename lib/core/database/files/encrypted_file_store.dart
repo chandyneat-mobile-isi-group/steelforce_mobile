@@ -6,7 +6,7 @@
 // Design constraints already locked:
 //   • Media lives on the native filesystem; the database holds only string
 //     references — never inline binary data in Drift.
-//     (`docs/blueprint/system-architecture.md` §3 Layer 4, `docs/adr/ADR001singledatabase.md`)
+//     (`docs/blueprint/system-architecture.md` §3 Layer 4, `docs/adr/ADR-0001-single-encrypted-database.md`)
 //   • Growth is bounded by size caps + upload-then-purge TTL policy
 //     (`docs/blueprint/sync-architecture.md` §11).
 //

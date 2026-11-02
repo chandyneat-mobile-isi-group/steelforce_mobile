@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:steelforce/core/localization/localization_services.dart';
 import 'package:steelforce/core/responsive/responsive_sizing.dart';
 import 'package:steelforce/core/theme/theme_extensions.dart';
 import 'package:steelforce/features/order/domain/entities/promotion/promotion_evaluation.dart';
@@ -98,7 +99,10 @@ class CartPromotionBadge extends StatelessWidget {
           // Text here would paint straight through whatever is beside it.
           Flexible(
             child: Text(
-              'Buy ${tier.minQuantity} Free ${tier.freeQuantity}',
+              'orders.promotion.buy_free'.trParams({
+                'qty': '${tier.minQuantity}',
+                'free': '${tier.freeQuantity}',
+              }),
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
               style: TextStyle(
@@ -127,7 +131,7 @@ class CartPromotionBadge extends StatelessWidget {
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     Text(
-                      'See detail',
+                      'orders.promotion.see_detail'.tr,
                       style: TextStyle(
                         color: accent,
                         fontSize: context.rsp(9.5),

@@ -102,8 +102,8 @@ class _LanguageSelectionScreenState extends State<LanguageSelectionScreen> {
                           crossAxisAlignment: CrossAxisAlignment.stretch,
                           children: [
                             Center(
-                              // The full ISI Group wordmark in dark ink, not
-                              // the blue seal on its own: `Vibe.bg` is
+                              // The SteelForce lockup in dark ink, not the
+                              // app-icon tile on its own: `Vibe.bg` is
                               // `AppColors.background` (white), so this is a
                               // light surface and the dark mark belongs.
                               child: const BrandLogo(width: 200),

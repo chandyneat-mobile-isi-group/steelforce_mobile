@@ -148,7 +148,7 @@ class _ThemeOptionTile extends StatelessWidget {
                       : Icons.radio_button_unchecked_rounded,
                   color: selected ? scheme.primary : scheme.outline,
                   size: context.rr(22),
-                  semanticLabel: selected ? 'Selected' : null,
+                  semanticLabel: selected ? 'common.selected'.tr : null,
                 ),
               ],
             ),

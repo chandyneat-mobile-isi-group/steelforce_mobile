@@ -107,13 +107,17 @@ class SyncEngine with WidgetsBindingObserver {
 
   /// Idempotent. Called when the signed-in shell goes away.
   Future<void> stop() async {
-    if (!_started) return;
-    _started = false;
-    WidgetsBinding.instance.removeObserver(this);
-    await _connectivitySub?.cancel();
-    _connectivitySub = null;
-    _coalesce?.cancel();
-    _retry?.cancel();
+    if (_started) {
+      _started = false;
+      WidgetsBinding.instance.removeObserver(this);
+      await _connectivitySub?.cancel();
+      _connectivitySub = null;
+      _coalesce?.cancel();
+      _retry?.cancel();
+    }
+    // A session reset must not race a drain that is still writing outbox
+    // state. `stop` is also used during sign-out, before the stores clear.
+    await whenIdle();
   }
 
   @override
@@ -149,6 +153,17 @@ class SyncEngine with WidgetsBindingObserver {
     }
     await _run();
     return true;
+  }
+
+  /// Completes once no drain is running. Switching to offline mode waits on
+  /// this, so a send already on the wire finishes and records its outcome
+  /// instead of being cut off mid-batch and counted as a failed attempt.
+  Future<void> whenIdle() async {
+    while (_busy) {
+      final running = _inFlight;
+      if (running == null) return;
+      await running;
+    }
   }
 
   void _schedule({bool resetBackoff = false}) {

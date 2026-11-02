@@ -11,6 +11,7 @@ import 'package:steelforce/core/database/drift/daos/route_telemetry_dao.dart';
 import 'package:steelforce/core/database/drift/daos/notification_dao.dart';
 import 'package:steelforce/core/database/drift/daos/order_dao.dart';
 import 'package:steelforce/core/database/drift/daos/visit_dao.dart';
+import 'package:steelforce/core/database/drift/daos/visit_plan_dao.dart';
 import 'package:steelforce/core/database/drift/daos/workflow_state_dao.dart';
 import 'package:steelforce/core/database/drift/migrations/schema_migrations.dart';
 import 'package:steelforce/core/database/drift/tables/app_metadata_table.dart';
@@ -23,6 +24,7 @@ import 'package:steelforce/core/database/drift/tables/geo_tables.dart';
 import 'package:steelforce/core/database/drift/tables/notification_tables.dart';
 import 'package:steelforce/core/database/drift/tables/order_tables.dart';
 import 'package:steelforce/core/database/drift/tables/route_tables.dart';
+import 'package:steelforce/core/database/drift/tables/visit_plan_tables.dart';
 import 'package:steelforce/core/database/drift/tables/visit_tables.dart';
 import 'package:steelforce/core/database/drift/tables/workflow_state_table.dart';
 import 'package:steelforce/core/database/secure/app_database_key_provider.dart';
@@ -103,6 +105,11 @@ part 'app_database.g.dart';
     GeoDistricts,
     GeoCommunes,
     GeoVillages,
+    // Visit plans (v30): the plans endpoints' last answers, so the Visits tab
+    // works offline. Server-owned; replaced whole on every pull.
+    VisitPlanSnapshots,
+    // v32: plan visit steps worked offline, until the server has them.
+    PlanVisitOutbox,
   ],
   daos: [
     AppMetadataDao,
@@ -127,6 +134,7 @@ part 'app_database.g.dart';
     // single cascade and re-seeded together in one transaction, so splitting
     // them per level would only prevent that transaction.
     GeoDao,
+    VisitPlanDao,
   ],
 )
 class AppDatabase extends _$AppDatabase {

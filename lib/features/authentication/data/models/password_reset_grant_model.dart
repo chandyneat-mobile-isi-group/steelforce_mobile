@@ -1,9 +1,9 @@
 import 'package:steelforce/core/utils/typedefs.dart';
 import 'package:steelforce/features/authentication/domain/entities/password_reset_grant.dart';
 
-/// Reads the unwrapped `data` of `forgot-password/verify-otp`:
-/// `{resetToken, expiresIn, passwordPolicy: {minLength, maxLength,
-/// requireUppercase, requireLowercase, requireNumber, requireSpecial}}`.
+/// Reads the unwrapped `data` of `auth/forgot-password/phone/verify`:
+/// `{resetToken, expiresIn, passwordPolicy}`. The server's policy wins; the
+/// production rules apply only when a server sends none.
 class PasswordResetGrantModel extends PasswordResetGrant {
   const PasswordResetGrantModel({
     required super.resetToken,
@@ -18,7 +18,7 @@ class PasswordResetGrantModel extends PasswordResetGrant {
       expiresIn: (json['expiresIn'] as num?)?.toInt(),
       policy: policy is Map
           ? _policy(DataMap.from(policy))
-          : const PasswordPolicy(),
+          : PasswordPolicy.productionReset,
     );
   }
 
@@ -29,5 +29,7 @@ class PasswordResetGrantModel extends PasswordResetGrant {
         requireLowercase: json['requireLowercase'] == true,
         requireNumber: json['requireNumber'] == true,
         requireSpecial: json['requireSpecial'] == true,
+        minDistinctCharacters:
+            (json['minDistinctCharacters'] as num?)?.toInt() ?? 0,
       );
 }

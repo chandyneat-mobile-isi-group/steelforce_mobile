@@ -187,45 +187,26 @@ abstract final class NotificationApiMapper {
 
   // ── Devices ─────────────────────────────────────────────────────────
 
-  /// `POST /mobile/devices/register` request body (§4.2). `camelCase`.
+  /// `PUT /me/devices/{installationId}` request body.
   static DataMap registrationToJson(PushRegistration registration) => {
-        'deviceId': registration.deviceId,
         'pushToken': registration.pushToken,
         'platform': registration.platform.code,
-        // Omitted rather than sent empty: the device registry shows these to
-        // support, and a blank row is less useful than an absent field.
-        if (registration.deviceName?.isNotEmpty ?? false)
-          'deviceName': registration.deviceName,
-        if (registration.appVersion?.isNotEmpty ?? false)
-          'appVersion': registration.appVersion,
-        if (registration.osVersion?.isNotEmpty ?? false)
-          'osVersion': registration.osVersion,
-        if (registration.locale?.isNotEmpty ?? false)
-          'locale': registration.locale,
-        if (registration.timeZone?.isNotEmpty ?? false)
-          'timeZone': registration.timeZone,
-        // Always sent, including when false. §4.2: a declined registration is
-        // kept but excluded from the push audience, which makes the delivery log
-        // read `NO_DEVICE` instead of a run of failures.
-        'pushPermissionGranted': registration.pushPermissionGranted,
-        'latitude': registration.latitude,
-        'longitude': registration.longitude,
-        'locationAccuracyMeters': registration.locationAccuracyMeters,
-        'locationCapturedAt':
-            registration.locationCapturedAt.toUtc().toIso8601String(),
+        'locale': registration.locale ?? '',
+        'appVersion': registration.appVersion ?? '',
       };
 
-  /// `POST /mobile/devices/register` response (§4.3).
+  /// `PUT /me/devices/{installationId}` response.
   static PushRegistrationResult registrationFromJson(DataMap json) =>
       PushRegistrationResult(
-        id: _string(json['id']) ?? '',
-        deviceId: _string(json['deviceId']) ?? '',
+        id: _string(json['id']) ?? _string(json['installationId']) ?? '',
+        deviceId:
+            _string(json['deviceId']) ?? _string(json['installationId']) ?? '',
         // Defaults to true because that is what a 2xx from this endpoint means:
         // a registration the backend had deactivated is *revived* by the call.
         // Defaulting to false would report a working registration as dead.
         isActive: json['isActive'] as bool? ?? true,
         pushPermissionGranted: json['pushPermissionGranted'] as bool? ?? false,
-        lastSeenAt: parseUtc(json['lastSeenAt']),
+        lastSeenAt: parseUtc(json['lastSeenAt'] ?? json['registeredAt']),
       );
 
   // ── Preferences ─────────────────────────────────────────────────────

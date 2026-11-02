@@ -1,6 +1,9 @@
 import 'package:equatable/equatable.dart';
 import 'package:steelforce/core/localization/localized_text.dart';
 import 'package:steelforce/features/depots/domain/entities/depot_contact.dart';
+import 'package:steelforce/features/depots/domain/entities/depot_list_kind.dart';
+import 'package:steelforce/features/depots/domain/entities/depot_profile.dart';
+import 'package:steelforce/features/depots/domain/entities/depot_sales_area.dart';
 import 'package:steelforce/features/depots/domain/entities/depot_status.dart';
 
 /// An approved business depot that already exists in SAP.
@@ -54,6 +57,11 @@ class Depot extends Equatable {
     this.currency = 'USD',
     this.totalOrders = 0,
     this.createdAt,
+    this.depotType,
+    this.createdBy,
+    this.salesEmployees,
+    this.profile,
+    this.salesAreas,
   });
 
   final String id;
@@ -123,6 +131,24 @@ class Depot extends Equatable {
   /// When SAP created the record ([updatedAt] covers modification).
   final DateTime? createdAt;
 
+  /// `Depot`, `NonDepot` or `Draft`, as the list sends it.
+  final String? depotType;
+
+  /// Employee code of whoever recorded it; null for a depot SAP brought in.
+  final String? createdBy;
+
+  /// Everyone assigned to the outlet. Null when never received.
+  final List<DepotSalesEmployee>? salesEmployees;
+
+  /// Field facts, suppliers and management. Null when never received.
+  final DepotProfile? profile;
+
+  /// SAP sales areas with their credit terms. Null when never received.
+  final List<DepotSalesArea>? salesAreas;
+
+  /// Which list this row belongs to (depots, Non-BP, awaiting approval).
+  DepotListKind get listKind => DepotListKind.of(depotType);
+
   /// Whether this depot has a usable position.
   ///
   /// `(0, 0)` encodes "no GPS fix was ever captured". It is a real point in the
@@ -172,6 +198,19 @@ class Depot extends Equatable {
     if (sapDepotId case final sapId?) yield sapId;
     yield ownerName;
     yield phone;
+  }
+
+  /// The number to show and call: the depot's own [phone], or — when SAP
+  /// sent none — the first contact person's. Empty when neither has one.
+  /// Display only; [phone] itself stays what the server sent.
+  String get contactPhone {
+    final own = phone.trim();
+    if (own.isNotEmpty) return own;
+    for (final contact in contacts) {
+      final number = contact.phone.trim();
+      if (number.isNotEmpty) return number;
+    }
+    return '';
   }
 
   /// Headroom left against the credit limit. Clamped at zero so an
@@ -225,6 +264,11 @@ class Depot extends Equatable {
     String? currency,
     int? totalOrders,
     DateTime? createdAt,
+    String? depotType,
+    String? createdBy,
+    List<DepotSalesEmployee>? salesEmployees,
+    DepotProfile? profile,
+    List<DepotSalesArea>? salesAreas,
   }) {
     return Depot(
       id: id ?? this.id,
@@ -265,6 +309,11 @@ class Depot extends Equatable {
       currency: currency ?? this.currency,
       totalOrders: totalOrders ?? this.totalOrders,
       createdAt: createdAt ?? this.createdAt,
+      depotType: depotType ?? this.depotType,
+      createdBy: createdBy ?? this.createdBy,
+      salesEmployees: salesEmployees ?? this.salesEmployees,
+      profile: profile ?? this.profile,
+      salesAreas: salesAreas ?? this.salesAreas,
     );
   }
 
@@ -308,5 +357,10 @@ class Depot extends Equatable {
         currency,
         totalOrders,
         createdAt,
+        depotType,
+        createdBy,
+        salesEmployees,
+        profile,
+        salesAreas,
       ];
 }

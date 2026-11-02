@@ -36,6 +36,8 @@ class AuthProfile extends Equatable {
     this.lineManagerName,
     this.lineManagerCode,
     this.avatarThumbnailUrl,
+    this.salesOrgCode,
+    this.salesOrgName,
   });
 
   final String id;
@@ -115,6 +117,10 @@ class AuthProfile extends Equatable {
   /// profile read hands out fresh ones.
   final String? avatarThumbnailUrl;
 
+  /// Sales organisation supplied by `/mobile/auth/profile` as `saleOrg`.
+  final String? salesOrgCode;
+  final String? salesOrgName;
+
   /// The best available human-readable job label, preferring what HR calls the
   /// job over the coarse authorisation bucket.
   String? get positionOrRoleLabel {
@@ -170,6 +176,8 @@ class AuthProfile extends Equatable {
         territoryCode,
         depotCode,
         passwordChangeRequired,
+        salesOrgCode,
+        salesOrgName,
       ];
 }
 

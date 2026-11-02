@@ -19,18 +19,14 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:steelforce/core/logging/debug_trace.dart';
 import 'package:steelforce/features/depots/data/local/rep_sales_context_source.dart';
-import 'package:steelforce/features/depots/domain/entities/bp_depot_draft.dart';
-import 'package:steelforce/features/depots/domain/entities/bp_form_step.dart';
-import 'package:steelforce/features/depots/domain/entities/rep_sales_context.dart';
+import 'package:steelforce/features/depots/data/models/bp_depot_form_data.dart';
 import 'package:steelforce/features/depots/data/models/sap_reference_options.dart';
-import 'package:steelforce/features/depots/domain/entities/business_partner_request.dart';
 import 'package:steelforce/features/depots/domain/entities/depot_document.dart';
 import 'package:steelforce/features/depots/domain/entities/depot_submit_progress.dart';
 import 'package:steelforce/features/depots/domain/repositories/business_partner_repository.dart';
 import 'package:steelforce/features/depots/domain/repositories/depot_document_repository.dart';
 import 'package:steelforce/features/depots/domain/repositories/depot_registration_outbox.dart';
-import 'package:steelforce/features/depots/presentation/bloc/business_partner_submission.dart';
-import 'package:steelforce/features/depots/domain/entities/bp_attachment.dart';
+import 'package:steelforce/features/depots/presentation/bloc/depot_draft_submission.dart';
 
 part 'add_depot_event.dart';
 part 'add_depot_state.dart';
@@ -46,13 +42,13 @@ const _trace = DebugTrace('registration');
 class AddDepotBloc extends Bloc<AddDepotEvent, AddDepotState> {
   final BusinessPartnerRepository _repository;
   final DepotDocumentRepository _documents;
-  final BusinessPartnerSubmission _submission;
-  final RepSalesContextSource _repSource;
 
-  /// Holds a registration SAP could not be reached for and replays it when it
-  /// can. Optional so tests that never go offline need not supply one; without
-  /// it an unreachable submit falls back to keeping the form as a draft.
-  final DepotRegistrationOutbox? _outbox;
+  /// Sends the form to `POST /api/v1/depot-drafts` and its photos after.
+  final DepotDraftSubmission _draftSubmission;
+
+  /// Holds a registration made with no connection until it can be sent.
+  final DepotRegistrationOutbox _outbox;
+  final RepSalesContextSource _repSource;
 
   /// The signed-in rep, once resolved. Null until [OpenForm] has read it, and
   /// null for good when there is no trustworthy identity — in which case the
@@ -62,21 +58,22 @@ class AddDepotBloc extends Bloc<AddDepotEvent, AddDepotState> {
   AddDepotBloc({
     required BusinessPartnerRepository repository,
     required DepotDocumentRepository documents,
-    required BusinessPartnerSubmission submission,
+    required DepotDraftSubmission draftSubmission,
+    required DepotRegistrationOutbox outbox,
     required RepSalesContextSource repSource,
-    DepotRegistrationOutbox? outbox,
     BpDepotDraft? initialDraft,
   })  : _repository = repository,
         _documents = documents,
-        _submission = submission,
-        _repSource = repSource,
+        _draftSubmission = draftSubmission,
         _outbox = outbox,
+        _repSource = repSource,
         super(AddDepotState(
           currentStep: BpFormStep.identity,
           draft: (initialDraft ?? BpDepotDraft())..applyRepDefaults(_noRep),
         )) {
     _trace.begin('depot registration');
-    _trace.step('form', 'opened', {'step': '1/5 identity'});
+    _trace.step(
+        'form', 'opened', {'step': '1/${BpFormStep.values.length} identity'});
     on<OpenForm>(_onOpenForm);
     on<DraftChanged>(_onDraftChanged);
     on<NextStep>(_onNextStep);
@@ -100,13 +97,6 @@ class AddDepotBloc extends Bloc<AddDepotEvent, AddDepotState> {
 
   /// True once the signed-in rep's personnel number is known.
   bool get hasRepIdentity => _rep != null;
-
-  /// Builds the exact payload for the current form. Used by the review step.
-  BusinessPartnerRequest previewRequest() => _submission.buildRequest(
-        state.draft,
-        rep: rep,
-        priceGroupResolver: state.references.priceGroupFor,
-      );
 
   /// Resolves the rep if not already known. Re-tried on every send because a
   /// session restored after the form opened must not leave it unsendable.
@@ -191,20 +181,24 @@ class AddDepotBloc extends Bloc<AddDepotEvent, AddDepotState> {
       // on the strength of a check that no longer applies.
       sapPreCheckPassed: false,
     ));
-    _trace.step('edit',
-        '${state.currentStep.number}/5 ${state.currentStep.name}', const {});
+    _trace.step(
+        'edit',
+        '${state.currentStep.number}/${BpFormStep.values.length} ${state.currentStep.name}',
+        const {});
     _persistDraft();
   }
 
   void _onNextStep(NextStep event, Emitter<AddDepotState> emit) {
-    _trace.step('next',
-        '${state.currentStep.number}/6 ${state.currentStep.name}', const {});
+    _trace.step(
+        'next',
+        '${state.currentStep.number}/${BpFormStep.values.length} ${state.currentStep.name}',
+        const {});
 
     final errors = state.draft.validateStep(state.currentStep);
     if (errors.isNotEmpty) {
       _trace.fail(
         'step',
-        '${state.currentStep.number}/6 ${state.currentStep.name}',
+        '${state.currentStep.number}/${BpFormStep.values.length} ${state.currentStep.name}',
         {'missing': DebugTrace.names(errors.keys)},
       );
       emit(state.copyWith(errors: errors));
@@ -224,7 +218,9 @@ class AddDepotBloc extends Bloc<AddDepotEvent, AddDepotState> {
       status: AddDepotStatus.editing,
       errorMessage: null,
     ));
-    _trace.ok('step', '${state.currentStep.number}/6 ${state.currentStep.name}',
+    _trace.ok(
+        'step',
+        '${state.currentStep.number}/${BpFormStep.values.length} ${state.currentStep.name}',
         const {});
     _persistDraft();
   }
@@ -234,14 +230,19 @@ class AddDepotBloc extends Bloc<AddDepotEvent, AddDepotState> {
     emit(state.copyWith(
       currentStep: BpFormStep.values[state.currentStep.index - 1],
     ));
-    _trace.step('back',
-        '${state.currentStep.number}/5 ${state.currentStep.name}', const {});
+    _trace.step(
+        'back',
+        '${state.currentStep.number}/${BpFormStep.values.length} ${state.currentStep.name}',
+        const {});
   }
 
   /// Used by the review screen's edit pencils — jump back without re-walking.
   void _onGoToStep(GoToStep event, Emitter<AddDepotState> emit) {
     emit(state.copyWith(currentStep: event.step));
-    _trace.step('jump', '${event.step.number}/5 ${event.step.name}', const {});
+    _trace.step(
+        'jump',
+        '${event.step.number}/${BpFormStep.values.length} ${event.step.name}',
+        const {});
   }
 
   /// Holds the photograph on the device. Nothing is uploaded here: the
@@ -287,13 +288,10 @@ class AddDepotBloc extends Bloc<AddDepotEvent, AddDepotState> {
   /// Fire-and-forget local persistence so a killed app does not lose the form.
   void _persistDraft() {
     _trace.step('cache', 'local draft saved',
-        {'step': '${state.currentStep.number}/5'});
+        {'step': '${state.currentStep.number}/${BpFormStep.values.length}'});
     _repository.saveDraft(state.draft);
   }
 }
-
-/// Localisation key shown when the signed-in rep's personnel number is unknown.
-const _repIdentityUnavailable = 'add_depot.error.rep_identity_unavailable';
 
 /// No identity: the draft falls back to the documented sales-area defaults and
 /// carries an empty personnel number, which the repository refuses to send.

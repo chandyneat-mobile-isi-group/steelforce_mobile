@@ -19,6 +19,18 @@ The largest feature in the app: 14 screens, 48 widgets, 10 blocs, 43 use cases,
 | [product-selection/README.md](product-selection/README.md) | The guided material configurator — category → attribute steps → stock location → SKU → quotation line. Written for the SAP/middleware team. |
 | [product-selection/api.md](product-selection/api.md) | Materials, stock, and price integration contract. Responses were executed against a live server and live SAP `Live110`. |
 | [product-selection/availability.md](product-selection/availability.md) | How the client implements the sellability check — when the call is made, what is rendered, and which compromises were deliberate. |
+| [product-selection/sku-card-live-pricing-change-request.md](product-selection/sku-card-live-pricing-change-request.md) | Change request: material search → SKU card → live price. The SKU card is built; the realtime price hub is still a stub. Fold it into product-selection and pricing when finished. |
+| [pricing/](pricing/README.md) | Depot prices from SAP — the mobile contract ([pricing/api/mobile.md](pricing/api/mobile.md)), SAP pricing contract, realtime hub. ⧉ Written by the backend team. |
+| [quotation/](quotation/README.md) | Quotations: contract ([quotation/api/mobile.md](quotation/api/mobile.md)), business rules, data model, and the programme plan with decisions D1–D18 ([quotation/plan.md](quotation/plan.md)). ⧉ Written by the backend team. |
+| [promotions/](promotions/README.md) | Promotions, agreements and rebates: contract, rules, the design plan with decisions D19–D33 ([promotions/plan.md](promotions/plan.md)), and the mobile client's own view ([mobile-client.md](promotions/mobile-client.md), [mobile-workflow.md](promotions/mobile-workflow.md)). |
+
+> **Known divergence (report, not fixed):** the backend promotion docs say the
+> server owns discount evaluation, while the app still evaluates promotions on
+> the device (`promotion_evaluation.dart`). See
+> [promotions/mobile-client.md](promotions/mobile-client.md).
+
+Business requirements for promotions (the business's own `.docx` files):
+[../../requirement/promotions/](../../requirement/promotions/).
 
 ---
 

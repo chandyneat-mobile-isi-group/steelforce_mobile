@@ -1,5 +1,5 @@
 import 'package:steelforce/core/utils/typedefs.dart';
-import 'package:steelforce/features/depots/domain/entities/bp_depot_draft.dart';
+import 'package:steelforce/features/depots/data/models/bp_depot_form_data.dart';
 import 'package:steelforce/features/depots/data/models/sap_reference_options.dart';
 import 'package:steelforce/features/depots/domain/entities/business_partner_request.dart';
 import 'package:steelforce/features/depots/domain/entities/business_partner_result.dart';

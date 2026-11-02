@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:steelforce/core/localization/localization_services.dart';
+import 'package:steelforce/core/theme/theme_extensions.dart';
 
 /// The postal code, derived where possible and typeable where not.
 ///
@@ -89,10 +90,10 @@ class _PostalCodeFieldState extends State<PostalCodeField> {
         vertical: widget.compact ? 8 : 10,
       ),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: context.appColors.card,
         borderRadius: BorderRadius.circular(14),
         border: Border.all(
-          color: hasError ? theme.colorScheme.error : const Color(0xFFE2E8F0),
+          color: hasError ? theme.colorScheme.error : context.appColors.border,
           width: 1.1,
         ),
         boxShadow: [
@@ -114,7 +115,10 @@ class _PostalCodeFieldState extends State<PostalCodeField> {
                       width: 24,
                       height: 24,
                       decoration: BoxDecoration(
-                        color: const Color(0xFFEFF6FF),
+                        color: Theme.of(context)
+                            .colorScheme
+                            .primary
+                            .withValues(alpha: 0.10),
                         borderRadius: BorderRadius.circular(6),
                       ),
                       child: Center(
@@ -174,13 +178,13 @@ class _PostalCodeFieldState extends State<PostalCodeField> {
                     isDense: true,
                     filled: true,
                     fillColor: isFieldDerived
-                        ? const Color(0xFFF1F5F9)
-                        : const Color(0xFFF8FAFC),
+                        ? context.appColors.divider
+                        : context.appColors.surfaceSoft,
                     hintText: !isFieldLocked
                         ? 'geo.postal_hint'.tr
                         : 'geo.postal_code'.tr,
-                    hintStyle: const TextStyle(
-                      color: Color(0xFF94A3B8),
+                    hintStyle: TextStyle(
+                      color: context.appColors.textHint,
                       fontSize: 12,
                       fontWeight: FontWeight.w400,
                       letterSpacing: 0,
@@ -193,8 +197,8 @@ class _PostalCodeFieldState extends State<PostalCodeField> {
                             : Icons.qr_code_scanner_rounded,
                         size: 16,
                         color: isFieldDerived
-                            ? const Color(0xFF64748B)
-                            : const Color(0xFF3B82F6),
+                            ? context.appColors.textSecondary
+                            : Theme.of(context).colorScheme.primary,
                       ),
                     ),
                     suffixIconConstraints: const BoxConstraints(
@@ -207,7 +211,7 @@ class _PostalCodeFieldState extends State<PostalCodeField> {
                     ),
                     enabledBorder: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(8),
-                      borderSide: const BorderSide(color: Color(0xFFE2E8F0)),
+                      borderSide: BorderSide(color: context.appColors.border),
                     ),
                     focusedBorder: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(8),
@@ -215,7 +219,7 @@ class _PostalCodeFieldState extends State<PostalCodeField> {
                     ),
                     disabledBorder: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(8),
-                      borderSide: const BorderSide(color: Color(0xFFE2E8F0)),
+                      borderSide: BorderSide(color: context.appColors.border),
                     ),
                   ),
                 ),
@@ -228,7 +232,10 @@ class _PostalCodeFieldState extends State<PostalCodeField> {
                   width: 32,
                   height: 32,
                   decoration: BoxDecoration(
-                    color: const Color(0xFFEFF6FF),
+                    color: Theme.of(context)
+                        .colorScheme
+                        .primary
+                        .withValues(alpha: 0.10),
                     borderRadius: BorderRadius.circular(8),
                   ),
                   child: Center(
@@ -290,13 +297,13 @@ class _PostalCodeFieldState extends State<PostalCodeField> {
                           isDense: true,
                           filled: true,
                           fillColor: isFieldDerived
-                              ? const Color(0xFFF1F5F9)
-                              : const Color(0xFFF8FAFC),
+                              ? context.appColors.divider
+                              : context.appColors.surfaceSoft,
                           hintText: !isFieldLocked
                               ? 'geo.postal_hint'.tr
                               : 'geo.postal_code'.tr,
-                          hintStyle: const TextStyle(
-                            color: Color(0xFF94A3B8),
+                          hintStyle: TextStyle(
+                            color: context.appColors.textHint,
                             fontSize: 13,
                             fontWeight: FontWeight.w400,
                             letterSpacing: 0,
@@ -309,8 +316,8 @@ class _PostalCodeFieldState extends State<PostalCodeField> {
                                   : Icons.qr_code_scanner_rounded,
                               size: 18,
                               color: isFieldDerived
-                                  ? const Color(0xFF64748B)
-                                  : const Color(0xFF3B82F6),
+                                  ? context.appColors.textSecondary
+                                  : Theme.of(context).colorScheme.primary,
                             ),
                           ),
                           suffixIconConstraints: const BoxConstraints(
@@ -324,7 +331,7 @@ class _PostalCodeFieldState extends State<PostalCodeField> {
                           enabledBorder: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(8),
                             borderSide:
-                                const BorderSide(color: Color(0xFFE2E8F0)),
+                                BorderSide(color: context.appColors.border),
                           ),
                           focusedBorder: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(8),
@@ -334,7 +341,7 @@ class _PostalCodeFieldState extends State<PostalCodeField> {
                           disabledBorder: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(8),
                             borderSide:
-                                const BorderSide(color: Color(0xFFE2E8F0)),
+                                BorderSide(color: context.appColors.border),
                           ),
                         ),
                       ),
@@ -368,7 +375,7 @@ class _PostalCodeFieldState extends State<PostalCodeField> {
               child: Text(
                 'geo.postal_manual_notice'.tr,
                 style: theme.textTheme.bodySmall?.copyWith(
-                  color: const Color(0xFF64748B),
+                  color: context.appColors.textSecondary,
                 ),
               ),
             ),

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:steelforce/core/localization/localization_services.dart';
 import 'package:steelforce/core/localization/localized_text_context.dart';
 import 'package:steelforce/core/responsive/responsive_sizing.dart';
 import 'package:steelforce/core/theme/theme_extensions.dart';
@@ -28,7 +29,7 @@ Future<String?> showAddHcVisitDialog(
   // "added to HC visits" the moment the rep tapped Confirm told them a visit
   // existed when nothing had been sent anywhere.
   //
-  // `addDepotToTodayVisits` reports the real outcome.
+  // `startAdHocVisitAt` reports the real outcome.
   if (result != null && context.mounted) onConfirmed?.call(result);
 
   return result;
@@ -86,7 +87,7 @@ class _AddHcVisitDialogState extends State<AddHcVisitDialog> {
 
     final contactParts = [
       if (depot.ownerName.isNotEmpty) depot.ownerName,
-      if (depot.phone.isNotEmpty) depot.phone,
+      if (depot.contactPhone.isNotEmpty) depot.contactPhone,
     ];
     final contactText = contactParts.join(' • ');
 
@@ -129,7 +130,7 @@ class _AddHcVisitDialogState extends State<AddHcVisitDialog> {
               ),
               SizedBox(height: context.rh(14)),
               Text(
-                'Add HC Visit',
+                'depots.hc_visit.title'.tr,
                 textAlign: TextAlign.center,
                 style: TextStyle(
                   color: colors.textPrimary,
@@ -140,7 +141,7 @@ class _AddHcVisitDialogState extends State<AddHcVisitDialog> {
               ),
               SizedBox(height: context.rh(6)),
               Text(
-                'Do you want to add this depot to your HC (Ad-hoc) visits for today?',
+                'depots.hc_visit.question'.tr,
                 textAlign: TextAlign.center,
                 style: TextStyle(
                   color: colors.textSecondary,
@@ -168,7 +169,7 @@ class _AddHcVisitDialogState extends State<AddHcVisitDialog> {
                       SizedBox(width: context.rw(10)),
                       Expanded(
                         child: Text(
-                          'This depot is closed (terminal status). HC visits cannot be scheduled for closed depots.',
+                          'depots.hc_visit.closed_warning'.tr,
                           style: TextStyle(
                             color: Colors.red.shade800,
                             fontSize: context.rsp(12),
@@ -256,7 +257,8 @@ class _AddHcVisitDialogState extends State<AddHcVisitDialog> {
                             color: Colors.blueGrey,
                           ),
                         _InfoChip(
-                          label: 'Today: $todayFormatted',
+                          label: 'depots.hc_visit.today'
+                              .trParams({'date': todayFormatted}),
                           icon: Icons.calendar_today_rounded,
                           color: scheme.secondary,
                         ),
@@ -314,7 +316,7 @@ class _AddHcVisitDialogState extends State<AddHcVisitDialog> {
 
               // Note Input (Optional)
               Text(
-                'Visit Objective / Note (Optional)',
+                'depots.hc_visit.note_label'.tr,
                 style: TextStyle(
                   color: colors.textPrimary,
                   fontSize: context.rsp(12),
@@ -332,8 +334,7 @@ class _AddHcVisitDialogState extends State<AddHcVisitDialog> {
                   color: colors.textPrimary,
                 ),
                 decoration: InputDecoration(
-                  hintText:
-                      'e.g. Follow-up on quotation, collect payment, inspect stock...',
+                  hintText: 'depots.hc_visit.note_hint'.tr,
                   hintStyle: TextStyle(
                     fontSize: context.rsp(12),
                     color: colors.textSecondary.withValues(alpha: 0.7),
@@ -374,7 +375,7 @@ class _AddHcVisitDialogState extends State<AddHcVisitDialog> {
                         ),
                       ),
                       child: Text(
-                        'Cancel',
+                        'common.cancel'.tr,
                         style: TextStyle(
                           color: colors.textSecondary,
                           fontSize: context.rsp(13),
@@ -395,7 +396,7 @@ class _AddHcVisitDialogState extends State<AddHcVisitDialog> {
                       icon:
                           const Icon(Icons.add_location_alt_rounded, size: 18),
                       label: Text(
-                        'Add Visit',
+                        'depots.hc_visit.confirm'.tr,
                         style: TextStyle(
                           fontSize: context.rsp(13),
                           fontWeight: FontWeight.w700,

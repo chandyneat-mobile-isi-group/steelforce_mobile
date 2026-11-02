@@ -24,6 +24,9 @@ class CoachStep extends Equatable {
     this.advanceOnCta = false,
     this.autoNavigateHome = true,
     this.canSkip = true,
+    this.blocking = true,
+    this.failureAction,
+    this.failureMessageKey,
   });
 
   /// Stable identifier, also used as the persisted "completed step" token.
@@ -54,6 +57,18 @@ class CoachStep extends Equatable {
 
   /// Whether the whole tutorial can be skipped from this step.
   final bool canSkip;
+
+  /// True: the classic tour look — dimmed screen, taps allowed only through
+  /// the spotlight. False: a guide that never blocks — the rep is filling a
+  /// real form, answering dialogs and scrolling, so the coach only points.
+  final bool blocking;
+
+  /// The action that means this step's operation came back with an error.
+  /// It never advances; it shows [failureMessageKey] so the rep can retry.
+  final CoachAction? failureAction;
+
+  /// Retry guidance shown after [failureAction].
+  final String? failureMessageKey;
 
   /// 1-based display order.
   final int order;

@@ -1,5 +1,4 @@
 import 'package:equatable/equatable.dart';
-import 'package:steelforce/core/utils/name_initials.dart';
 
 /// The signed-in employee as `GET /auth/me` describes them — everything the
 /// profile screen shows.
@@ -30,6 +29,8 @@ class WorkerProfile extends Equatable {
     this.lineManagerCode,
     this.temporaryPasswordExpiresAt,
     this.avatarThumbnailUrl,
+    this.salesOrgCode,
+    this.salesOrgName,
   });
 
   final String id;
@@ -65,6 +66,9 @@ class WorkerProfile extends Equatable {
   /// like [avatarUrl]. The full-size [avatarUrl] is for the full-screen view.
   final String? avatarThumbnailUrl;
 
+  final String? salesOrgCode;
+  final String? salesOrgName;
+
   final DateTime? lastLoginAt;
   final DateTime? passwordExpiresAt;
   final bool isActive;
@@ -87,7 +91,14 @@ class WorkerProfile extends Equatable {
   /// What the header chip shows: the job title, else the role.
   String get title => position ?? roleLabel ?? '';
 
-  String get initials => nameInitials(fullName) ?? '?';
+  String get initials {
+    final parts = fullName.trim().split(RegExp(r'\s+'))
+      ..removeWhere((p) => p.isEmpty);
+    if (parts.isEmpty) return '?';
+    final first = parts.first[0];
+    final last = parts.length > 1 ? parts.last[0] : '';
+    return (first + last).toUpperCase();
+  }
 
   @override
   List<Object?> get props => [
@@ -112,5 +123,7 @@ class WorkerProfile extends Equatable {
         lineManagerCode,
         temporaryPasswordExpiresAt,
         avatarThumbnailUrl,
+        salesOrgCode,
+        salesOrgName,
       ];
 }

@@ -11,9 +11,9 @@
 
 | Item | Value | Source |
 |---|---|---|
-| applicationId / namespace | `com.isigroup.steelforce` | `android/app/build.gradle.kts` |
-| Firebase project | `steelforce-94963` | `android/app/google-services.json` |
-| Firebase Android App ID | `1:696334570059:android:f1a7010fb960234bb0f3ce` | `android/app/google-services.json` |
+| applicationId (namespace stays `com.isigroup.steelforce`) | `com.isisteel.steelforce` | `android/app/build.gradle.kts` |
+| Firebase project | `steelforce` | `android/app/google-services.json` |
+| Firebase Android App ID | `1:696334570059:android:f70d69129448bce4b0f3ce` | `android/app/google-services.json` |
 | versionName / versionCode | `version: X.Y.Z+N` in `pubspec.yaml` | Flutter → `flutter.versionName` / `flutter.versionCode` |
 | Flavors | none | |
 
@@ -22,7 +22,7 @@ The applicationId is permanent once a build is distributed — do not change it.
 **Versioning.** Bump `pubspec.yaml` before every distributed build. `N`
 (versionCode) must **always increase** — Firebase and Play both reject or
 mis-order a build that reuses one. It may also be overridden per build without
-editing the file: `flutter build appbundle --release --build-number=35`.
+editing the file: `tool/build_release.sh appbundle --build-number=35`.
 
 ---
 
@@ -76,10 +76,20 @@ flutter pub get
 dart run build_runner build --delete-conflicting-outputs   # needs .env
 flutter analyze
 flutter test
-flutter build appbundle --release
+tool/build_release.sh appbundle      # --release --obfuscate --split-debug-info
 ```
 
 Output: **`build/app/outputs/bundle/release/app-release.aab`**
+
+Release builds carry **arm64-v8a and armeabi-v7a only** — the CPUs real phones
+use. x86/x86_64 (emulators) is dropped twice over: the script passes
+`--target-platform=android-arm,android-arm64`, and `android/app/build.gradle.kts`
+excludes the plugins' x86 libraries from release variants. Debug builds keep
+x86_64, so the emulator still runs.
+
+Debug symbols: **`build/symbols/appbundle/<version>/`** — archive them privately
+with the release. They are needed to read an obfuscated crash stack and must
+never be published (`docs/security/README.md` §5).
 
 Verify the signature (prints the certificate; must not be `CN=Android Debug`):
 
@@ -101,7 +111,7 @@ machine tool, not a project dependency — nothing is added to `pubspec.yaml`.
 ```bash
 firebase login        # interactive, local only
 firebase appdistribution:distribute build/app/outputs/bundle/release/app-release.aab \
-  --app 1:696334570059:android:f1a7010fb960234bb0f3ce \
+  --app 1:696334570059:android:f70d69129448bce4b0f3ce \
   --release-notes-file release-notes.txt \
   --groups "qa"
 ```
@@ -112,11 +122,13 @@ Firebase console → App Distribution → Testers & Groups.
 
 > ⚠️ **AAB prerequisite.** Firebase distributes an AAB through Google Play
 > internal app sharing, so the Firebase project must be **linked to a Google
-> Play developer account** and the app `com.isigroup.steelforce` must exist in
+> Play developer account** and the app `com.isisteel.steelforce` must exist in
 > Play Console (Firebase console → Project settings → Integrations → Google
 > Play). Until that link exists, an AAB upload is rejected; distribute an APK
 > instead with the same command:
-> `flutter build apk --release` → `build/app/outputs/flutter-apk/app-release.apk`.
+> `tool/build_release.sh apk` → one APK per CPU in `build/app/outputs/flutter-apk/`:
+> `app-arm64-v8a-release.apk` (almost every phone — upload this one) and
+> `app-armeabi-v7a-release.apk` (old 32-bit phones only).
 
 ---
 
@@ -147,10 +159,10 @@ export ANDROID_KEYSTORE_PATH="$CI_PROJECT_DIR/upload.jks"
 cp "$GOOGLE_SERVICES_JSON" android/app/google-services.json
 cp "$DOTENV_FILE" .env
 dart run build_runner build --delete-conflicting-outputs
-flutter build appbundle --release --build-number="$CI_PIPELINE_IID"
+tool/build_release.sh appbundle --build-number="$CI_PIPELINE_IID"
 GOOGLE_APPLICATION_CREDENTIALS="$FIREBASE_SERVICE_ACCOUNT" \
   firebase appdistribution:distribute build/app/outputs/bundle/release/app-release.aab \
-    --app 1:696334570059:android:f1a7010fb960234bb0f3ce \
+    --app 1:696334570059:android:f70d69129448bce4b0f3ce \
     --release-notes-file release-notes.txt --groups "qa"
 ```
 

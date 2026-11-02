@@ -1,12 +1,19 @@
 import 'package:dio/dio.dart';
 import 'package:get_it/get_it.dart';
-import 'package:steelforce/core/config/data_source_mode.dart';
-import 'package:steelforce/core/demo/demo_network.dart';
+import 'package:steelforce/features/depots/domain/usecases/get_depot_channel.dart';
+import 'package:steelforce/features/depots/domain/repositories/depot_channel_source.dart';
+import 'package:steelforce/features/depots/data/local/drift_depot_channel_source.dart';
+import 'package:steelforce/features/depots/domain/usecases/load_depot_filter_options.dart';
+import 'package:steelforce/features/depots/domain/repositories/depot_filter_options_source.dart';
+import 'package:steelforce/features/depots/data/local/drift_depot_filter_options_source.dart';
+import 'package:steelforce/features/depots/data/remote/depot_supplier_namer.dart';
+import 'package:steelforce/features/depots/data/local/division_names.dart';
 import 'package:steelforce/core/database/drift/app_database.dart';
 import 'package:steelforce/core/database/hive/hive_service.dart';
 import 'package:steelforce/core/database/hive/local_cache.dart';
 import 'package:steelforce/core/logging/app_logger.dart';
 import 'package:steelforce/core/network/connectivity/network_info.dart';
+import 'package:steelforce/core/practice/practice_session.dart';
 import 'package:steelforce/core/session/session_manager.dart';
 import 'package:steelforce/core/sync/sync_engine.dart';
 import 'package:steelforce/features/authentication/domain/repositories/auth_repository.dart';
@@ -17,13 +24,6 @@ import 'package:steelforce/features/depots/data/local/depot_local_data_source.da
 import 'package:steelforce/features/depots/data/local/bp_draft_cache.dart';
 import 'package:steelforce/features/depots/data/local/depot_reference_cache.dart';
 import 'package:steelforce/features/depots/data/local/master_data_cache.dart';
-import 'package:steelforce/features/depots/data/mock/demo_business_partner_remote_data_source.dart';
-import 'package:steelforce/features/depots/data/mock/demo_depot_directory.dart';
-import 'package:steelforce/features/depots/data/mock/demo_depot_document_remote_data_source.dart';
-import 'package:steelforce/features/depots/data/mock/demo_depot_remote_data_source.dart';
-import 'package:steelforce/features/depots/data/mock/demo_depot_stop_information_remote_data_source.dart';
-import 'package:steelforce/features/depots/data/mock/demo_master_data_remote_data_source.dart';
-import 'package:steelforce/features/depots/data/mock/demo_registration_remote_data_source.dart';
 import 'package:steelforce/features/depots/data/remote/api_depot_remote_data_source.dart';
 import 'package:steelforce/features/depots/data/remote/depot_remote_data_source.dart';
 import 'package:steelforce/features/depots/data/remote/master_data_remote_data_source.dart';
@@ -31,9 +31,11 @@ import 'package:steelforce/features/depots/data/remote/mock_master_data_remote_d
 import 'package:steelforce/features/depots/data/remote/depot_document_remote_data_source.dart';
 import 'package:steelforce/features/depots/data/repositories/depot_document_repository_impl.dart';
 import 'package:steelforce/features/depots/domain/repositories/depot_document_repository.dart';
+import 'package:steelforce/features/depots/domain/repositories/depot_draft_repository.dart';
 import 'package:steelforce/features/depots/data/repositories/depot_repository_impl.dart';
 import 'package:steelforce/features/depots/data/datasources/business_partner_remote_data_source.dart';
 import 'package:steelforce/features/depots/data/repositories/business_partner_repository_impl.dart';
+import 'package:steelforce/features/depots/data/repositories/depot_draft_outbox_route.dart';
 import 'package:steelforce/features/depots/data/repositories/depot_registration_outbox_impl.dart';
 import 'package:steelforce/features/depots/domain/repositories/depot_registration_outbox.dart';
 import 'package:steelforce/features/depots/data/remote/depot_datasources.dart'
@@ -69,10 +71,20 @@ import 'package:steelforce/features/depots/presentation/bloc/depot_registration_
 import 'package:steelforce/features/depots/presentation/bloc/depot_sync_cubit.dart';
 import 'package:steelforce/features/depots/presentation/bloc/depots_bloc.dart';
 import 'package:steelforce/features/depots/presentation/bloc/add_depot_bloc.dart';
+import 'package:steelforce/features/depots/presentation/bloc/supplying_depot_picker_cubit.dart';
 import 'package:steelforce/features/depots/presentation/bloc/business_partner_submission.dart';
 import 'package:steelforce/features/depots/data/remote/depot_stop_information_remote_data_source.dart';
 import 'package:steelforce/features/depots/data/repositories/depot_stop_information_repository_impl.dart';
 import 'package:steelforce/features/depots/domain/repositories/depot_stop_information_repository.dart';
+import 'package:steelforce/features/depots/practice/depot_practice_module.dart';
+import 'package:steelforce/features/depots/depot_draft_injection.dart';
+import 'package:steelforce/features/depots/data/remote/depot_draft_remote_data_source.dart';
+import 'package:steelforce/features/depots/domain/usecases/registration/create_depot_draft.dart';
+import 'package:steelforce/features/depots/domain/usecases/registration/load_depot_draft_attachments.dart';
+import 'package:steelforce/features/depots/domain/usecases/registration/load_depot_references.dart';
+import 'package:steelforce/features/depots/domain/usecases/registration/load_supplier_options.dart';
+import 'package:steelforce/features/depots/domain/usecases/registration/upload_depot_evidence.dart';
+import 'package:steelforce/features/depots/presentation/bloc/depot_draft_submission.dart';
 
 /// Registers the approved-depot directory. Persistence is the single
 /// SQLCipher-encrypted Drift database (`AppDatabase`) via [DepotDao] — the
@@ -83,14 +95,6 @@ Future<void> registerDepotFeature(GetIt sl) async {
     () => DepotDriftLocalDataSource(sl<AppDatabase>().depotDao),
   );
 
-  // TODO(release-gate): a demo build (`USE_MOCK_DATA=true`) answers every
-  // depot route from this in-memory book instead of the API. Shared by the
-  // demo sources below so a shop registered through one is visible to the
-  // others. Never registered in a live build.
-  if (DataSourceMode.useMocks) {
-    sl.registerLazySingleton<DemoDepotDirectory>(DemoDepotDirectory.new);
-  }
-
   // The depot *directory* feed — `GET /mobile/depots`, consumed by
   // DepotSyncRepositoryImpl.
   //
@@ -100,37 +104,41 @@ Future<void> registerDepotFeature(GetIt sl) async {
   // registering one does NOT satisfy the other — omitting this line fails at
   // runtime, not compile time, with "DepotRemoteDataSource is not
   // registered" when the Depots screen builds.
-  // TODO(release-gate): demo builds use the in-memory demo book.
   sl.registerLazySingleton<DepotRemoteDataSource>(
-    () => DataSourceMode.useLiveApi
-        ? ApiDepotRemoteDataSource(sl<Dio>())
-        : DemoDepotRemoteDataSource(
-            sl<DemoNetwork>(), sl<DemoDepotDirectory>()),
+    () => ApiDepotRemoteDataSource(
+      sl<Dio>(),
+      // The detail answer names suppliers by code; the rep reads names.
+      suppliers: DepotSupplierNamer((type) =>
+          sl<DepotDraftRemoteDataSource>().fetchSupplierOptions(type)),
+    ),
   );
 
   // SAP Depot Helper master data (ADR-009). Cached in Hive rather than
   // Drift because these are regenerable lookups, not business records
   // (ARCHITECTURE.md §3, Layer 2) — so this needs no schema migration.
-  // TODO(release-gate): demo builds add the demo network's offline switch
-  // on top of the same mock rows a live build still uses (see the mock's own
-  // release-gate note — there is no SAP-backed implementation yet).
   sl.registerLazySingleton<MasterDataRemoteDataSource>(
-    () => DataSourceMode.useLiveApi
-        ? const MockMasterDataRemoteDataSource()
-        : DemoMasterDataRemoteDataSource(sl<DemoNetwork>()),
+    () => const MockMasterDataRemoteDataSource(),
   );
   sl.registerLazySingleton<MasterDataCache>(
     () => MasterDataCache(LocalCache(HiveService.cacheBox)),
   );
 
   // ── Repositories ────────────────────────────────────────────────────
-  sl.registerLazySingleton<DepotRepository>(() => DepotRepositoryImpl(sl()));
-  // TODO(release-gate): demo builds use the in-memory demo book.
+  // The Advanced Filters choices: what the stored depots carry.
+  sl.registerLazySingleton<DepotFilterOptionsSource>(
+      () => DriftDepotFilterOptionsSource(sl<AppDatabase>().depotDao));
+  sl.registerLazySingleton(() => LoadDepotFilterOptions(sl()));
+  // A depot's channel for screens outside this feature (visit plan cards).
+  sl.registerLazySingleton<DepotChannelSource>(
+      () => DriftDepotChannelSource(sl<AppDatabase>().depotDao));
+  sl.registerLazySingleton(() => GetDepotChannel(sl()));
+  sl.registerLazySingleton<DepotRepository>(() => DepotRepositoryImpl(sl(),
+      logger: sl<AppLogger>(),
+      divisionNames: DivisionNames(() =>
+          sl<DepotReferenceCache>().readStale(includeInactive: true) ??
+          sl<DepotReferenceCache>().readStale())));
   sl.registerLazySingleton<bp.DepotRemoteDataSource>(
-    () => DataSourceMode.useLiveApi
-        ? bp.DepotRemoteDataSourceImpl(sl<Dio>())
-        : DemoRegistrationRemoteDataSource(
-            sl<DemoNetwork>(), sl<DemoDepotDirectory>()),
+    () => bp.DepotRemoteDataSourceImpl(sl<Dio>()),
   );
   // Hive, not Drift: regenerable ERP lookups are Layer 2 (ADR-009), so this
   // needs no schema migration.
@@ -143,12 +151,8 @@ Future<void> registerDepotFeature(GetIt sl) async {
   // The outlet profile behind a visit's stop screen. Owned here rather than in
   // `my_visits` because the endpoint is `/mobile/depots/{id}/stop-information`
   // — my_visits consumes it through the domain interface (CLAUDE.md §4).
-  // TODO(release-gate): demo builds use the in-memory demo book.
   sl.registerLazySingleton<DepotStopInformationRemoteDataSource>(
-    () => DataSourceMode.useLiveApi
-        ? ApiDepotStopInformationRemoteDataSource(sl<Dio>())
-        : DemoDepotStopInformationRemoteDataSource(
-            sl<DemoNetwork>(), sl<DemoDepotDirectory>()),
+    () => ApiDepotStopInformationRemoteDataSource(sl<Dio>()),
   );
   sl.registerLazySingleton<DepotStopInformationRepository>(
     () => DepotStopInformationRepositoryImpl(
@@ -158,11 +162,8 @@ Future<void> registerDepotFeature(GetIt sl) async {
     ),
   );
 
-  // TODO(release-gate): demo builds keep documents in memory.
   sl.registerLazySingleton<DepotDocumentRemoteDataSource>(
-    () => DataSourceMode.useLiveApi
-        ? ApiDepotDocumentRemoteDataSource(sl<Dio>())
-        : DemoDepotDocumentRemoteDataSource(sl<DemoNetwork>()),
+    () => ApiDepotDocumentRemoteDataSource(sl<Dio>()),
   );
   sl.registerLazySingleton<DepotDocumentRepository>(
     () => DepotDocumentRepositoryImpl(
@@ -174,12 +175,8 @@ Future<void> registerDepotFeature(GetIt sl) async {
   // `POST /api/v1/mobile/depots/business-partner`. Separate from
   // `bp.DepotRemoteDataSource`, which still owns `GET /references` and the
   // retired draft routes — the two are different types and both are needed.
-  // TODO(release-gate): demo builds register into the in-memory demo book.
   sl.registerLazySingleton<BusinessPartnerRemoteDataSource>(
-    () => DataSourceMode.useLiveApi
-        ? BusinessPartnerRemoteDataSourceImpl(sl<Dio>())
-        : DemoBusinessPartnerRemoteDataSource(
-            sl<DemoNetwork>(), sl<DemoDepotDirectory>()),
+    () => BusinessPartnerRemoteDataSourceImpl(sl<Dio>()),
   );
 
   // Hive, not Drift: an in-progress form is UI state that survives a process
@@ -213,7 +210,7 @@ Future<void> registerDepotFeature(GetIt sl) async {
   sl.registerLazySingleton<BusinessPartnerRepository>(
     () => BusinessPartnerRepositoryImpl(
       remote: sl<BusinessPartnerRemoteDataSource>(),
-      references: sl<bp.DepotRemoteDataSource>(),
+      references: sl<DepotDraftRemoteDataSource>(),
       referenceCache: sl<DepotReferenceCache>(),
       draftCache: sl<BpDraftCache>(),
       network: sl<NetworkInfo>(),
@@ -229,6 +226,7 @@ Future<void> registerDepotFeature(GetIt sl) async {
       documents: sl<DepotDocumentRepository>(),
       draftCache: sl<BpDraftCache>(),
       logger: sl<AppLogger>(),
+      drafts: DepotDraftOutboxRoute(sl<DepotDraftRepository>()),
       onEnqueued: () {
         if (sl.isRegistered<SyncEngine>()) sl<SyncEngine>().requestSync();
       },
@@ -251,6 +249,73 @@ Future<void> registerDepotFeature(GetIt sl) async {
   );
 
   // ── Use cases ───────────────────────────────────────────────────────
+  registerDepotUseCases(sl);
+  registerDepotDraftFeature(sl);
+
+  // ── Practice ────────────────────────────────────────────────────────
+  // While an App Coach lesson runs, the real depot screens work over
+  // in-memory stand-ins: nothing reaches Drift, Hive, the registration outbox
+  // or the API. The use cases are rebuilt over the stand-ins by the same
+  // function as above, so a use case added later cannot drift out of the
+  // sandbox.
+  sl<PracticeSession>().contribute(registerDepotPracticeScope);
+
+  // ── Presentation ────────────────────────────────────────────────────
+  sl.registerFactory(
+    () => DepotsBloc(
+      browseDepots: sl(),
+      fetchRecentDepots: sl(),
+      toggleFavoriteDepot: sl(),
+    ),
+  );
+  sl.registerFactory(
+    () => AddDepotBloc(
+      repository: sl(),
+      documents: sl<DepotDocumentRepository>(),
+      draftSubmission: sl<DepotDraftSubmission>(),
+      outbox: sl<DepotRegistrationOutbox>(),
+      repSource: sl<RepSalesContextSource>(),
+    ),
+  );
+  sl.registerFactory(
+    () => DepotDetailCubit(
+      getDepotById: sl(),
+      hydrateDepot: sl(),
+      fetchDepotNotes: sl(),
+      addDepotNote: sl(),
+      fetchDepotActivities: sl(),
+      addDepotActivity: sl(),
+      recordDepotViewed: sl(),
+    ),
+  );
+  sl.registerFactory(() => DepotCodeLookupCubit(sl()));
+  sl.registerFactory(() => SupplyingDepotPickerCubit(sl()));
+  sl.registerFactory(
+    () => DepotRegistrationQueueCubit(
+      outbox: sl<DepotRegistrationOutbox>(),
+      syncNow: () => sl<SyncEngine>().runNow(),
+    ),
+  );
+  sl.registerFactory(
+    () => DepotSyncCubit(
+      runInitialSync: sl(),
+      runDeltaSync: sl(),
+      getLastSyncedAt: sl(),
+      session: sl<SessionManager>(),
+      logger: sl<AppLogger>(),
+    ),
+  );
+}
+
+/// Registers every depot use case — and [BusinessPartnerSubmission], which
+/// captures two of them — against whatever repositories [sl] currently
+/// resolves.
+///
+/// Called once for the app, and again inside the practice scope after the
+/// practice stand-ins are registered, so every use case a lesson screen
+/// reaches is built over the stand-ins rather than over a base-scope singleton
+/// that already holds the real repository.
+void registerDepotUseCases(GetIt sl) {
   sl.registerLazySingleton(() => BrowseDepots(sl()));
   sl.registerLazySingleton(() => CreateDepot(sl()));
   sl.registerLazySingleton(() => CreateBusinessPartner(sl()));
@@ -272,14 +337,16 @@ Future<void> registerDepotFeature(GetIt sl) async {
   sl.registerLazySingleton(() => FetchMasterData(sl()));
   sl.registerLazySingleton(() => RefreshMasterData(sl()));
 
-  // ── Presentation ────────────────────────────────────────────────────
-  sl.registerFactory(
-    () => DepotsBloc(
-      browseDepots: sl(),
-      fetchRecentDepots: sl(),
-      toggleFavoriteDepot: sl(),
-    ),
+  // New-depot registration (`/api/v1/depot-drafts`).
+  sl.registerLazySingleton(() => CreateDepotDraft(sl()));
+  sl.registerLazySingleton(() => LoadDepotReferences(sl()));
+  sl.registerLazySingleton(() => LoadSupplierOptions(sl()));
+  sl.registerLazySingleton(() => UploadDepotEvidence(sl()));
+  sl.registerLazySingleton(() => LoadDepotDraftAttachments(sl()));
+  sl.registerLazySingleton(
+    () => DepotDraftSubmission(createDraft: sl(), uploadEvidence: sl()),
   );
+
   // Holds the draft -> payload mapping. A singleton rather than part of the
   // bloc so the mapping can be unit-tested, and so a future offline replay
   // worker builds the payload the same way the wizard does.
@@ -289,41 +356,11 @@ Future<void> registerDepotFeature(GetIt sl) async {
       validateBusinessPartner: sl(),
     ),
   );
+}
 
-  sl.registerFactory(
-    () => AddDepotBloc(
-      repository: sl(),
-      documents: sl<DepotDocumentRepository>(),
-      submission: sl<BusinessPartnerSubmission>(),
-      repSource: sl<RepSalesContextSource>(),
-      outbox: sl<DepotRegistrationOutbox>(),
-    ),
-  );
-  sl.registerFactory(
-    () => DepotDetailCubit(
-      getDepotById: sl(),
-      hydrateDepot: sl(),
-      fetchDepotNotes: sl(),
-      addDepotNote: sl(),
-      fetchDepotActivities: sl(),
-      addDepotActivity: sl(),
-      recordDepotViewed: sl(),
-    ),
-  );
-  sl.registerFactory(() => DepotCodeLookupCubit(sl()));
-  sl.registerFactory(
-    () => DepotRegistrationQueueCubit(
-      outbox: sl<DepotRegistrationOutbox>(),
-      syncNow: () => sl<SyncEngine>().runNow(),
-    ),
-  );
-  sl.registerFactory(
-    () => DepotSyncCubit(
-      runInitialSync: sl(),
-      runDeltaSync: sl(),
-      getLastSyncedAt: sl(),
-      session: sl<SessionManager>(),
-      logger: sl<AppLogger>(),
-    ),
-  );
+/// The depot feature's contribution to a practice scope: the stand-ins, then
+/// every use case rebuilt over them.
+void registerDepotPracticeScope(GetIt sl, PracticeWorld world) {
+  registerDepotPracticeStandIns(sl, world);
+  registerDepotUseCases(sl);
 }

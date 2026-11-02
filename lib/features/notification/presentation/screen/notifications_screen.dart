@@ -6,11 +6,12 @@ import 'package:steelforce/core/localization/localized_builder.dart';
 import 'package:steelforce/core/notifications/notification_deep_link.dart';
 import 'package:steelforce/core/responsive/responsive_content_frame.dart';
 import 'package:steelforce/core/responsive/responsive_sizing.dart';
-import 'package:steelforce/core/theme/theme_extensions.dart';
 import 'package:steelforce/features/notification/domain/entities/notification_message.dart';
 import 'package:steelforce/features/notification/presentation/bloc/notification_inbox_cubit.dart';
 import 'package:steelforce/features/notification/presentation/bloc/push_permission_cubit.dart';
 import 'package:steelforce/features/notification/presentation/widgets/notification_inbox_view.dart';
+import 'package:steelforce/shared/widgets/brand_wallpaper_background.dart';
+import 'package:steelforce/core/theme/theme_extensions.dart';
 
 /// The full-screen inbox — the destination `app://notifications` resolves to.
 ///
@@ -80,8 +81,6 @@ class _NotificationsScreenState extends State<NotificationsScreen>
 
   @override
   Widget build(BuildContext context) {
-    final colors = context.appColors;
-
     return MultiBlocProvider(
       providers: [
         BlocProvider.value(value: _inbox),
@@ -89,7 +88,7 @@ class _NotificationsScreenState extends State<NotificationsScreen>
       ],
       child: LocalizedBuilder(
         builder: (context) => Scaffold(
-          backgroundColor: colors.canvas,
+          backgroundColor: context.appColors.canvas,
           appBar: AppBar(
             title: Text(
               'notifications.title'.tr,
@@ -106,24 +105,12 @@ class _NotificationsScreenState extends State<NotificationsScreen>
                   NotificationDeepLink.notificationSettingsRoute,
                 ),
               ),
-              Builder(
-                builder: (context) => TextButton(
-                  onPressed: () =>
-                      context.read<NotificationInboxCubit>().markAllRead(),
-                  child: Text(
-                    'notifications.mark_all_read'.tr,
-                    style: TextStyle(
-                      fontSize: context.rsp(12),
-                      fontWeight: FontWeight.w700,
-                    ),
-                  ),
-                ),
-              ),
             ],
           ),
           // Caps the readable width on a tablet or a browser window rather than
           // stretching a list of short rows across 1440px.
-          body: ResponsiveContentFrame(
+          body: BrandWallpaperBody(
+              child: ResponsiveContentFrame(
             child: Padding(
               padding: EdgeInsets.fromLTRB(
                 context.pagePadding,
@@ -135,7 +122,7 @@ class _NotificationsScreenState extends State<NotificationsScreen>
                 onOpenNotification: widget.onOpenNotification,
               ),
             ),
-          ),
+          )),
         ),
       ),
     );

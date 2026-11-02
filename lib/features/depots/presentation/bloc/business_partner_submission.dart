@@ -13,11 +13,10 @@
 // bloc the queue replayed it with slightly different defaults.
 // =============================================================================
 
+import 'package:steelforce/core/error/failure_message.dart';
 import 'package:steelforce/core/error/failures.dart';
 import 'package:steelforce/features/depots/data/mappers/bp_draft_to_business_partner.dart';
-import 'package:steelforce/features/depots/domain/entities/bp_depot_draft.dart';
-import 'package:steelforce/features/depots/domain/entities/bp_form_step.dart';
-import 'package:steelforce/features/depots/domain/entities/rep_sales_context.dart';
+import 'package:steelforce/features/depots/data/models/bp_depot_form_data.dart';
 import 'package:steelforce/features/depots/domain/entities/business_partner_request.dart';
 import 'package:steelforce/features/depots/domain/entities/business_partner_result.dart';
 import 'package:steelforce/features/depots/domain/entities/pending_depot_registration.dart';
@@ -201,7 +200,7 @@ class BusinessPartnerSubmission {
       case NetworkFailure():
       case ServerUnreachableFailure():
         return BpSubmissionUnreachable(
-          message: failure.message,
+          message: failure.userMessage,
           request: request,
           mayHaveLanded: false,
         );
@@ -211,7 +210,7 @@ class BusinessPartnerSubmission {
         // so the offline queue may resend it automatically.
         if (isSafeToResendServerError(statusCode)) {
           return BpSubmissionUnreachable(
-            message: failure.message,
+            message: failure.userMessage,
             request: request,
             mayHaveLanded: false,
           );
@@ -222,13 +221,13 @@ class BusinessPartnerSubmission {
         // for the rep to check, never resent blind.
         if (statusCode != null && statusCode >= 500) {
           return BpSubmissionUnreachable(
-            message: failure.message,
+            message: failure.userMessage,
             request: request,
             mayHaveLanded: true,
           );
         }
         return BpSubmissionRejected(
-          message: failure.message,
+          message: failure.userMessage,
           step: _stepForMessage(failure.message.toLowerCase()),
         );
 
@@ -246,7 +245,8 @@ class BusinessPartnerSubmission {
       case AuthenticationFailure():
       case DepotStopInformationUnavailableFailure():
       case AdHocVisitRefusedFailure():
-        return BpSubmissionRejected(message: failure.message);
+      case DepotDraftRejectedFailure():
+        return BpSubmissionRejected(message: failure.userMessage);
     }
   }
 

@@ -21,10 +21,20 @@ import 'package:flutter/widgets.dart';
 /// there is no shared key to collide. The coach reads the current context's
 /// render box to position the spotlight.
 class CoachAnchorRegistry {
+  /// [parent]: a registry higher in the tree that should also see every
+  /// anchor registered here. The shell's registry forwards to the app-wide one
+  /// above the Navigator, where the coach overlay lives — so the overlay finds
+  /// anchors on the shell *and* on screens pushed over it.
+  CoachAnchorRegistry({this.parent});
+
+  final CoachAnchorRegistry? parent;
   final Map<String, BuildContext> _anchors = {};
 
   /// Publishes [context] as the live anchor for [id] (last mount wins).
-  void register(String id, BuildContext context) => _anchors[id] = context;
+  void register(String id, BuildContext context) {
+    _anchors[id] = context;
+    parent?.register(id, context);
+  }
 
   /// Withdraws [context] — but only if it is still the registered one.
   ///
@@ -33,6 +43,7 @@ class CoachAnchorRegistry {
   /// `dispose` must not evict the incoming (already-registered) context.
   void unregister(String id, BuildContext context) {
     if (identical(_anchors[id], context)) _anchors.remove(id);
+    parent?.unregister(id, context);
   }
 
   /// The live [BuildContext] for [id], or null when the anchor is absent or
@@ -47,8 +58,17 @@ class CoachAnchorRegistry {
   /// Current global bounds of [id]'s widget, or null when it isn't laid out.
   /// The coach falls back to a centered bubble on null, so a missing target
   /// degrades gracefully instead of crashing.
+  ///
+  /// Also null while the anchor is mounted but not on screen: on a route
+  /// another page or dialog now covers, or on a shell tab that is not the
+  /// one showing. Its box still has a size and an offset there, so without
+  /// this the spotlight would ring an empty patch of the screen above it.
   Rect? rectFor(String id) {
-    final box = contextFor(id)?.findRenderObject();
+    final ctx = contextFor(id);
+    if (ctx == null) return null;
+    if (ModalRoute.of(ctx)?.isCurrent == false) return null;
+    if (!TickerMode.valuesOf(ctx).enabled) return null;
+    final box = ctx.findRenderObject();
     if (box is! RenderBox || !box.hasSize || !box.attached) return null;
     return box.localToGlobal(Offset.zero) & box.size;
   }

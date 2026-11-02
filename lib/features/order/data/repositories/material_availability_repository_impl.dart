@@ -46,7 +46,7 @@ class MaterialAvailabilityRepositoryImpl
   ResultFuture<MaterialAvailability> checkAvailability(String material) async {
     if (material.trim().isEmpty) {
       return const Failed(
-          ServerFailure(message: 'No material number to check.'));
+          ServerFailure(message: 'orders.sku_key_in.error_no_material'));
     }
 
     // Checked up front because this is the one call in the feature that
@@ -64,7 +64,7 @@ class MaterialAvailabilityRepositoryImpl
       return Success(MaterialApiMapper.stockFrom(json, requested: number));
     } on ApiException catch (e) {
       return Failed(ServerFailure(
-        message: e.error.message ?? 'Could not check stock.',
+        message: e.error.message ?? 'orders.sku_key_in.stock_check_failed',
         statusCode: e.statusCode,
       ));
     } on ServerException catch (e) {

@@ -13,12 +13,18 @@ sealed class Failure extends Equatable {
 }
 
 final class ServerFailure extends Failure {
-  const ServerFailure({required super.message, super.statusCode, this.code});
+  const ServerFailure({
+    required super.message,
+    super.statusCode,
+    this.code,
+    this.retryAfter,
+  });
 
   final String? code;
+  final Duration? retryAfter;
 
   @override
-  List<Object?> get props => [message, statusCode, code];
+  List<Object?> get props => [message, statusCode, code, retryAfter];
 }
 
 final class CacheFailure extends Failure {
@@ -77,6 +83,43 @@ final class AdHocVisitRefusedFailure extends Failure {
 
   @override
   List<Object?> get props => [message, statusCode, code, supportReference];
+}
+
+/// The server refused a depot draft or one of its files, for a reason the rep
+/// can act on.
+///
+/// Its own type because a refusal must reach the form **field by field**:
+/// one 400 `VALIDATION_FAILED` lists every problem, keyed like
+/// `address.districtCode` or `salesAreas[0].salesOrg`. A [ServerFailure]
+/// has nowhere to carry that, and a 409 limit or a refused file each need
+/// their own wording rather than a generic "rejected".
+final class DepotDraftRejectedFailure extends Failure {
+  const DepotDraftRejectedFailure({
+    required super.message,
+    required this.code,
+    super.statusCode,
+    this.fieldErrors = const {},
+    this.retryAfter,
+    this.supportReference,
+  });
+
+  /// The server's code (`VALIDATION_FAILED`, `DEPOT_ATTACHMENT_LIMIT_REACHED`
+  /// …), or the app's status-derived `ApiError` code when the body had none.
+  final String code;
+
+  /// Server-localised messages per field path, exactly as the server keyed
+  /// them. Empty for a refusal that is not about one field.
+  final Map<String, List<String>> fieldErrors;
+
+  /// Set on a 429; never retry sooner.
+  final Duration? retryAfter;
+
+  /// The server's trace id, for support. Never shown as the message.
+  final String? supportReference;
+
+  @override
+  List<Object?> get props =>
+      [message, statusCode, code, fieldErrors, retryAfter, supportReference];
 }
 
 /// The device has a working network, but the ISI gateway did not answer.

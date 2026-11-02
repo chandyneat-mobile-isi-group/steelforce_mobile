@@ -9,7 +9,7 @@
 #   sqlcipher_flutter_libs  0.6.8  →  8.0
 #
 # Raised 14.0 → 15.0 by the Firebase upgrade. Note that
-# `docs/feature/notification/notification-mobile.md` Step 4 says "deployment
+# `docs/feature/notification/README.md` Step 4 says "deployment
 # target is already 14.0 — fine, FCM needs 12+"; that is **wrong for the
 # versions the same document pins**. The build fails outright with
 # "the package product 'firebase-core' requires minimum platform version 15.0",

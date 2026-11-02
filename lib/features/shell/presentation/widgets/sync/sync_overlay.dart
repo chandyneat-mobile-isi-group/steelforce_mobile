@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:steelforce/core/theme/app_colors.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:steelforce/core/localization/localization_services.dart';
 import 'package:steelforce/core/network/connectivity/connectivity_cubit.dart';
-import 'package:steelforce/core/theme/theme_extensions.dart';
 import 'package:steelforce/features/order/presentation/bloc/sync/pending_sync_cubit.dart';
 
 /// Wraps the shell so that when connectivity is *restored* and quotations are
@@ -36,7 +36,9 @@ class ReconnectSyncListener extends StatelessWidget {
         SnackBar(
           behavior: SnackBarBehavior.floating,
           duration: const Duration(seconds: 4),
-          backgroundColor: context.appColors.slate,
+          // Dark slate in both themes: the text on it is white, and the
+          // theme's slate is light in dark mode.
+          backgroundColor: AppColors.slate,
           content: Text(
             'sync.connected_syncing'.trParams({'count': pending}),
             style: const TextStyle(color: Colors.white),

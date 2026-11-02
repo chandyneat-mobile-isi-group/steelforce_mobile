@@ -8,7 +8,7 @@ import 'package:drift/drift.dart';
 ///
 /// There is no geographic endpoint. `GET /mobile/depots/references` serves
 /// exactly ten SAP `CustHelper` catalogues
-/// (`docs/feature/depot/registration/sap-helpers.md`) and none of them is
+/// (`docs/feature/depot/reference/sap-helpers.md`) and none of them is
 /// geographic, so there is nothing to cache. Before this table the app carried
 /// five provinces and one province's districts as `const` maps in
 /// `bp_depot_form_data.dart`, which meant a rep in Kampot could not enter

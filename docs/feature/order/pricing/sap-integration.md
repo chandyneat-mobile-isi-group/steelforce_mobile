@@ -16,13 +16,13 @@
 GET /api/Pricing/GetPriceByPaging/{conId}
 ```
 
-Recorded in [sap-api-catalogue.md](../../blueprint/sap-api-catalogue.md) as available
+Recorded in `sap-api-catalogue.md` ⧉ backend repo as available
 and, until this feature, unused. It reads SD condition records.
 
 ## The request — verified
 
 Every parameter below is specified in
-[sap-openapi.json](../../blueprint/sap-openapi.json). Blanks are omitted rather than
+`sap-openapi.json` ⧉ backend repo. Blanks are omitted rather than
 sent empty, because the middleware treats a present-but-empty parameter as a value to
 match on for some fields and silently returns nothing.
 

@@ -84,7 +84,7 @@ GET /api/v1/mobile/depots/{depotId}/stop-information
 **`data.customer`, not `data.depot`.** The route says depot because that is the business
 word; the payload keeps SAP's word because renaming response fields is a wire break this
 change deliberately did not take. See
-[depot-terminology-migration.md](depot-terminology-migration.md).
+`depot-terminology-migration.md` ⧉ backend repo.
 
 ### Key-by-key binding rules
 
@@ -148,7 +148,7 @@ are real.
 This matters more than it sounds: a rep quoting "$50,000 credit limit" to an outlet owner
 from a hardcoded constant is worse than showing nothing. The chip is what prevents that.
 
-Register: [open-business-decisions.md](../../../../requirement/open-business-decisions.md).
+Register: `open-business-decisions.md` ⧉ backend repo.
 
 ---
 
@@ -182,7 +182,7 @@ does not exist yet. Do not plan against one, and do not build anything new again
 - [x] Mark the five unresolved ones as examples
 - [ ] UI labels "Customer" → "Depot" — 163 entries × 2 languages, **not a
       find-and-replace**; see
-      [depot-terminology-migration.md](depot-terminology-migration.md) for which ones
+      `depot-terminology-migration.md` ⧉ backend repo for which ones
       must be left alone
 - [ ] Nothing new built against `/mobile/customers`
 
@@ -190,8 +190,8 @@ does not exist yet. Do not plan against one, and do not build anything new again
 
 ## Related
 
-- [depot-terminology-migration.md](depot-terminology-migration.md) — why routes say depot
+- `depot-terminology-migration.md` ⧉ backend repo — why routes say depot
   and payloads say customer, and the label rules
-- [stop-information.md](stop-information.md) — the endpoint in full
-- [ADR-0007](../../../../adr/ADR-0007-depot-terminology-at-the-api-boundary.md) — the
+- `stop-information.md` ⧉ backend repo — the endpoint in full
+- ADR-0007 (`ADR-0007-depot-terminology-at-the-api-boundary.md` ⧉ backend repo) — the
   decision and its accepted costs

@@ -127,8 +127,12 @@ class _Actions extends StatelessWidget {
           ),
         ),
         SizedBox(height: context.rh(6)),
-        Row(
-          mainAxisAlignment: MainAxisAlignment.center,
+        // Wrap, not Row: in Khmer or at a large text scale the two labels do
+        // not fit side by side, and the second one moves to its own line
+        // instead of overflowing.
+        Wrap(
+          alignment: WrapAlignment.center,
+          crossAxisAlignment: WrapCrossAlignment.center,
           children: [
             TextButton(
               onPressed: onCancel,

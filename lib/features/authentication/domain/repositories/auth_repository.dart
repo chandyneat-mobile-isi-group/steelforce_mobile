@@ -1,6 +1,5 @@
 import 'package:steelforce/core/utils/typedefs.dart';
 import 'package:steelforce/features/authentication/domain/entities/auth_profile.dart';
-import 'package:steelforce/features/authentication/domain/entities/password_reset_grant.dart';
 
 /// The contract the domain depends on. The data layer provides the
 /// implementation; the domain never knows about Dio, JSON, or storage.
@@ -39,20 +38,8 @@ abstract interface class AuthRepository {
   /// has set their own password.
   ResultFuture<void> markPasswordChanged();
 
-  /// Password reset by SMS, step 1: texts a code to [phoneNumber]. Always
-  /// reports success for a well-formed number, whether or not it is
-  /// registered — anything else would make this an account-enumeration
-  /// oracle. Calling it again is "resend".
-  ResultFuture<void> forgotPassword(String phoneNumber);
-
-  /// Step 2: checks the code and returns the one-time reset token with the
-  /// password policy the new password must meet.
-  ResultFuture<PasswordResetGrant> verifyResetCode({
-    required String phoneNumber,
-    required String otp,
-  });
-
-  /// Step 3: sets the new password with the token from [verifyResetCode].
+  /// Sets the new password with the grant returned by Firebase proof
+  /// verification.
   ResultFuture<void> resetPassword({
     required String resetToken,
     required String newPassword,

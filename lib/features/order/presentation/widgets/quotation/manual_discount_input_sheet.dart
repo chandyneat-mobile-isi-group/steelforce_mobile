@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:steelforce/core/localization/localization_services.dart';
 import 'package:steelforce/core/localization/localized_text_context.dart';
 import 'package:steelforce/core/responsive/responsive_sizing.dart';
 import 'package:steelforce/core/theme/theme_extensions.dart';
@@ -83,7 +84,7 @@ Future<double?> showManualDiscountInputSheet({
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(
-                              'Line Manual Discount (%)',
+                              'orders.manual_discount.title'.tr,
                               style: TextStyle(
                                 fontSize: context.rsp(16),
                                 fontWeight: FontWeight.bold,
@@ -128,8 +129,9 @@ Future<double?> showManualDiscountInputSheet({
                         SizedBox(width: context.rw(8)),
                         Expanded(
                           child: Text(
-                            'Your manual limit: ${maxDiscountPercent.toStringAsFixed(1)}%. '
-                            'Discounts above this require management approval.',
+                            'orders.manual_discount.limit_note'.trParams({
+                              'limit': maxDiscountPercent.toStringAsFixed(1),
+                            }),
                             style: TextStyle(
                               fontSize: context.rsp(11),
                               color: colors.textSecondary,
@@ -160,7 +162,11 @@ Future<double?> showManualDiscountInputSheet({
                             ),
                           ),
                           child: Text(
-                            'Standing Agreement: -${ag.percent.toStringAsFixed(1)}% (${ag.category})',
+                            'orders.manual_discount.standing_agreement'
+                                .trParams({
+                              'percent': ag.percent.toStringAsFixed(1),
+                              'category': ag.category,
+                            }),
                             style: TextStyle(
                               fontSize: context.rsp(10.5),
                               fontWeight: FontWeight.w600,
@@ -188,13 +194,17 @@ Future<double?> showManualDiscountInputSheet({
                     ],
                     onChanged: (_) => setState(() {}),
                     decoration: InputDecoration(
-                      labelText: 'Discount Percentage',
-                      hintText: 'e.g. 3.5',
+                      labelText: 'orders.manual_discount.label'.tr,
+                      hintText: 'orders.manual_discount.hint'.tr,
                       suffixText: '%',
                       prefixIcon: const Icon(Icons.tune_rounded),
                       errorText: isExceeded
-                          ? 'Limit is ${maxDiscountPercent.toStringAsFixed(1)}%'
-                          : (isNegative ? 'Must be positive' : null),
+                          ? 'orders.manual_discount.error_limit'.trParams({
+                              'limit': maxDiscountPercent.toStringAsFixed(1),
+                            })
+                          : (isNegative
+                              ? 'orders.manual_discount.error_negative'.tr
+                              : null),
                       border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(12),
                       ),
@@ -212,7 +222,7 @@ Future<double?> showManualDiscountInputSheet({
                         runSpacing: 6,
                         children: [
                           ActionChip(
-                            label: const Text('0% (Reset)'),
+                            label: Text('orders.manual_discount.reset_chip'.tr),
                             onPressed: () {
                               controller.text = '0';
                               setState(() {});
@@ -235,7 +245,13 @@ Future<double?> showManualDiscountInputSheet({
                                   (c) => (c - maxDiscountPercent).abs() < 0.01))
                             ActionChip(
                               label: Text(
-                                '${maxDiscountPercent.toStringAsFixed(maxDiscountPercent.truncateToDouble() == maxDiscountPercent ? 0 : 1)}% (Max)',
+                                'orders.manual_discount.max_chip'.trParams({
+                                  'percent': maxDiscountPercent.toStringAsFixed(
+                                      maxDiscountPercent.truncateToDouble() ==
+                                              maxDiscountPercent
+                                          ? 0
+                                          : 1),
+                                }),
                               ),
                               onPressed: () {
                                 controller.text =
@@ -265,7 +281,7 @@ Future<double?> showManualDiscountInputSheet({
                               borderRadius: BorderRadius.circular(10),
                             ),
                           ),
-                          child: const Text('Cancel'),
+                          child: Text('common.cancel'.tr),
                         ),
                       ),
                       SizedBox(width: context.rw(12)),
@@ -285,7 +301,7 @@ Future<double?> showManualDiscountInputSheet({
                               borderRadius: BorderRadius.circular(10),
                             ),
                           ),
-                          child: const Text('Apply Discount'),
+                          child: Text('orders.manual_discount.apply'.tr),
                         ),
                       ),
                     ],

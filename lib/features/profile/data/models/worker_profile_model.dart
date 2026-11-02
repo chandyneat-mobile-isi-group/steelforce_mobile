@@ -2,12 +2,10 @@ import 'package:steelforce/core/network/api/server_url.dart';
 import 'package:steelforce/features/authentication/domain/entities/auth_profile.dart';
 import 'package:steelforce/features/profile/domain/entities/worker_profile.dart';
 
-/// [WorkerProfile] built from the auth layer's record.
+/// [WorkerProfile] built from `GET /api/v1/mobile/auth/profile`'s auth record.
 ///
-/// There is no JSON of its own: `GET /auth/me` and `PUT /users/me/profile`
-/// both answer with the same `EmployeeProfileResponse`, which
-/// `AuthProfileModel` already parses — a second parser for the same payload
-/// would be a second place for the two to drift.
+/// There is no second JSON parser here: [AuthProfileModel] parses the mobile
+/// profile response and also handles the related auth profile/cache shapes.
 class WorkerProfileModel extends WorkerProfile {
   const WorkerProfileModel({
     required super.id,
@@ -31,6 +29,8 @@ class WorkerProfileModel extends WorkerProfile {
     super.lineManagerCode,
     super.temporaryPasswordExpiresAt,
     super.avatarThumbnailUrl,
+    super.salesOrgCode,
+    super.salesOrgName,
   });
 
   /// [apiBaseUrl] resolves the server-relative `avatarUrl`
@@ -64,6 +64,8 @@ class WorkerProfileModel extends WorkerProfile {
         temporaryPasswordExpiresAt:
             p.passwordChangeRequired ? p.temporaryPasswordExpiresAt : null,
         avatarThumbnailUrl: resolveServerUrl(p.avatarThumbnailUrl, apiBaseUrl),
+        salesOrgCode: _blankToNull(p.salesOrgCode),
+        salesOrgName: _blankToNull(p.salesOrgName),
       );
 
   static String? _blankToNull(String? v) =>

@@ -35,7 +35,7 @@ class RouteStopWithDepot {
   /// The join is a LEFT join for exactly this reason. An inner join would drop
   /// the stop from the rep's day, which is the same data loss the foreign key
   /// used to cause, just silent instead of loud. The caller renders what it has
-  /// (`docs/adr/ADR011localmirrornorelations.md`).
+  /// (`docs/adr/ADR-0011-local-mirror-no-foreign-keys.md`).
   final RouteDepotRow? depot;
 }
 

@@ -86,5 +86,5 @@ inactive.
 
 ## Related
 
-- [Authorization architecture](../../blueprint/authorization-architecture.md)
+- Authorization architecture (`authorization-architecture.md` ⧉ backend repo)
 - [Business rules](business-rules.md) · [API — admin](api/admin.md)

@@ -1,3 +1,4 @@
+import 'package:steelforce/core/localization/localization_services.dart';
 import 'package:steelforce/core/localization/localized_text_context.dart';
 import 'package:steelforce/core/platform/storage/local_files.dart';
 import 'package:flutter/material.dart';
@@ -90,7 +91,7 @@ class QuotationItemCard extends StatelessWidget {
                                 mainAxisSize: MainAxisSize.min,
                                 children: [
                                   Text(
-                                    '✏️ Customized',
+                                    'orders.quotation_item.customized'.tr,
                                     style: theme.textTheme.labelSmall?.copyWith(
                                       color: colorScheme.onPrimaryContainer,
                                       fontWeight: FontWeight.bold,
@@ -163,7 +164,8 @@ class QuotationItemCard extends StatelessWidget {
                   SizedBox(width: context.rw(6)),
                   Expanded(
                     child: Text(
-                      'Finish: ${item.appearance}',
+                      'orders.quotation_item.finish'
+                          .trParams({'finish': item.appearance!}),
                       style: theme.textTheme.bodySmall?.copyWith(
                         color: colorScheme.onSurfaceVariant,
                       ),
@@ -177,7 +179,8 @@ class QuotationItemCard extends StatelessWidget {
                 item.customizationDescription!.isNotEmpty) ...[
               SizedBox(height: context.rh(4)),
               Text(
-                'Note: ${item.customizationDescription}',
+                'orders.quotation_item.note'
+                    .trParams({'note': item.customizationDescription!}),
                 style: theme.textTheme.bodySmall?.copyWith(
                   fontStyle: FontStyle.italic,
                   color: colorScheme.onSurfaceVariant,

@@ -49,7 +49,7 @@ class GeoLocationRepositoryImpl implements GeoLocationRepository {
     } catch (e, s) {
       _logger.error('geo.seed_failed', error: e, stackTrace: s);
       return const Failed(
-        CacheFailure(message: 'Unable to prepare location data.'),
+        CacheFailure(message: 'geo.error.seed_failed'),
       );
     }
   }
@@ -75,7 +75,7 @@ class GeoLocationRepositoryImpl implements GeoLocationRepository {
         fields: {'key': key},
       );
       return const Failed(
-        CacheFailure(message: 'Unable to load location data.'),
+        CacheFailure(message: 'geo.error.load_failed'),
       );
     }
   }
@@ -94,7 +94,7 @@ class GeoLocationRepositoryImpl implements GeoLocationRepository {
     } catch (e, s) {
       _logger.error('geo.search_failed', error: e, stackTrace: s);
       return const Failed(
-        CacheFailure(message: 'Unable to search location data.'),
+        CacheFailure(message: 'geo.error.search_failed'),
       );
     }
   }
@@ -161,7 +161,7 @@ class GeoLocationRepositoryImpl implements GeoLocationRepository {
     } catch (e, s) {
       _logger.error('geo.resolve_failed', error: e, stackTrace: s);
       return const Failed(
-        CacheFailure(message: 'Unable to resolve the saved location.'),
+        CacheFailure(message: 'geo.error.resolve_failed'),
       );
     }
   }

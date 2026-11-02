@@ -1,4 +1,4 @@
-import 'package:steelforce/features/depots/domain/entities/rep_sales_context.dart';
+import 'package:steelforce/features/depots/data/models/bp_depot_form_data.dart';
 
 /// Supplies the signed-in rep's identity for a registration.
 ///

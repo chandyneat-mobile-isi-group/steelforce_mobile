@@ -1,6 +1,6 @@
 import 'package:equatable/equatable.dart';
 
-/// The 5 server-defined status groups matching `docs/feature/quotation-orders/api/mobile.md`.
+/// The 5 server-defined status groups matching `docs/feature/order/quotation/api/mobile.md`.
 enum QuotationStatusGroup {
   drafts('Drafts'),
   waiting('Waiting'),
@@ -23,8 +23,8 @@ enum QuotationStatusGroup {
   }
 }
 
-/// The 4 discount kinds declared in `docs/feature/quotation-orders/api/mobile.md`
-/// and `docs/feature/prom-discount/integration-points.md`.
+/// The 4 discount kinds declared in `docs/feature/order/quotation/api/mobile.md`
+/// and `docs/feature/order/promotions/integration-points.md`.
 enum QuotationDiscountKind {
   manual(0),
   agreement(1),

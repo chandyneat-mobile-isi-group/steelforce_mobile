@@ -2,15 +2,12 @@ import 'package:dio/dio.dart';
 import 'package:get_it/get_it.dart';
 import 'package:steelforce/core/session/unsent_work.dart';
 import 'package:steelforce/core/config/app_config.dart';
-import 'package:steelforce/core/config/data_source_mode.dart';
-import 'package:steelforce/core/demo/demo_network.dart';
 import 'package:steelforce/core/logging/app_logger.dart';
 import 'package:steelforce/core/session/session_manager.dart';
 import 'package:steelforce/features/authentication/data/datasources/auth_local_data_source.dart';
 import 'package:steelforce/features/authentication/data/datasources/auth_remote_data_source.dart';
 import 'package:steelforce/features/profile/data/datasources/auth_backed_profile_data_source.dart';
 import 'package:steelforce/features/profile/data/datasources/profile_remote_data_source.dart';
-import 'package:steelforce/features/profile/data/mock/demo_profile_data_source.dart';
 import 'package:steelforce/features/profile/data/repositories/profile_repository_impl.dart';
 import 'package:steelforce/features/profile/domain/repositories/profile_repository.dart';
 import 'package:steelforce/features/profile/domain/usecases/change_password.dart';
@@ -27,24 +24,15 @@ void registerProfileFeature(GetIt sl) {
   // signed-in employee is `GET /auth/me`, and a second fetch path would be a
   // second answer to "who is signed in". The mock served the same hardcoded
   // "Alex Morgan" to every user.
-  //
-  // TODO(release-gate): the demo source is selected only when
-  // `DataSourceMode.useMocks`; a live build never constructs it.
   sl.registerLazySingleton<ProfileRemoteDataSource>(
-    () => DataSourceMode.useLiveApi
-        ? AuthBackedProfileDataSource(
-            remote: sl<AuthRemoteDataSource>(),
-            local: sl<AuthLocalDataSource>(),
-            client: sl<Dio>(),
-            session: sl<SessionManager>(),
-            apiBaseUrl: AppConfig.apiBaseUrl,
-            logger: sl<AppLogger>(),
-          )
-        : DemoProfileDataSource(
-            network: sl<DemoNetwork>(),
-            remote: sl<AuthRemoteDataSource>(),
-            local: sl<AuthLocalDataSource>(),
-          ),
+    () => AuthBackedProfileDataSource(
+      remote: sl<AuthRemoteDataSource>(),
+      local: sl<AuthLocalDataSource>(),
+      client: sl<Dio>(),
+      session: sl<SessionManager>(),
+      apiBaseUrl: AppConfig.apiBaseUrl,
+      logger: sl<AppLogger>(),
+    ),
   );
 
   // ── Repositories ────────────────────────────────────────────────────

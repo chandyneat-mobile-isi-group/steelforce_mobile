@@ -32,10 +32,17 @@ class QuotationPdfGenerator extends PdfDocumentBuilder {
   @override
   String get documentName => 'ISI_Quotation';
 
-  String _l(String key, String fallback) {
-    final value = key.tr;
-    return value == key ? fallback : value;
+  String _l(String key, String fallback) => key.trOrNull ?? fallback;
+
+  /// [_l] with `{name}` placeholders filled from [params].
+  String _lp(String key, String fallback, Map<String, String> params) {
+    var value = _l(key, fallback);
+    params.forEach((name, v) => value = value.replaceAll('{$name}', v));
+    return value;
   }
+
+  String get _tagline => _l('orders.quotation.pdf.tagline_full',
+      'Industrial Steel & Construction Materials');
 
   /// Shaping-aware replacement for `pw.Text` — identical style surface.
   pw.Widget _t(
@@ -152,7 +159,7 @@ class QuotationPdfGenerator extends PdfDocumentBuilder {
                 pw.SizedBox(height: 2),
               ],
               _t(
-                'Industrial Steel & Construction Materials',
+                _tagline,
                 fontSize: 8.5,
                 color: theme.muted,
                 letterSpacing: 0.2,
@@ -174,49 +181,58 @@ class QuotationPdfGenerator extends PdfDocumentBuilder {
                 maxWidth: 220,
               ),
               pw.SizedBox(height: 3),
-              pw.RichText(
-                text: pw.TextSpan(
-                  style: pw.TextStyle(fontSize: 8.5, color: theme.muted),
-                  children: [
-                    const pw.TextSpan(text: 'Quotation No: '),
-                    pw.TextSpan(
-                      text: data.quotationNumber,
-                      style: pw.TextStyle(
-                        fontWeight: pw.FontWeight.bold,
+              pw.Row(
+                mainAxisSize: pw.MainAxisSize.min,
+                children: [
+                  _t(
+                    '${_l('orders.quotation.pdf.quotation_no', 'Quotation No')}: ',
+                    fontSize: 8.5,
+                    color: theme.muted,
+                    maxWidth: 120,
+                  ),
+                  pw.Text(
+                    data.quotationNumber,
+                    style: pw.TextStyle(
+                        fontSize: 8.5,
                         color: theme.ink,
-                      ),
-                    ),
-                  ],
-                ),
+                        fontWeight: pw.FontWeight.bold),
+                  ),
+                ],
               ),
               pw.SizedBox(height: 2),
-              pw.RichText(
-                text: pw.TextSpan(
-                  style: pw.TextStyle(fontSize: 8, color: theme.muted),
-                  children: [
-                    const pw.TextSpan(text: 'Date: '),
-                    pw.TextSpan(
-                      text: dateFmt.format(data.createdDate),
-                      style: pw.TextStyle(color: theme.ink),
-                    ),
-                  ],
-                ),
+              pw.Row(
+                mainAxisSize: pw.MainAxisSize.min,
+                children: [
+                  _t(
+                    '${_l('orders.quotation.pdf.date', 'Date')}: ',
+                    fontSize: 8,
+                    color: theme.muted,
+                    maxWidth: 120,
+                  ),
+                  pw.Text(
+                    dateFmt.format(data.createdDate),
+                    style: pw.TextStyle(fontSize: 8, color: theme.ink),
+                  ),
+                ],
               ),
               pw.SizedBox(height: 2),
-              pw.RichText(
-                text: pw.TextSpan(
-                  style: pw.TextStyle(fontSize: 8, color: theme.muted),
-                  children: [
-                    const pw.TextSpan(text: 'Valid Until: '),
-                    pw.TextSpan(
-                      text: validUntilStr,
-                      style: pw.TextStyle(
-                        fontWeight: pw.FontWeight.bold,
+              pw.Row(
+                mainAxisSize: pw.MainAxisSize.min,
+                children: [
+                  _t(
+                    '${_l('orders.quotation.pdf.valid_until', 'Valid Until')}: ',
+                    fontSize: 8,
+                    color: theme.muted,
+                    maxWidth: 120,
+                  ),
+                  pw.Text(
+                    validUntilStr,
+                    style: pw.TextStyle(
+                        fontSize: 8,
                         color: theme.ink,
-                      ),
-                    ),
-                  ],
-                ),
+                        fontWeight: pw.FontWeight.bold),
+                  ),
+                ],
               ),
             ],
           ),
@@ -258,37 +274,52 @@ class QuotationPdfGenerator extends PdfDocumentBuilder {
         : dateFmt.format(data.createdDate.add(const Duration(days: 7)));
 
     final depotRows = [
-      _InfoRow('Depot Name', data.depotName, emphasize: true),
-      _InfoRow('Company Name', data.companyName ?? data.depotName),
       _InfoRow(
-        'Address',
+          _l('orders.quotation.pdf.depot_name', 'Depot Name'), data.depotName,
+          emphasize: true),
+      _InfoRow(_l('orders.quotation.pdf.company_name', 'Company Name'),
+          data.companyName ?? data.depotName),
+      _InfoRow(
+        _l('orders.quotation.pdf.address', 'Address'),
         (data.depotAddress ?? '').isNotEmpty
             ? data.depotAddress!
             : 'Phnom Penh, Cambodia',
       ),
       _InfoRow(
-        'Phone',
+        _l('orders.quotation.pdf.phone', 'Phone'),
         (data.depotPhone ?? '').isNotEmpty ? data.depotPhone! : '—',
       ),
       _InfoRow(
-        'Email',
+        _l('orders.quotation.pdf.email', 'Email'),
         (data.depotEmail ?? '').isNotEmpty ? data.depotEmail! : '—',
       ),
-      _InfoRow('Contact Person', data.contactPerson ?? data.depotName),
+      _InfoRow(_l('orders.quotation.pdf.contact_person', 'Contact Person'),
+          data.contactPerson ?? data.depotName),
     ];
 
     final quotationRows = [
-      _InfoRow('Sales Representative', data.salesRepName, emphasize: true),
-      _InfoRow('Sales Territory', data.salesTerritory ?? 'Phnom Penh'),
-      _InfoRow('Quotation Date', dateFmt.format(data.createdDate)),
-      _InfoRow('Valid Until', validUntilStr),
       _InfoRow(
-        'Payment Terms',
-        data.paymentTerms ?? '30% Advance / Balance on Delivery',
+          _l('orders.quotation.pdf.sales_representative',
+              'Sales Representative'),
+          data.salesRepName,
+          emphasize: true),
+      _InfoRow(_l('orders.quotation.pdf.sales_territory', 'Sales Territory'),
+          data.salesTerritory ?? 'Phnom Penh'),
+      _InfoRow(_l('orders.quotation.pdf.quotation_date', 'Quotation Date'),
+          dateFmt.format(data.createdDate)),
+      _InfoRow(
+          _l('orders.quotation.pdf.valid_until', 'Valid Until'), validUntilStr),
+      _InfoRow(
+        _l('orders.quotation.pdf.payment_terms', 'Payment Terms'),
+        data.paymentTerms ??
+            _l('orders.quotation.pdf.default_payment_terms',
+                '30% Advance / Balance on Delivery'),
       ),
       _InfoRow(
-        'Delivery Terms',
-        data.deliveryTerms ?? 'Depot Site / Standard Lead Time',
+        _l('orders.quotation.pdf.delivery_terms', 'Delivery Terms'),
+        data.deliveryTerms ??
+            _l('orders.quotation.pdf.default_delivery_terms',
+                'Depot Site / Standard Lead Time'),
       ),
     ];
 
@@ -298,7 +329,7 @@ class QuotationPdfGenerator extends PdfDocumentBuilder {
         pw.Expanded(
           child: _infoSection(
             theme,
-            title: 'DEPOT INFORMATION',
+            title: _l('orders.quotation.pdf.depot_info', 'DEPOT INFORMATION'),
             rows: depotRows,
           ),
         ),
@@ -306,7 +337,8 @@ class QuotationPdfGenerator extends PdfDocumentBuilder {
         pw.Expanded(
           child: _infoSection(
             theme,
-            title: 'QUOTATION INFORMATION',
+            title: _l(
+                'orders.quotation.pdf.quotation_info', 'QUOTATION INFORMATION'),
             rows: quotationRows,
           ),
         ),
@@ -428,14 +460,23 @@ class QuotationPdfGenerator extends PdfDocumentBuilder {
       decoration: pw.BoxDecoration(color: theme.brandGreenDark),
       children: [
         headerCell('#', align: pw.Alignment.center),
-        headerCell(hasSketches ? 'PRODUCT / SKETCH' : 'MATERIAL / PRODUCT'),
+        headerCell(hasSketches
+            ? _l('orders.quotation.pdf.col_product_sketch', 'PRODUCT / SKETCH')
+            : _l('orders.quotation.pdf.col_material_product',
+                'MATERIAL / PRODUCT')),
         headerCell('SKU'),
-        headerCell('SPECIFICATION'),
-        headerCell('QTY', align: pw.Alignment.centerRight),
-        headerCell('UNIT', align: pw.Alignment.center),
-        headerCell('UNIT PRICE', align: pw.Alignment.centerRight),
-        headerCell('DISCOUNT', align: pw.Alignment.centerRight),
-        headerCell('TOTAL', align: pw.Alignment.centerRight),
+        headerCell(
+            _l('orders.quotation.pdf.col_specification', 'SPECIFICATION')),
+        headerCell(_l('orders.quotation.pdf.col_qty', 'QTY'),
+            align: pw.Alignment.centerRight),
+        headerCell(_l('orders.quotation.pdf.col_unit', 'UNIT'),
+            align: pw.Alignment.center),
+        headerCell(_l('orders.quotation.pdf.col_unit_price', 'UNIT PRICE'),
+            align: pw.Alignment.centerRight),
+        headerCell(_l('orders.quotation.pdf.col_discount', 'DISCOUNT'),
+            align: pw.Alignment.centerRight),
+        headerCell(_l('orders.quotation.pdf.col_total', 'TOTAL'),
+            align: pw.Alignment.centerRight),
       ],
     );
   }
@@ -503,7 +544,8 @@ class QuotationPdfGenerator extends PdfDocumentBuilder {
                     border: pw.Border.all(color: theme.brandGreen, width: 0.5),
                   ),
                   child: _t(
-                    '📐 Custom Specification',
+                    _l('orders.quotation.pdf.custom_spec',
+                        '📐 Custom Specification'),
                     fontSize: 6,
                     bold: true,
                     color: theme.brandGreenDark,
@@ -561,7 +603,7 @@ class QuotationPdfGenerator extends PdfDocumentBuilder {
               if (line.appearance != null && line.appearance!.isNotEmpty) ...[
                 pw.SizedBox(height: 1),
                 _t(
-                  'Finish: ${line.appearance}',
+                  '${_l('orders.quotation.pdf.finish', 'Finish')}: ${line.appearance}',
                   fontSize: 6.5,
                   color: theme.muted,
                   maxWidth: 82,
@@ -656,7 +698,10 @@ class QuotationPdfGenerator extends PdfDocumentBuilder {
           ),
         if (hasFree)
           _t(
-            'Free ${line.freeQuantity} ${line.unit}',
+            _lp('orders.quotation.pdf.free_qty', 'Free {qty} {unit}', {
+              'qty': '${line.freeQuantity}',
+              'unit': line.unit,
+            }),
             fontSize: 6.5,
             color: theme.brandGreenDark,
             bold: true,
@@ -700,7 +745,7 @@ class QuotationPdfGenerator extends PdfDocumentBuilder {
         children: [
           // Payment Terms
           _t(
-            'PAYMENT TERMS',
+            _l('orders.quotation.pdf.payment_terms_title', 'PAYMENT TERMS'),
             fontSize: 7.5,
             bold: true,
             color: theme.brandGreenDark,
@@ -711,7 +756,8 @@ class QuotationPdfGenerator extends PdfDocumentBuilder {
           _t(
             (data.paymentTerms ?? '').isNotEmpty
                 ? data.paymentTerms!
-                : '30% advance payment upon confirmation.\nRemaining balance according to agreed terms.',
+                : _l('orders.quotation.pdf.payment_terms_body',
+                    '30% advance payment upon confirmation.\nRemaining balance according to agreed terms.'),
             fontSize: 7.5,
             color: theme.ink,
             lineSpacing: 1.5,
@@ -724,7 +770,7 @@ class QuotationPdfGenerator extends PdfDocumentBuilder {
 
           // Delivery Terms
           _t(
-            'DELIVERY',
+            _l('orders.quotation.pdf.delivery_title', 'DELIVERY'),
             fontSize: 7.5,
             bold: true,
             color: theme.brandGreenDark,
@@ -733,14 +779,24 @@ class QuotationPdfGenerator extends PdfDocumentBuilder {
           ),
           pw.SizedBox(height: 3),
           _t(
-            'Delivery location: ${data.deliveryLocation ?? (data.depotAddress ?? 'Depot Site')}',
+            _lp('orders.quotation.pdf.delivery_location',
+                'Delivery location: {location}', {
+              'location': data.deliveryLocation ??
+                  (data.depotAddress ??
+                      _l('orders.quotation.pdf.default_delivery_location',
+                          'Depot Site')),
+            }),
             fontSize: 7.5,
             color: theme.ink,
             maxWidth: 220,
           ),
           pw.SizedBox(height: 1.5),
           _t(
-            'Estimated delivery: ${data.estimatedDelivery ?? '3–5 business days'}',
+            _lp('orders.quotation.pdf.estimated_delivery',
+                'Estimated delivery: {eta}', {
+              'eta': data.estimatedDelivery ??
+                  _l('orders.quotation.pdf.default_eta', '3–5 business days'),
+            }),
             fontSize: 7.5,
             color: theme.ink,
             maxWidth: 220,
@@ -791,8 +847,9 @@ class QuotationPdfGenerator extends PdfDocumentBuilder {
       );
     }
 
-    final deliveryLabel =
-        data.deliveryFee > 0 ? currency.format(data.deliveryFee) : 'Included';
+    final deliveryLabel = data.deliveryFee > 0
+        ? currency.format(data.deliveryFee)
+        : _l('orders.quotation.pdf.included', 'Included');
 
     return pw.Container(
       padding: const pw.EdgeInsets.all(10),
@@ -805,13 +862,13 @@ class QuotationPdfGenerator extends PdfDocumentBuilder {
         children: [
           // Subtotal
           summaryRow(
-            'SUBTOTAL',
+            _l('orders.quotation.pdf.subtotal', 'Subtotal').toUpperCase(),
             currency.format(data.subtotal),
           ),
 
           // Total Discount
           summaryRow(
-            'DISCOUNT',
+            _l('orders.quotation.pdf.discount', 'Discount').toUpperCase(),
             data.totalDiscount > 0
                 ? '-${currency.format(data.totalDiscount)}'
                 : '—',
@@ -823,7 +880,7 @@ class QuotationPdfGenerator extends PdfDocumentBuilder {
             pw.Padding(
               padding: const pw.EdgeInsets.only(left: 6),
               child: summaryRow(
-                '  • SKU Discounts',
+                '  • ${_l('orders.quotation.pdf.sku_discounts', 'SKU Discounts')}',
                 '-${currency.format(data.skuDiscountTotal)}',
                 valueColor: theme.success,
               ),
@@ -831,7 +888,7 @@ class QuotationPdfGenerator extends PdfDocumentBuilder {
             pw.Padding(
               padding: const pw.EdgeInsets.only(left: 6),
               child: summaryRow(
-                '  • Invoice Discount',
+                '  • ${_l('orders.quotation.pdf.invoice_discount', 'Invoice Discount')}',
                 '-${currency.format(data.invoiceDiscountTotal)}',
                 valueColor: theme.success,
               ),
@@ -840,13 +897,15 @@ class QuotationPdfGenerator extends PdfDocumentBuilder {
 
           // Tax / VAT
           summaryRow(
-            data.tax <= 0 ? 'TAX (EXEMPT)' : 'VAT 10%',
+            data.tax <= 0
+                ? _l('orders.quotation.pdf.tax_exempt', 'TAX (EXEMPT)')
+                : _l('orders.quotation.pdf.vat', 'VAT 10%'),
             currency.format(data.tax),
           ),
 
           // Delivery
           summaryRow(
-            'DELIVERY',
+            _l('orders.quotation.pdf.delivery_title', 'DELIVERY'),
             deliveryLabel,
           ),
 
@@ -870,7 +929,7 @@ class QuotationPdfGenerator extends PdfDocumentBuilder {
               crossAxisAlignment: pw.CrossAxisAlignment.center,
               children: [
                 _t(
-                  'TOTAL AMOUNT',
+                  _l('orders.quotation.pdf.total_amount', 'TOTAL AMOUNT'),
                   fontSize: 9,
                   bold: true,
                   color: theme.brandGreenDark,
@@ -908,7 +967,7 @@ class QuotationPdfGenerator extends PdfDocumentBuilder {
         crossAxisAlignment: pw.CrossAxisAlignment.start,
         children: [
           _t(
-            'TERMS & CONDITIONS',
+            _l('orders.quotation.pdf.terms_title', 'TERMS & CONDITIONS'),
             fontSize: 7.5,
             bold: true,
             color: theme.brandGreenDark,
@@ -917,11 +976,14 @@ class QuotationPdfGenerator extends PdfDocumentBuilder {
           ),
           pw.SizedBox(height: 4),
           _t(
-            '1. Quotation validity: 7 days from quotation date.\n'
-            '2. Prices are subject to applicable taxes.\n'
-            '3. Product availability is subject to confirmation upon order placement.\n'
-            '4. Delivery schedule may vary depending on stock availability and production lead times.\n'
-            '5. Any customized material is subject to approved engineering specifications.',
+            _l(
+              'orders.quotation.pdf.terms_body',
+              '1. Quotation validity: 7 days from quotation date.\n'
+                  '2. Prices are subject to applicable taxes.\n'
+                  '3. Product availability is subject to confirmation upon order placement.\n'
+                  '4. Delivery schedule may vary depending on stock availability and production lead times.\n'
+                  '5. Any customized material is subject to approved engineering specifications.',
+            ),
             fontSize: 7,
             color: theme.muted,
             lineSpacing: 1.8,
@@ -930,7 +992,8 @@ class QuotationPdfGenerator extends PdfDocumentBuilder {
           if (customNotes.isNotEmpty) ...[
             pw.SizedBox(height: 4),
             _t(
-              'Special Notes: $customNotes',
+              _lp('orders.quotation.pdf.special_notes',
+                  'Special Notes: {notes}', {'notes': customNotes}),
               fontSize: 7,
               bold: true,
               color: theme.ink,
@@ -971,7 +1034,8 @@ class QuotationPdfGenerator extends PdfDocumentBuilder {
             ),
             pw.SizedBox(height: 8),
             _t(
-              'Name: $name',
+              _lp('orders.quotation.pdf.signature_name', 'Name: {name}',
+                  {'name': name}),
               fontSize: 7.5,
               color: theme.ink,
               maxWidth: 200,
@@ -988,8 +1052,9 @@ class QuotationPdfGenerator extends PdfDocumentBuilder {
             pw.Row(
               mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
               children: [
-                _t('Signature', fontSize: 7, color: theme.muted, maxWidth: 80),
-                _t('Date: $date',
+                _t(_l('orders.quotation.pdf.signature', 'Signature'),
+                    fontSize: 7, color: theme.muted, maxWidth: 80),
+                _t('${_l('orders.quotation.pdf.date', 'Date')}: $date',
                     fontSize: 7, color: theme.muted, maxWidth: 100),
               ],
             ),
@@ -1004,15 +1069,17 @@ class QuotationPdfGenerator extends PdfDocumentBuilder {
         crossAxisAlignment: pw.CrossAxisAlignment.start,
         children: [
           signatureColumn(
-            title: 'Prepared By',
-            subtitle: 'Sales Representative',
+            title: _l('orders.quotation.pdf.prepared_by_title', 'Prepared By'),
+            subtitle: _l('orders.quotation.pdf.sales_representative',
+                'Sales Representative'),
             name: data.salesRepName,
             date: dateFmt.format(data.createdDate),
           ),
           pw.SizedBox(width: 48),
           signatureColumn(
-            title: 'Depot Approval',
-            subtitle: 'Authorized Person',
+            title: _l('orders.quotation.pdf.depot_approval', 'Depot Approval'),
+            subtitle: _l(
+                'orders.quotation.pdf.authorized_person', 'Authorized Person'),
             name: (data.contactPerson ?? data.depotName),
             date: '__________________',
           ),
@@ -1023,7 +1090,7 @@ class QuotationPdfGenerator extends PdfDocumentBuilder {
 
   // ── 7. Footer ─────────────────────────────────────────────────────────
   pw.Widget _footerBrand(PdfTheme theme) => _t(
-        'ISI Steel · Industrial Steel & Construction Materials',
+        'ISI Steel · $_tagline',
         fontSize: 7,
         color: theme.muted,
         maxWidth: 350,

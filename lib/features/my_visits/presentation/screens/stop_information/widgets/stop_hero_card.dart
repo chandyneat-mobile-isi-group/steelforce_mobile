@@ -129,7 +129,7 @@ class _HeroCardState extends State<_HeroCard> {
                       Row(
                         children: [
                           _PillBadge(
-                              label: 'Diamond',
+                              label: 'my_visits.tier.diamond'.tr,
                               color: scheme.primary.withValues(alpha: 0.12),
                               textColor: scheme.primary,
                               isExample: true),

@@ -80,4 +80,4 @@ evidence the decision was reversed.
 
 - [../skills/engineering-standard.md](../skills/engineering-standard.md) — the master rules ADRs sit under
 - [../blueprint/README.md](../blueprint/README.md) — the architecture these decisions produced
-- [../blueprint/master-plan.md](../blueprint/master-plan.md) — the analysis several of these came out of
+- [../blueprint/migration-plan.md](../blueprint/migration-plan.md) — the roadmap several of these came out of

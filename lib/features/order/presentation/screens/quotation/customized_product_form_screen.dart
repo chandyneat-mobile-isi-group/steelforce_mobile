@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
+import 'package:steelforce/core/localization/localization_services.dart';
 import 'package:steelforce/features/order/domain/entities/data_domain.dart'
     show CustomizationMeasurement;
 import 'package:steelforce/features/order/domain/entities/product.dart';
@@ -132,8 +133,8 @@ class __CustomizedProductFormViewState
         );
 
     ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('Customized product added to quotation!'),
+      SnackBar(
+        content: Text('orders.customize.added'.tr),
         behavior: SnackBarBehavior.floating,
       ),
     );
@@ -147,7 +148,7 @@ class __CustomizedProductFormViewState
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Customize Product ✏️'),
+        title: Text('orders.customize.title'.tr),
         centerTitle: false,
       ),
       body: BlocConsumer<CustomizationCubit, CustomizationState>(
@@ -182,7 +183,8 @@ class __CustomizedProductFormViewState
                       children: [
                         _buildBaseProductHeader(theme, colorScheme),
                         SizedBox(height: context.rh(20)),
-                        _SectionTitle(title: '1. TECHNICAL DRAWING / SKETCH'),
+                        _SectionTitle(
+                            title: 'orders.customize.section_drawing'.tr),
                         SizedBox(height: context.rh(8)),
                         DrawingUploadComponent(
                           imagePath: dataState.drawingImagePath,
@@ -191,20 +193,22 @@ class __CustomizedProductFormViewState
                         ),
                         SizedBox(height: context.rh(24)),
                         _SectionTitle(
-                            title: '2. SPECIFICATIONS FOR '
-                                '${widget.baseProduct.subCategory.toUpperCase()}'),
+                            title: 'orders.customize.section_specs'.trParams({
+                          'category':
+                              widget.baseProduct.subCategory.toUpperCase(),
+                        })),
                         SizedBox(height: context.rh(12)),
                         _buildMeasurementFields(cubit),
                         if (_hasAppearance) ...[
                           SizedBox(height: context.rh(20)),
-                          _SectionTitle(title: '3. APPEARANCE / FINISH'),
+                          _SectionTitle(
+                              title: 'orders.customize.section_appearance'.tr),
                           SizedBox(height: context.rh(8)),
                           TextFormField(
                             controller: _appearanceController,
                             onChanged: cubit.updateAppearance,
                             decoration: InputDecoration(
-                              hintText:
-                                  'e.g. Galvanized, Powder-coated black, Raw/mill finish...',
+                              hintText: 'orders.customize.appearance_hint'.tr,
                               prefixIcon: const Icon(Icons.palette_outlined),
                               border: OutlineInputBorder(
                                 borderRadius: BorderRadius.circular(12),
@@ -214,16 +218,16 @@ class __CustomizedProductFormViewState
                         ],
                         SizedBox(height: context.rh(20)),
                         _SectionTitle(
-                            title:
-                                '${_hasAppearance ? '4' : '3'}. ADDITIONAL INSTRUCTIONS'),
+                            title: 'orders.customize.section_instructions'
+                                .trParams(
+                                    {'number': _hasAppearance ? '4' : '3'})),
                         SizedBox(height: context.rh(8)),
                         TextFormField(
                           controller: _notesController,
                           maxLines: 3,
                           onChanged: cubit.updateNotes,
                           decoration: InputDecoration(
-                            hintText:
-                                'Specify steel grade, bending angles, or special instructions...',
+                            hintText: 'orders.customize.instructions_hint'.tr,
                             border: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(12),
                             ),
@@ -254,8 +258,9 @@ class __CustomizedProductFormViewState
                             ),
                           ),
                           icon: const Icon(Icons.add_shopping_cart_rounded),
-                          label: const Text('Add Customized Item',
-                              style: TextStyle(fontWeight: FontWeight.bold)),
+                          label: Text('orders.customize.add_item'.tr,
+                              style:
+                                  const TextStyle(fontWeight: FontWeight.bold)),
                         ),
                       ),
                     ],
@@ -323,12 +328,12 @@ class __CustomizedProductFormViewState
   }
 
   String _fieldLabel(CustomizationField field) => switch (field) {
-        CustomizationField.length => 'Length (mm)',
-        CustomizationField.width => 'Width (mm)',
-        CustomizationField.height => 'Height (mm)',
-        CustomizationField.thickness => 'Thickness (mm)',
-        CustomizationField.diameter => 'Diameter Ø (mm)',
-        CustomizationField.appearance => 'Appearance',
+        CustomizationField.length => 'orders.customize.field_length'.tr,
+        CustomizationField.width => 'orders.customize.field_width'.tr,
+        CustomizationField.height => 'orders.customize.field_height'.tr,
+        CustomizationField.thickness => 'orders.customize.field_thickness'.tr,
+        CustomizationField.diameter => 'orders.customize.field_diameter'.tr,
+        CustomizationField.appearance => 'orders.customize.field_appearance'.tr,
       };
 
   Widget _buildBaseProductHeader(ThemeData theme, ColorScheme colorScheme) {
@@ -360,7 +365,10 @@ class __CustomizedProductFormViewState
                       ?.copyWith(fontWeight: FontWeight.bold),
                 ),
                 Text(
-                  'Code: ${widget.baseProduct.code} • Base Unit: ${widget.baseProduct.unit}',
+                  'orders.customize.base_product'.trParams({
+                    'code': widget.baseProduct.code,
+                    'unit': widget.baseProduct.unit,
+                  }),
                   style: theme.textTheme.bodySmall?.copyWith(
                     color: colorScheme.onSurfaceVariant,
                   ),

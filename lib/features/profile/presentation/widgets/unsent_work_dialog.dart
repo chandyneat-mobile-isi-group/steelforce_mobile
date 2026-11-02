@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:steelforce/core/localization/localization_services.dart';
 import 'package:steelforce/core/session/unsent_work.dart';
+import 'package:steelforce/core/theme/app_colors.dart';
 import 'package:steelforce/core/theme/theme_extensions.dart';
+import 'package:steelforce/shared/widgets/brand_wallpaper_background.dart';
 
 /// Shown instead of the sign-out confirmation while work saved on this device
 /// has not reached the server — signing out would delete it.
@@ -31,53 +33,137 @@ class UnsentWorkDialog extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
+    final theme = Theme.of(context);
+    final scheme = theme.colorScheme;
     final colors = context.appColors;
+    final isDark = theme.brightness == Brightness.dark;
 
     return AlertDialog(
-      backgroundColor: colors.surfaceSoft,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-      // The list can be long in Khmer at large text sizes.
+      backgroundColor: colors.card,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(24),
+      ),
+      clipBehavior: Clip.antiAlias,
+      titlePadding: EdgeInsets.zero,
+      contentPadding: EdgeInsets.zero,
+      actionsPadding: const EdgeInsets.fromLTRB(16, 0, 16, 14),
       scrollable: true,
-      icon: Icon(Icons.cloud_upload_rounded, color: scheme.primary),
-      title: Text('profile.unsent_title'.tr,
-          style: TextStyle(color: scheme.onSurface)),
-      content: Column(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          Text(
-            'profile.unsent_body'.trParams({'count': _total}),
-            style: TextStyle(color: colors.textSecondary, height: 1.4),
-          ),
-          const SizedBox(height: 14),
-          Container(
-            decoration: BoxDecoration(
-              color: scheme.surface,
-              borderRadius: BorderRadius.circular(14),
-              border: Border.all(color: colors.border),
+      title: SizedBox(
+        height: 100,
+        child: Stack(
+          children: [
+            const Positioned.fill(
+              child: BrandWallpaperBackground(
+                style: BrandWallpaperStyle.vivid,
+              ),
             ),
-            child: Column(
-              children: [
-                for (var i = 0; i < items.length; i++) ...[
-                  if (i > 0)
-                    Divider(height: 1, indent: 56, color: colors.divider),
-                  _KindRow(item: items[i]),
+            Positioned(
+              top: 6,
+              right: 6,
+              child: IconButton(
+                onPressed: () => Navigator.pop(context, false),
+                tooltip: MaterialLocalizations.of(context).closeButtonTooltip,
+                icon: Container(
+                  padding: const EdgeInsets.all(4),
+                  decoration: BoxDecoration(
+                    color: Colors.black.withValues(alpha: 0.20),
+                    shape: BoxShape.circle,
+                  ),
+                  child: const Icon(
+                    Icons.close_rounded,
+                    color: Colors.white,
+                    size: 18,
+                  ),
+                ),
+              ),
+            ),
+            Center(
+              child: Container(
+                width: 58,
+                height: 58,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: isDark ? colors.card : Colors.white,
+                  boxShadow: [
+                    BoxShadow(
+                      color: AppColors.primary.withValues(alpha: 0.35),
+                      blurRadius: 16,
+                      offset: const Offset(0, 5),
+                    ),
+                  ],
+                ),
+                child: Icon(
+                  Icons.cloud_upload_rounded,
+                  color: scheme.primary,
+                  size: 28,
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+      content: Padding(
+        padding: const EdgeInsets.fromLTRB(20, 14, 20, 10),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Text(
+              'profile.unsent_title'.tr,
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                color: scheme.onSurface,
+                fontSize: 19,
+                fontWeight: FontWeight.w800,
+              ),
+            ),
+            const SizedBox(height: 6),
+            Text(
+              'profile.unsent_body'.trParams({'count': _total}),
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                color: colors.textSecondary,
+                fontSize: 13.5,
+                height: 1.4,
+              ),
+            ),
+            const SizedBox(height: 14),
+            Container(
+              decoration: BoxDecoration(
+                color: isDark ? colors.surfaceSoft : scheme.surface,
+                borderRadius: BorderRadius.circular(14),
+                border: Border.all(color: colors.border),
+              ),
+              child: Column(
+                children: [
+                  for (var i = 0; i < items.length; i++) ...[
+                    if (i > 0)
+                      Divider(height: 1, indent: 56, color: colors.divider),
+                    _KindRow(item: items[i]),
+                  ],
                 ],
-              ],
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
       actions: [
         TextButton(
           onPressed: () => Navigator.pop(context, false),
+          style: TextButton.styleFrom(
+            foregroundColor: colors.textSecondary,
+          ),
           child: Text('common.close'.tr),
         ),
         FilledButton.icon(
           onPressed: () => Navigator.pop(context, true),
           icon: const Icon(Icons.sync_rounded, size: 18),
           label: Text('profile.open_sync_center'.tr),
+          style: FilledButton.styleFrom(
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(12),
+            ),
+          ),
         ),
       ],
     );

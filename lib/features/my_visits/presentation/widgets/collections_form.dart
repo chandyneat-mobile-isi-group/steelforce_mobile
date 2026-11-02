@@ -44,8 +44,8 @@ Future<VisitCollection?> showCollectionsSheet(
                 textInputAction: TextInputAction.next,
                 keyboardType:
                     const TextInputType.numberWithOptions(decimal: true),
-                decoration: const InputDecoration(
-                    hintText: 'Amount', prefixText: '\$ '),
+                decoration: InputDecoration(
+                    hintText: 'my_visits.forms.amount'.tr, prefixText: '\$ '),
               ),
               SizedBox(height: context.rh(10)),
               Wrap(
@@ -96,7 +96,7 @@ Future<VisitCollection?> showCollectionsSheet(
                     shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(14)),
                   ),
-                  child: const Text('Save'),
+                  child: Text('common.save'.tr),
                 ),
               ),
             ],

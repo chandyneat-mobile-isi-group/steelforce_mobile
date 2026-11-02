@@ -200,11 +200,18 @@ class VisitSyncRepositoryImpl implements VisitSyncRepository {
       for (final r in await _local.fetchPendingNotes()) {
         at(r.stopId)
           ..notes += 1
+          ..noteTexts.add(r.text)
           ..seen(r.createdAt);
       }
       for (final r in await _local.fetchPendingPhotos()) {
         at(r.stopId)
           ..photos += 1
+          ..photoFiles.add(PendingVisitPhoto(
+            path: r.url,
+            takenAt: r.takenAt,
+            caption: r.caption,
+            isSignature: r.isSignature,
+          ))
           ..seen(r.takenAt);
       }
 
@@ -233,6 +240,9 @@ class VisitSyncRepositoryImpl implements VisitSyncRepository {
             collections: t.collections,
             notes: t.notes,
             photos: t.photos,
+            photoFiles: [...t.photoFiles]
+              ..sort((a, b) => a.takenAt.compareTo(b.takenAt)),
+            noteTexts: List.unmodifiable(t.noteTexts),
           ),
       ];
       return Success(
@@ -406,6 +416,8 @@ class _PendingStopTally {
   int collections = 0;
   int notes = 0;
   int photos = 0;
+  final List<PendingVisitPhoto> photoFiles = [];
+  final List<String> noteTexts = [];
 
   /// The earliest time any of the stop's rows carries, for ordering.
   DateTime? first;

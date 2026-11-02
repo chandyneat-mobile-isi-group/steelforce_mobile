@@ -1,4 +1,3 @@
-import java.util.Base64
 import java.util.Properties
 import java.io.FileInputStream
 
@@ -47,7 +46,7 @@ val missingSigningInputs: List<String> =
 
 // ── Environment config ──────────────────────────────────────────────────────
 // The Google Maps key is injected as a manifest placeholder rather than being
-// committed in AndroidManifest.xml (docs/SECURITY.md §9). Source order:
+// committed in AndroidManifest.xml (docs/skills/security.md §9). Source order:
 // GOOGLE_MAPS_ANDROID_KEY env var (CI) → .env file (local dev) → empty.
 val dotenv = Properties()
 val dotenvFile = rootProject.file("../.env")
@@ -59,36 +58,14 @@ val googleMapsApiKey: String =
         ?: dotenv.getProperty("GOOGLE_MAPS_ANDROID_KEY")
         ?: ""
 
-// ── Demo build ──────────────────────────────────────────────────────────────
-// Flutter hands `--dart-define` values to Gradle as one comma-separated list of
-// base64 strings in the `dart-defines` property.
-val isDemoBuild: Boolean =
-    (project.findProperty("dart-defines") as String?)
-        ?.split(",")
-        ?.any { encoded: String ->
-            runCatching { String(Base64.getDecoder().decode(encoded)) }
-                .getOrNull() == "USE_MOCK_DATA=true"
-        }
-        ?: false
-
 plugins {
     id("com.android.application")
     id("org.jetbrains.kotlin.android")
     // The Flutter Gradle Plugin must be applied after the Android and Kotlin Gradle plugins.
     id("dev.flutter.flutter-gradle-plugin")
-    // Resolved here, applied below — skipped in demo builds.
-    id("com.google.gms.google-services") apply false
-}
-
-// Must come after the Flutter plugin: it hooks the variant tasks the Flutter
-// plugin registers.
-//
-// TODO(release-gate): demo builds (`--dart-define=USE_MOCK_DATA=true`) skip it.
-// They never start Firebase (push uses the no-op transport), so they need no
-// Firebase config file, and a mismatched one would otherwise fail the build at
-// `process*GoogleServices`. Every other build applies it as before.
-if (!isDemoBuild) {
-    apply(plugin = "com.google.gms.google-services")
+    // Must come after the Flutter plugin: it hooks the variant tasks the
+    // Flutter plugin registers.
+    id("com.google.gms.google-services")
 }
 
 android {
@@ -110,18 +87,22 @@ android {
         // Permanent for the life of the Play listing — do not change after the
         // first upload.
         //
-        // Renamed from `com.isigroup.steelsales` to match the iOS bundle id and
-        // the Firebase project (`steelforce-94963`), whose Android app is
-        // registered as `com.isigroup.steelforce`. Without the rename
+        // Must equal the `package_name` in `google-services.json`, or
         // `processDebugGoogleServices` fails outright: "No matching client found
-        // for package name".
+        // for package name". The Android app is registered as
+        // `com.isisteel.steelforce` in the Firebase project `steelforce-94963`.
+        // ⚠️ iOS currently uses `isig-dev-steelforce` — see
+        // docs/feature/authentication/firebase-sms-otp-test.md §2.
         //
-        // ⚠️ If this app has already been published, an applicationId change
-        // creates a **new Play listing**: existing installs will not receive it
-        // as an update and will not migrate their local data. The alternative is
-        // to add a second Android app to the Firebase console under the old
-        // package name and re-download `google-services.json`.
-        applicationId = "com.isigroup.steelforce"
+        // `namespace` above deliberately stays `com.isigroup.steelforce`: it is
+        // the Kotlin/R package, not the install identity, and changing it would
+        // mean moving MainActivity for no behavioural gain.
+        //
+        // ⚠️ An applicationId change creates a **new Play listing**: existing
+        // installs will not receive it as an update and will not migrate their
+        // local data. It also invalidates any Google Cloud API key restricted to
+        // the old package name (the Maps key below).
+        applicationId = "com.isisteel.steelforce"
         minSdk = flutter.minSdkVersion
         targetSdk = flutter.targetSdkVersion
         versionCode = flutter.versionCode
@@ -170,6 +151,20 @@ android {
                 signingConfig = signingConfigs.getByName("release")
             }
         }
+    }
+}
+
+// Release ships real-phone CPUs only (arm64-v8a, armeabi-v7a). x86/x86_64 is
+// emulator-only; `tool/build_release.sh` already drops Flutter's own x86_64
+// code, and this drops the plugins' copies (SQLCipher, dartjni, …) to match.
+// A half-x86_64 bundle is worse than none: Play would install that split on an
+// Intel Chromebook, which then has SQLCipher but no Flutter engine. Debug
+// builds keep x86_64 so the emulator still runs.
+androidComponents {
+    onVariants(selector().withBuildType("release")) { variant ->
+        variant.packaging.jniLibs.excludes.addAll(
+            listOf("lib/x86/**", "lib/x86_64/**"),
+        )
     }
 }
 

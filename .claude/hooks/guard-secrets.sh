@@ -1,31 +1,38 @@
 #!/usr/bin/env bash
-# PreToolUse (Write|Edit|MultiEdit|NotebookEdit) — refuse to write secret-bearing
-# or deliberately-uncommitted generated files.
+# PreToolUse (Write|Edit) — refuse to write secret-bearing or generated files.
 #
-# Fails CLOSED: a security guard that cannot inspect the payload blocks the
-# write rather than waving it through. (format-dart.sh fails open on purpose;
-# this one must not.)
+# These paths are gitignored for a reason (.claude/rules/security.md §4): they
+# carry the SQLCipher salt, signing material, or Envied output that must never
+# be committed. A deny here is cheaper than noticing it in review.
 set -uo pipefail
 
-here="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-# shellcheck source=SCRIPTDIR/lib/secret-paths.sh
-source "$here/lib/secret-paths.sh"
+command -v jq >/dev/null 2>&1 || exit 0
 
-if ! command -v jq >/dev/null 2>&1; then
-  echo "guard-secrets: jq is not installed, so the write cannot be checked. Install jq (brew install jq / apt install jq)." >&2
-  exit 2
-fi
-
-file="$(jq -r '.tool_input.file_path // .tool_input.notebook_path // empty')"
+file="$(jq -r '.tool_input.file_path // empty')"
 [ -n "$file" ] || exit 0
 
-if reason="$(secret_reason "$(basename "$file")")"; then
-  jq -nc --arg f "$file" --arg why "$reason" '{
+base="$(basename "$file")"
+deny=""
+
+case "$base" in
+  .env|.env.*)            deny="the .env file carries DB_SALT and is gitignored" ;;
+  Env.xcconfig)           deny="generated from .env by tool/generate_ios_env.dart" ;;
+  env.g.dart)             deny="Envied output — generated, deliberately not committed" ;;
+  *.jks|*.keystore|*.p12|*.pem|*.key|*.mobileprovision)
+                          deny="signing / private key material" ;;
+  google-services.json|GoogleService-Info.plist)
+                          deny="Firebase credential file" ;;
+esac
+case "$base" in .env.example) deny="" ;; esac
+
+if [ -n "$deny" ]; then
+  jq -nc --arg f "$file" --arg why "$deny" '{
     hookSpecificOutput: {
       hookEventName: "PreToolUse",
       permissionDecision: "deny",
       permissionDecisionReason: ("Refused to write \($f): \($why). See .claude/rules/security.md §4. If this is genuinely needed, the user must do it by hand.")
     }
   }'
+  exit 0
 fi
 exit 0

@@ -194,7 +194,7 @@ class _PulseIndicatorState extends State<_PulseIndicator>
           borderRadius: BorderRadius.circular(8),
         ),
         child: Text(
-          'REQUIRED',
+          'my_visits.inventory.required'.tr.toUpperCase(),
           style: TextStyle(
             color: primary.withValues(alpha: 0.75 + (_controller.value * 0.25)),
             fontSize: context.rsp(9.5),

@@ -1,6 +1,6 @@
 <div align="center">
 
-<img src="assets/logos/steelforce_app_logo.png" alt="SteelForce" width="96" />
+<img src="assets/logos/SteelForce-Logos/PNG/steelforce-app-icon-dark.png" alt="SteelForce" width="96" />
 
 # SteelForce
 

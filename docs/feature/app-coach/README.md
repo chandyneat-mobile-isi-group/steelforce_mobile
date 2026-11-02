@@ -526,3 +526,107 @@ the app.
   time for a real provider — the bloc is untouched.
 - Verified with `flutter analyze` (clean). Recommend a device pass to confirm
   spotlight geometry across screen sizes.
+---
+
+# Lessons and practice mode (coach v11)
+
+The first-run tour is now one of five **lessons**. The other four teach a
+whole workflow on the real screens, and run as **practice**: over in-memory
+demo data, so nothing a rep does while learning reaches the encrypted
+database, the sync queue or the API.
+
+| Lesson | Steps | Completed by |
+|---|---|---|
+| `tour` | The original Home walkthrough (blocking spotlight) | Tab switches and CTAs, as before |
+| `depots` — Learn how to manage depots | intro → open Depots → `+` → identity → address → contact → sales terms → documents → submit → find it in the list → detail actions → done | `startCreateDepot`, `depotForm*` (only after a step validated), `createDepotSucceeded` (bloc reached `success`), `openDepotDetails` |
+| `quotation` — Create a quotation without a visit | intro → open Depots → Create Quotation on the demo depot → add products → review → save → Submit for Approval → done | `startCreateQuotation`, `quotationItemAdded`, `createQuotationSucceeded` (repository returned the quotation), `submitQuotationSucceeded` |
+| `order` — Create an order remotely | intro → Quotes & Orders → the approved demo quotation → Convert to Sales Order → Create Sales Order in SAP → done | `openQuotationDetails`, `startCreateOrder`, `createOrderSucceeded` (`Result` success) |
+| `visit` — Learn how to complete a visit | intro → My Visits → the demo stop → Start Visit → check in → inventory photo → Complete visit → done | `openVisitDetails`, `startCheckIn`, `checkInSucceeded` (stop is `checkedIn`), `submitVisitSurveySucceeded` (photo saved), `completeVisitSucceeded` (`CompleteVisitCheckOut` succeeded) |
+
+**Deliberate divergences from the original lesson brief**, because the app
+works differently and the coach must not invent features:
+
+- There is **no visit survey** in this app. The step after check-in is the
+  Inventory Visibility photo, so that is what the visit lesson teaches.
+- There is **no direct "create order"**. A sales order is made only from a
+  quotation the manager has approved. The order lesson therefore starts from
+  a demo quotation that is already approved; in real use the approval comes
+  from the manager.
+- Quotations and orders have **no visit requirement** in the code, so neither
+  lesson checks in anywhere, and no visit records are created to satisfy them.
+
+## Events: opened, succeeded, failed
+
+Every operation is reported in separate actions (`coach_action.dart`):
+opening a screen (`startCreate…`, `open…`) is never evidence of a save; a
+`…Succeeded` action is sent only after the app confirmed the result; a
+`…Failed` action holds the step and shows its retry guidance
+(`failureMessageKey`). Features report with `AppCoach.notify(action)`, which
+is a no-op outside a lesson.
+
+The bloc (`app_coach_bloc.dart`) advances only on the current step's
+`requiredAction`. In a practice lesson, a rep who already did a **later**
+step's action moves straight to it; earlier, repeated and unknown actions are
+ignored. The tour keeps its strict order.
+
+## Practice mode — how no demo data can leak
+
+`lib/core/practice/practice_session.dart`. Starting a practice lesson pushes
+a GetIt scope; each feature contributes stand-ins for the repositories it must
+keep off disk and off the network, and re-registers its use cases over them
+(one shared `register…UseCases(sl)` function per feature, so the two never
+drift). Blocs are factories, so screens opened during practice use the
+stand-ins with no screen changes. Ending the lesson — finished, exited,
+replaced, or signed out (`PracticeSessionScopedStore` runs first on sign-out)
+— pops the scope: the demo data becomes unreachable rather than having to be
+found and deleted.
+
+Every stand-in wraps the real implementation and forwards to it once the
+practice world is closed, so a base lazy singleton that happened to be
+created during practice degrades to the real behaviour, never to demo data.
+
+What the rep sees:
+
+- an amber edge around every screen and a **PRACTICE — NOT SAVED** chip in
+  the status-bar band (it never covers an app bar's back button); the chip
+  opens pause/resume, restart, all lessons, and exit;
+- the shell's work tabs rebuild when practice starts and ends
+  (`PracticeSession.generation`), and every screen opened during practice is
+  closed when it ends.
+
+Practice data lives in memory only. After an app restart a lesson that was
+running reads as **Interrupted** and can be started again; it cannot resume
+mid-way because its demo data is gone.
+
+## Overlay
+
+The coach is mounted above the Navigator (`CoachRoot` in `MaterialApp.builder`)
+with an app-wide `CoachAnchorScope`; the shell's registry forwards to it, so
+anchors on pushed screens work. A `CoachRouteObserver` reports whether the
+shell is on top and whether a dialog or sheet is open.
+
+- Tour steps (blocking) show only while the shell is the top page.
+- Lesson steps never block: no scrim, no absorbers, the target ringed and
+  re-read every 250 ms while the step is up (it may appear later or scroll).
+  The guide folds to a one-line chip while a dialog, sheet or keyboard is up,
+  or when the rep minimises it.
+- A spotlight is never drawn on an anchor that is mounted but hidden (a route
+  underneath, a non-visible tab).
+- When nothing is running, a floating assistant on Home opens the lessons list
+  (`coach_lessons_sheet.dart`).
+
+## Persistence and migration
+
+`CoachProgress` keeps the tour fields as before and adds `completedModuleIds`
+and `activeModuleId`. Moving from v10: a finished or skipped tour stays
+finished and every lesson starts as new — lessons are offered, never forced on
+a rep who already dismissed the coach. Lessons completed in v11+ survive later
+script changes. Malformed stored fields now degrade one by one instead of
+discarding the whole record.
+
+## Analytics
+
+`tutorial_started` / `_restarted` / `_step_completed` / `_skipped` /
+`_completed` carry `{module, step}`; `tutorial_operation_succeeded` /
+`_failed` carry `{module, action}` (e.g. `createDepotSucceeded`,
+`checkInFailed`). Never a name, phone, price, photo or anything typed.

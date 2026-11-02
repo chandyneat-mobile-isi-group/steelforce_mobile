@@ -91,12 +91,10 @@ abstract interface class PushMessagingService {
   /// are visible anyway.
   Future<void> suppressForegroundAlerts();
 
-  /// Drops the FCM token so this installation stops receiving pushes.
+  /// Explicitly drops the FCM token from Firebase.
   ///
-  /// Belt-and-braces alongside `DELETE /mobile/devices/{deviceId}` on sign-out:
-  /// the server call is what actually stops the sends, and this makes sure a
-  /// failed sign-out request cannot leave a live token behind on a handset that
-  /// has changed hands (§4.4).
+  /// Account sign-out must not call this: the token belongs to the app
+  /// installation and is reused when another user signs in.
   Future<void> deleteToken();
 }
 

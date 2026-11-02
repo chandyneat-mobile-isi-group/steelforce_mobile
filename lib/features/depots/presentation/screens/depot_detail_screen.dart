@@ -5,7 +5,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import 'package:gal/gal.dart';
+import 'package:intl/intl.dart' show DateFormat, NumberFormat;
 import 'package:url_launcher/url_launcher.dart';
 
 import 'package:steelforce/core/di/injection_container.dart';
@@ -14,63 +16,91 @@ import 'package:steelforce/core/localization/localized_builder.dart';
 import 'package:steelforce/core/localization/localized_text_context.dart';
 import 'package:steelforce/core/responsive/responsive_content_frame.dart';
 import 'package:steelforce/core/responsive/responsive_sizing.dart';
+import 'package:steelforce/core/theme/app_theme.dart';
+import 'package:steelforce/core/theme/app_typography.dart';
 import 'package:steelforce/core/theme/theme_extensions.dart';
+import 'package:steelforce/features/app_coach/domain/entities/coach_action.dart';
+import 'package:steelforce/features/app_coach/presentation/services/app_coach.dart';
+import 'package:steelforce/features/app_coach/presentation/services/coach_keys.dart';
 import 'package:steelforce/features/depots/domain/entities/depot.dart';
 import 'package:steelforce/features/depots/domain/entities/depot_activity_type.dart';
+import 'package:steelforce/features/depots/domain/entities/depot_list_kind.dart';
+import 'package:steelforce/features/depots/domain/entities/depot_profile.dart';
+import 'package:steelforce/features/depots/domain/entities/depot_sales_area.dart';
 import 'package:steelforce/features/depots/domain/entities/depot_status.dart';
 import 'package:steelforce/features/depots/presentation/bloc/depot_detail_cubit.dart';
 import 'package:steelforce/features/depots/presentation/bloc/depot_detail_state.dart';
+import 'package:steelforce/features/depots/presentation/navigation/open_depot_by_code.dart';
 import 'package:steelforce/features/depots/presentation/widgets/add_hc_visit_dialog.dart';
 import 'package:steelforce/features/my_visits/presentation/navigation/add_depot_to_today.dart';
 import 'package:steelforce/features/depots/presentation/widgets/edit_depot_bottom_sheet.dart';
-import 'package:steelforce/features/my_visits/presentation/screens/stop_information/order_history_screen.dart';
-import 'package:steelforce/features/my_visits/presentation/screens/stop_information/promotions_screen.dart';
 import 'package:steelforce/shared/widgets/app_bottom_sheet.dart';
+import 'package:steelforce/shared/widgets/brand_wallpaper_background.dart';
+import 'package:steelforce/core/assets/app_assets.dart';
 
 part 'depot_detail/hero_header_card.dart';
-part 'depot_detail/detail_tabs.dart';
+part 'depot_detail/detail_sales_areas.dart';
 part 'depot_detail/detail_tiles.dart';
-
-const String _fallbackOutletId = 'BP-884920';
-const String _fallbackOutletType = 'WHS / Retail';
-const String _fallbackOutletTier = 'Diamond';
-const String _fallbackOutletAction = 'Attack';
-const String _fallbackOwnerName = 'Yim Vithou';
-const String _fallbackPhone = '026 407 480';
-const String _fallbackTelegram = '@phnom_penh_steel_outlet';
-const String _fallbackAddress = 'St. 218, Mean Chey';
-const double _fallbackLatitude = 11.55925;
-const double _fallbackLongitude = 104.91601;
+part 'depot_detail/detail_sections.dart';
+part 'depot_detail/detail_overview_tab.dart';
+part 'depot_detail/detail_people_sections.dart';
+part 'depot_detail/detail_section_nav.dart';
+part 'depot_detail/detail_pill_row.dart';
+part 'depot_detail/detail_general_section.dart';
+part 'depot_detail/detail_document.dart';
+part 'depot_detail/detail_document_capture.dart';
+part 'depot_detail/detail_document_watermark.dart';
 
 class DepotDetailScreen extends StatelessWidget {
-  const DepotDetailScreen({super.key, required this.depotId});
+  const DepotDetailScreen({
+    super.key,
+    required this.depotId,
+    this.bottomAction,
+  });
 
   static const String routeName = 'depot-detail';
   final String depotId;
+
+  /// Pinned under the screen when the opener has an action for this depot —
+  /// Start Visit, from a visit plan card. Null everywhere else.
+  final Widget? bottomAction;
 
   @override
   Widget build(BuildContext context) {
     return BlocProvider(
       create: (_) => sl<DepotDetailCubit>()..load(depotId),
-      child: const _DepotDetailView(),
+      child: _DepotDetailView(bottomAction: bottomAction),
     );
   }
 }
 
 class _DepotDetailView extends StatefulWidget {
-  const _DepotDetailView();
+  const _DepotDetailView({this.bottomAction});
+
+  final Widget? bottomAction;
 
   @override
   State<_DepotDetailView> createState() => _DepotDetailViewState();
 }
 
 class _DepotDetailViewState extends State<_DepotDetailView> {
+  @override
+  void initState() {
+    super.initState();
+    // Once per opening; a no-op outside an App Coach lesson.
+    AppCoach.notify(CoachAction.openDepotDetails);
+  }
+
+  /// Off: the Edit action is hidden from the details screen. The sheet and
+  /// its save path are kept as they were — set true to offer it again.
+  static const _editEnabled = false;
+
   void _openEditDepot(BuildContext context, Depot depot) {
     if (depot.status == DepotStatus.closed) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           backgroundColor: Theme.of(context).colorScheme.error,
-          content: const Text('This depot is closed and cannot be edited.'),
+          content: Text('depots.detail.closed_cannot_edit'.tr),
         ),
       );
       return;
@@ -88,7 +118,9 @@ class _DepotDetailViewState extends State<_DepotDetailView> {
               SnackBar(
                 backgroundColor: Colors.green.shade700,
                 content: Text(
-                  'Depot "${context.localized(updated.displayName)}" updated successfully.',
+                  'depots.detail.updated_success'.trParams(
+                    {'name': context.localized(updated.displayName)},
+                  ),
                 ),
               ),
             );
@@ -98,26 +130,19 @@ class _DepotDetailViewState extends State<_DepotDetailView> {
     );
   }
 
-  /// Confirms, then actually asks the server for the visit.
+  /// Confirms, then starts the ad hoc visit (`POST /mobile/plans/ad-hoc`).
   ///
-  /// The dialog alone used to be the whole feature: it logged a local activity
-  /// and showed "added to HC visits", while nothing left the handset. The stop
-  /// never appeared on My Visits and could never be checked in to.
-  ///
-  /// The note stays local. `POST /mobile/visits/ad-hoc` takes `sk` and
-  /// `clientRequestId` and nothing else, so the note is recorded as a depot
-  /// activity here — which is where it was already going — and is not sent.
-  Future<void> _showAddHcVisit(
-      BuildContext context, Depot depot, String sk) async {
+  /// The note is not part of that request, so it stays local, recorded as a
+  /// depot activity once the visit is on today.
+  Future<void> _showAddHcVisit(BuildContext context, Depot depot) async {
+    if (!await adHocVisitsAvailable(context, depot: depot) ||
+        !context.mounted) {
+      return;
+    }
     final note = await showAddHcVisitDialog(context, depot: depot);
     if (note == null || !context.mounted) return;
 
-    final added = await addDepotToTodayVisits(
-      context,
-      depotId: depot.id,
-      sk: sk,
-      depotName: depot.shopName,
-    );
+    final added = await startAdHocVisitAt(context, depot);
     // Only on success: an activity reading "Scheduled as HC Visit" against a
     // visit the server refused is a note nobody can act on.
     if (!added || !context.mounted) return;
@@ -180,7 +205,8 @@ class _DepotDetailViewState extends State<_DepotDetailView> {
             detailState is DepotDetailLoaded ? detailState.depot : null;
 
         return Scaffold(
-          backgroundColor: colors.canvas,
+          backgroundColor: context.appColors.canvas,
+          bottomNavigationBar: widget.bottomAction,
           appBar: AppBar(
             backgroundColor: colors.canvas,
             elevation: 0,
@@ -202,107 +228,71 @@ class _DepotDetailViewState extends State<_DepotDetailView> {
               if (loadedDepot != null)
                 IconButton(
                   icon: const Icon(Icons.add_location_alt_outlined),
-                  tooltip: 'Add HC Visit',
-                  // Disabled until SAP reports the depot back — the endpoint
-                  // is keyed on its SAP code (`adHocVisitCode`).
-                  onPressed: switch (loadedDepot.adHocVisitCode) {
-                    final sk? => () =>
-                        _showAddHcVisit(context, loadedDepot, sk),
-                    null => null,
-                  },
+                  tooltip: 'depots.hc_visit.title'.tr,
+                  // Disabled while awaiting approval (`adHocOutlet`).
+                  onPressed: loadedDepot.adHocOutlet == null
+                      ? null
+                      : () => _showAddHcVisit(context, loadedDepot),
                 ),
-              if (loadedDepot != null &&
+              if (_editEnabled &&
+                  loadedDepot != null &&
                   loadedDepot.status != DepotStatus.closed)
-                IconButton(
-                  icon: const Icon(Icons.edit_outlined),
-                  tooltip: 'Edit Depot',
-                  onPressed: () => _openEditDepot(context, loadedDepot),
+                CoachKeys.wrap(
+                  CoachKeys.depotDetailEdit,
+                  child: IconButton(
+                    icon: const Icon(Icons.edit_outlined),
+                    tooltip: 'depots.detail.edit_depot'.tr,
+                    onPressed: () => _openEditDepot(context, loadedDepot),
+                  ),
                 ),
             ],
           ),
-          body: SafeArea(
-            child: BlocBuilder<DepotDetailCubit, DepotDetailState>(
-              builder: (context, state) {
-                return switch (state) {
-                  DepotDetailLoaded() => ResponsiveContentFrame(
-                      child: DefaultTabController(
-                        length: 3,
-                        child: Column(
-                          children: [
-                            Padding(
-                              padding: EdgeInsets.symmetric(
-                                horizontal: context.pagePadding,
-                                vertical: context.rh(6),
-                              ),
-                              child: _HeroHeaderCard(
-                                depot: state.depot,
-                                onPhoneTap: _openPhoneOrTelegram,
-                                onLocationTap: _openGoogleMaps,
-                              ),
-                            ),
-                            SizedBox(height: context.rh(8)),
-                            Container(
-                              margin: EdgeInsets.symmetric(
-                                  horizontal: context.pagePadding),
-                              decoration: BoxDecoration(
-                                color: colors.card,
-                                borderRadius:
-                                    BorderRadius.circular(context.rr(12)),
-                                border: Border.all(color: colors.border),
-                              ),
-                              child: TabBar(
-                                labelColor:
-                                    Theme.of(context).colorScheme.primary,
-                                unselectedLabelColor: colors.textSecondary,
-                                indicatorColor:
-                                    Theme.of(context).colorScheme.primary,
-                                indicatorSize: TabBarIndicatorSize.tab,
-                                indicatorWeight: 3,
-                                labelStyle: TextStyle(
-                                  fontSize: context.rsp(13),
-                                  fontWeight: FontWeight.w800,
+          body: BrandWallpaperBody(
+              style: BrandWallpaperStyle.vivid,
+              child: SafeArea(
+                child: BlocBuilder<DepotDetailCubit, DepotDetailState>(
+                  builder: (context, state) {
+                    return switch (state) {
+                      // No tabs: the four groups (General Information,
+                      // Sales & Financial, Business Profile, Contact & Audit)
+                      // are the whole page under the header.
+                      DepotDetailLoaded() => ResponsiveContentFrame(
+                          child: Column(
+                            children: [
+                              Padding(
+                                padding: EdgeInsets.symmetric(
+                                  horizontal: context.pagePadding,
+                                  vertical: context.rh(6),
                                 ),
-                                unselectedLabelStyle: TextStyle(
-                                  fontSize: context.rsp(13),
-                                  fontWeight: FontWeight.w600,
+                                child: _HeroHeaderCard(
+                                  depot: state.depot,
+                                  onPhoneTap: _openPhoneOrTelegram,
+                                  onLocationTap: _openGoogleMaps,
                                 ),
-                                tabs: [
-                                  Tab(text: 'depots.detail.tab_overview'.tr),
-                                  Tab(text: 'depots.detail.tab_sales'.tr),
-                                  Tab(text: 'depots.detail.tab_promos'.tr),
-                                ],
                               ),
-                            ),
-                            Expanded(
-                              child: TabBarView(
-                                children: [
-                                  _OverviewTab(
-                                    depot: state.depot,
-                                    onPhoneTap: _openPhoneOrTelegram,
-                                    onLocationTap: _openGoogleMaps,
-                                  ),
-                                  _SalesTab(depot: state.depot),
-                                  _PromosTab(depot: state.depot),
-                                ],
+                              Expanded(
+                                child: _OverviewTab(
+                                  depot: state.depot,
+                                  onPhoneTap: _openPhoneOrTelegram,
+                                  onLocationTap: _openGoogleMaps,
+                                ),
                               ),
-                            ),
-                          ],
+                            ],
+                          ),
                         ),
-                      ),
-                    ),
-                  DepotDetailError(:final message) => Center(
-                      child: Text(message,
-                          style: TextStyle(color: colors.textSecondary)),
-                    ),
-                  _ => Center(
-                      child: CircularProgressIndicator(
-                        color: Theme.of(context).colorScheme.primary,
-                      ),
-                    ),
-                };
-              },
-            ),
-          ),
+                      DepotDetailError(:final message) => Center(
+                          child: Text(message,
+                              style: TextStyle(color: colors.textSecondary)),
+                        ),
+                      _ => Center(
+                          child: CircularProgressIndicator(
+                            color: Theme.of(context).colorScheme.primary,
+                          ),
+                        ),
+                    };
+                  },
+                ),
+              )),
         );
       },
     );

@@ -9,7 +9,7 @@ extension TabletLayoutExtension on _AddDepotBottomSheetState {
             Expanded(
               child: _buildSectionCard(
                 title: 'add_depot.steps.identity'.tr,
-                subtitle: 'Who is the depot (BP header & names)',
+                subtitle: 'add_depot.tablet.identity_subtitle'.tr,
                 icon: Icons.person_outline_rounded,
                 child: _buildIdentityStep(state.errors),
               ),
@@ -18,32 +18,44 @@ extension TabletLayoutExtension on _AddDepotBottomSheetState {
             Expanded(
               child: _buildSectionCard(
                 title: 'add_depot.steps.address'.tr,
-                subtitle: 'Where are they located (Address & GPS)',
+                subtitle: 'add_depot.tablet.address_subtitle'.tr,
                 icon: Icons.location_on_outlined,
                 child: _buildAddressStep(state.errors),
               ),
             ),
           ],
         ),
-      1 => Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
+      1 => Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            Expanded(
-              child: _buildSectionCard(
-                title: 'add_depot.steps.contact'.tr,
-                subtitle: 'How do we reach them (Phones & Contact person)',
-                icon: Icons.phone_outlined,
-                child: _buildContactStep(state.errors),
-              ),
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Expanded(
+                  child: _buildSectionCard(
+                    title: 'add_depot.steps.contact'.tr,
+                    subtitle: 'add_depot.tablet.contact_subtitle'.tr,
+                    icon: Icons.phone_outlined,
+                    child: _buildContactStep(state.errors),
+                  ),
+                ),
+                SizedBox(width: _spacing(24)),
+                Expanded(
+                  child: _buildSectionCard(
+                    title: 'add_depot.steps.sales_terms'.tr,
+                    subtitle: 'add_depot.tablet.sales_terms_subtitle'.tr,
+                    icon: Icons.receipt_long_outlined,
+                    child: _buildSalesTermsStep(state.errors),
+                  ),
+                ),
+              ],
             ),
-            SizedBox(width: _spacing(24)),
-            Expanded(
-              child: _buildSectionCard(
-                title: 'add_depot.steps.sales_terms'.tr,
-                subtitle: 'Commercial setup (Pricing, Payment & Tax)',
-                icon: Icons.receipt_long_outlined,
-                child: _buildSalesTermsStep(state.errors),
-              ),
+            SizedBox(height: _spacing(24)),
+            _buildSectionCard(
+              title: 'add_depot.steps.sales_performance'.tr,
+              subtitle: 'add_depot.section_hint.sales_performance'.tr,
+              icon: Icons.insights_rounded,
+              child: _buildSalesPerformanceStep(state.errors),
             ),
           ],
         ),
@@ -53,7 +65,7 @@ extension TabletLayoutExtension on _AddDepotBottomSheetState {
             Expanded(
               child: _buildSectionCard(
                 title: 'add_depot.steps.documents'.tr,
-                subtitle: 'Verification documents & business license photos',
+                subtitle: 'add_depot.tablet.documents_subtitle'.tr,
                 icon: Icons.attach_file_rounded,
                 child: _buildDocumentPhotosSection(state.draft, state.errors),
               ),
@@ -62,7 +74,7 @@ extension TabletLayoutExtension on _AddDepotBottomSheetState {
             Expanded(
               child: _buildSectionCard(
                 title: 'add_depot.remark'.tr,
-                subtitle: 'Internal notes & instructions for Sales HQ',
+                subtitle: 'add_depot.tablet.remark_subtitle'.tr,
                 icon: Icons.description_outlined,
                 child: _buildRemarksSection(state.draft),
               ),
@@ -170,6 +182,7 @@ extension TabletLayoutExtension on _AddDepotBottomSheetState {
   }
 
   void _handleTabletNext(AddDepotState state) {
+    _coach.advanceRequested();
     if (_tabletStage == 0) {
       final idErrors = state.draft.validateStep(BpFormStep.identity);
       final addrErrors = state.draft.validateStep(BpFormStep.address);
@@ -183,10 +196,13 @@ extension TabletLayoutExtension on _AddDepotBottomSheetState {
         _bloc.add(const NextStep());
         return;
       }
+      _reportTabletStage(const [BpFormStep.address, BpFormStep.contact]);
       _goToTabletStage(1);
     } else if (_tabletStage == 1) {
       final contactErrors = state.draft.validateStep(BpFormStep.contact);
       final termsErrors = state.draft.validateStep(BpFormStep.salesTerms);
+      final surveyErrors =
+          state.draft.validateStep(BpFormStep.salesPerformance);
       if (contactErrors.isNotEmpty) {
         _bloc.add(const GoToStep(BpFormStep.contact));
         _bloc.add(const NextStep());
@@ -197,6 +213,16 @@ extension TabletLayoutExtension on _AddDepotBottomSheetState {
         _bloc.add(const NextStep());
         return;
       }
+      if (surveyErrors.isNotEmpty) {
+        _bloc.add(const GoToStep(BpFormStep.salesPerformance));
+        _bloc.add(const NextStep());
+        return;
+      }
+      _reportTabletStage(const [
+        BpFormStep.salesTerms,
+        BpFormStep.salesPerformance,
+        BpFormStep.documents,
+      ]);
       _goToTabletStage(2);
     } else if (_tabletStage == 2) {
       final docErrors = state.draft.validateStep(BpFormStep.documents);
@@ -205,11 +231,17 @@ extension TabletLayoutExtension on _AddDepotBottomSheetState {
         _bloc.add(const NextStep());
         return;
       }
+      _reportTabletStage(const [BpFormStep.review]);
       _goToTabletStage(3);
     } else if (_tabletStage == 3) {
       _bloc.add(const SubmitToHQ());
     }
   }
+
+  /// A tablet stage covers two wizard steps and moves the bloc with
+  /// `GoToStep`, so the coach is told here which steps the rep got through.
+  void _reportTabletStage(List<BpFormStep> reached) =>
+      _coach.stepsReached(reached).forEach(AppCoach.notify);
 
   Widget _buildTabletNavigationButtons(AddDepotState state) {
     final isFirst = _tabletStage == 0;
@@ -243,7 +275,9 @@ extension TabletLayoutExtension on _AddDepotBottomSheetState {
               },
               icon: const Icon(Icons.arrow_back),
               label: Text(
-                _tabletStage == 3 ? 'Back to Edit' : 'Previous',
+                _tabletStage == 3
+                    ? 'add_depot.tablet.back_to_edit'.tr
+                    : 'add_depot.tablet.previous'.tr,
                 style: TextStyle(
                   fontSize: _fontSize(14),
                   fontWeight: FontWeight.w700,
@@ -255,48 +289,51 @@ extension TabletLayoutExtension on _AddDepotBottomSheetState {
         ],
         Expanded(
           flex: 2,
-          child: ElevatedButton.icon(
-            style: ElevatedButton.styleFrom(
-              padding: btnPadding,
-              backgroundColor: isLast
-                  ? context.appColors.success
-                  : Theme.of(context).colorScheme.primary,
-              shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(14)),
-              elevation: 0,
-            ),
-            onPressed: (state.isBusy || isUploadingDoc)
-                ? null
-                : () => _handleTabletNext(state),
-            icon: isUploadingDoc
-                ? const SizedBox(
-                    width: 18,
-                    height: 18,
-                    child: CircularProgressIndicator(
-                      strokeWidth: 2,
+          child: CoachKeys.wrap(
+            CoachKeys.depotFormNext,
+            child: ElevatedButton.icon(
+              style: ElevatedButton.styleFrom(
+                padding: btnPadding,
+                backgroundColor: isLast
+                    ? context.appColors.success
+                    : Theme.of(context).colorScheme.primary,
+                shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(14)),
+                elevation: 0,
+              ),
+              onPressed: (state.isBusy || isUploadingDoc)
+                  ? null
+                  : () => _handleTabletNext(state),
+              icon: isUploadingDoc
+                  ? const SizedBox(
+                      width: 18,
+                      height: 18,
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2,
+                        color: Colors.white,
+                      ),
+                    )
+                  : Icon(
+                      isLast ? Icons.check_circle_outline : Icons.arrow_forward,
                       color: Colors.white,
                     ),
-                  )
-                : Icon(
-                    isLast ? Icons.check_circle_outline : Icons.arrow_forward,
-                    color: Colors.white,
-                  ),
-            label: Text(
-              isUploadingDoc
-                  ? 'add_depot.photo_uploading'.tr
-                  : (isLast
-                      ? (needsCredit
-                          ? 'add_depot.send_for_credit_approval'.tr
-                          : 'add_depot.send_to_hq'.tr)
-                      : (_tabletStage == 2
-                          ? 'Preview & Review'
-                          : 'add_depot.next_step'.tr)),
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              style: TextStyle(
-                color: Colors.white,
-                fontSize: _fontSize(15),
-                fontWeight: FontWeight.w900,
+              label: Text(
+                isUploadingDoc
+                    ? 'add_depot.photo_uploading'.tr
+                    : (isLast
+                        ? (needsCredit
+                            ? 'add_depot.send_for_credit_approval'.tr
+                            : 'add_depot.send_to_hq'.tr)
+                        : (_tabletStage == 2
+                            ? 'add_depot.tablet.preview_review'.tr
+                            : 'add_depot.next_step'.tr)),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: TextStyle(
+                  color: Colors.white,
+                  fontSize: _fontSize(15),
+                  fontWeight: FontWeight.w900,
+                ),
               ),
             ),
           ),

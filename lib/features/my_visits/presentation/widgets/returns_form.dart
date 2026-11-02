@@ -57,7 +57,8 @@ Future<VisitReturn?> showReturnsSheet(
             TextField(
                 controller: reasonController,
                 textInputAction: TextInputAction.done,
-                decoration: const InputDecoration(hintText: 'Reason')),
+                decoration:
+                    InputDecoration(hintText: 'my_visits.forms.reason'.tr)),
             SizedBox(height: context.rh(16)),
             SizedBox(
               width: double.infinity,
@@ -87,7 +88,7 @@ Future<VisitReturn?> showReturnsSheet(
                   shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(14)),
                 ),
-                child: const Text('Save'),
+                child: Text('common.save'.tr),
               ),
             ),
           ],

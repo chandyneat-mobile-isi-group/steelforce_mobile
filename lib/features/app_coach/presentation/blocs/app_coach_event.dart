@@ -12,8 +12,32 @@ class CoachStarted extends AppCoachEvent {
   const CoachStarted();
 }
 
-/// A real UI action happened (tab switch, button tap). Advances the current
-/// step only when it matches the step's [CoachStep.requiredAction].
+/// Starts — or restarts from its first step — the lesson [moduleId]. A
+/// practice lesson opens a fresh practice session.
+class CoachModuleStarted extends AppCoachEvent {
+  const CoachModuleStarted(this.moduleId, {this.autoplay = false});
+  final String moduleId;
+
+  /// "Watch demo": the coach performs each step itself (practice only).
+  final bool autoplay;
+  @override
+  List<Object?> get props => [moduleId, autoplay];
+}
+
+/// Autoplay on ("Auto-play") or off ("Take over"). Practice lessons only.
+class CoachAutoplayChanged extends AppCoachEvent {
+  const CoachAutoplayChanged(this.enabled, {this.reasonKey});
+  final bool enabled;
+
+  /// Why autoplay stopped by itself, shown in the guide (null when the rep
+  /// chose to take over).
+  final String? reasonKey;
+  @override
+  List<Object?> get props => [enabled, reasonKey];
+}
+
+/// A real UI action happened (tab switch, button tap, confirmed save). Moves
+/// the coach only when it matches the running step — see [AppCoachBloc].
 class CoachActionTriggered extends AppCoachEvent {
   const CoachActionTriggered(this.action);
   final CoachAction action;
@@ -37,12 +61,19 @@ class CoachResumed extends AppCoachEvent {
   const CoachResumed();
 }
 
-/// Skip the whole tutorial.
+/// Skip the running lesson. The tour is marked done; a practice lesson is
+/// left unfinished and its practice data discarded.
 class CoachSkipped extends AppCoachEvent {
   const CoachSkipped();
 }
 
-/// Restart from the first step.
+/// Restart the first-run tour from its first step.
 class CoachRestarted extends AppCoachEvent {
   const CoachRestarted();
+}
+
+/// Skip or ✕ was tapped on the coach: hide the mascot from Home for good.
+/// Saved, so it stays hidden after a restart.
+class CoachMascotHidden extends AppCoachEvent {
+  const CoachMascotHidden();
 }

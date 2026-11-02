@@ -33,7 +33,8 @@ class SalesOrderRepositoryImpl implements SalesOrderRepository {
       {required List<CartItem> items}) async {
     try {
       if (items.isEmpty) {
-        return const Failed(CacheFailure(message: 'Sales order has no items.'));
+        return const Failed(
+            CacheFailure(message: 'orders.sales_order.error_no_items'));
       }
       // "SAP performs final pricing" — mocked as a no-op lock: totals are
       // simply frozen from the (possibly rep-edited) line items, no numeric

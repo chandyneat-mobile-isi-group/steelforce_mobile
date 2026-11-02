@@ -28,6 +28,28 @@ abstract final class CoachKeys {
   static const String notification = 'ab_notification';
   static const String profile = 'ab_profile';
 
+  // ── Lesson anchors (screens pushed above the shell) ──────────────────
+  // These register with the root registry, so they work on any route.
+  static const String depotAdd = 'depots_add';
+  static const String depotFirstCard = 'depots_first_card';
+  static const String depotFirstCardQuotation = 'depots_first_card_quotation';
+  static const String depotFormNext = 'depot_form_next';
+  static const String depotDetailEdit = 'depot_detail_edit';
+
+  static const String quotationProducts = 'quotation_products';
+  static const String quotationPreview = 'quotation_preview';
+  static const String quotationSave = 'quotation_save';
+  static const String quotationSubmit = 'quotation_submit';
+  static const String quotationConvert = 'quotation_convert';
+  static const String ordersFirstRow = 'orders_first_row';
+  static const String salesOrderCreate = 'sales_order_create';
+
+  static const String visitFirstStop = 'visits_first_stop';
+  static const String visitStart = 'visit_start';
+  static const String visitCheckIn = 'visit_check_in';
+  static const String visitSurveySubmit = 'visit_survey_submit';
+  static const String visitComplete = 'visit_complete';
+
   /// Wrap an anchor widget so the coach can locate it:
   /// `CoachKeys.wrap(CoachKeys.monthlyTarget, child: MonthlyTargetCard(...))`.
   ///

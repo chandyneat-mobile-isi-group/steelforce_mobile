@@ -2,111 +2,69 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:steelforce/core/localization/localization_services.dart';
 import 'package:steelforce/core/responsive/responsive_sizing.dart';
+import 'package:steelforce/shared/animations/coach_mascot.dart';
 
-/// The small floating assistant shown while the coach is paused. Tapping it
-/// resumes the walkthrough; it stays clear of the bottom inset and is fully
-/// labelled for screen readers.
+/// The floating coach mascot. Tapping it calls [onResume] — resume a
+/// paused walkthrough, or open the lessons; it stays clear of the bottom
+/// inset and is fully labelled for screen readers.
 class FloatingAssistantButton extends StatefulWidget {
-  const FloatingAssistantButton({super.key, required this.onResume});
+  const FloatingAssistantButton({
+    super.key,
+    required this.onResume,
+    this.semanticsLabelKey = 'coach.resume_hint',
+  });
 
   final VoidCallback onResume;
+
+  /// Localization key read out by screen readers.
+  final String semanticsLabelKey;
 
   @override
   State<FloatingAssistantButton> createState() =>
       _FloatingAssistantButtonState();
 }
 
-class _FloatingAssistantButtonState extends State<FloatingAssistantButton>
-    with SingleTickerProviderStateMixin {
-  late final AnimationController _pulse = AnimationController(
-    vsync: this,
-    duration: const Duration(milliseconds: 1800),
-  );
+class _FloatingAssistantButtonState extends State<FloatingAssistantButton> {
   bool _pressed = false;
 
   @override
-  void initState() {
-    super.initState();
-    // Reduced-motion is gated visually in build() (t collapses to 0), so it's
-    // safe to always drive the controller here.
-    _pulse.repeat(reverse: true);
-  }
-
-  @override
-  void dispose() {
-    _pulse.dispose();
-    super.dispose();
-  }
-
-  @override
   Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
     final media = MediaQuery.of(context);
-    final reduceMotion = media.disableAnimations;
     final bottomInset = media.padding.bottom;
 
     // Self-positioning within a full-size parent so the host can drop it in
-    // without a Stack wrapper.
+    // without a Stack wrapper. Keep the full mascot visible, like a sticker,
+    // instead of enclosing it in a round icon button.
     return Align(
       alignment: Alignment.bottomRight,
       child: Padding(
         padding: EdgeInsets.only(
-            right: context.rw(16), bottom: context.rh(16) + bottomInset),
+          right: context.rw(12),
+          bottom: context.rh(16) + bottomInset,
+        ),
         child: Semantics(
           button: true,
-          label: 'coach.resume_hint'.tr,
+          label: widget.semanticsLabelKey.tr,
           child: TweenAnimationBuilder<double>(
-            tween: Tween(begin: 0.5, end: 1.0),
+            tween: Tween(begin: 0.85, end: 1.0),
             duration: const Duration(milliseconds: 420),
-            curve: Curves.elasticOut,
-            builder: (_, entrance, child) =>
-                Transform.scale(scale: entrance, child: child),
-            child: AnimatedBuilder(
-              animation: _pulse,
-              builder: (_, child) {
-                final t = reduceMotion ? 0.0 : _pulse.value;
-                return Stack(
-                  alignment: Alignment.center,
-                  children: [
-                    // Breathing halo — a quiet "look here" cue while idle.
-                    Container(
-                      width: context.rr(56) + 12 * t,
-                      height: context.rr(56) + 12 * t,
-                      decoration: BoxDecoration(
-                        shape: BoxShape.circle,
-                        color: scheme.primary.withValues(alpha: 0.16 * (1 - t)),
-                      ),
-                    ),
-                    child!,
-                  ],
-                );
+            curve: Curves.easeOutBack,
+            builder: (_, entrance, child) => Transform.scale(
+              scale: entrance * (_pressed ? 0.96 : 1.0),
+              child: child,
+            ),
+            child: GestureDetector(
+              behavior: HitTestBehavior.opaque,
+              onTap: () {
+                HapticFeedback.mediumImpact();
+                widget.onResume();
               },
-              child: AnimatedScale(
-                scale: _pressed ? 0.92 : 1.0,
-                duration: const Duration(milliseconds: 120),
-                curve: Curves.easeOut,
-                child: Material(
-                  color: scheme.primary,
-                  shape: const CircleBorder(),
-                  elevation: 8,
-                  shadowColor: scheme.primary.withValues(alpha: 0.55),
-                  child: InkWell(
-                    customBorder: const CircleBorder(),
-                    onTap: () {
-                      HapticFeedback.mediumImpact();
-                      widget.onResume();
-                    },
-                    onHighlightChanged: (v) => setState(() => _pressed = v),
-                    child: Padding(
-                      padding: EdgeInsets.all(context.rr(14)),
-                      child: Icon(
-                        Icons.auto_awesome_rounded,
-                        color: scheme.onPrimary,
-                        size: context.rr(24),
-                      ),
-                    ),
-                  ),
-                ),
+              onTapDown: (_) => setState(() => _pressed = true),
+              onTapCancel: () => setState(() => _pressed = false),
+              onTapUp: (_) => setState(() => _pressed = false),
+              child: CoachMascot(
+                size: context.rh(84),
+                animate: !media.disableAnimations,
               ),
             ),
           ),

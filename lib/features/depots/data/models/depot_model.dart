@@ -47,6 +47,11 @@ class DepotModel extends Depot {
     super.currency,
     super.totalOrders,
     super.createdAt,
+    super.depotType,
+    super.createdBy,
+    super.salesEmployees,
+    super.profile,
+    super.salesAreas,
     this.deleted = false,
   });
 

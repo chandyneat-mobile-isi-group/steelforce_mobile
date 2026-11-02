@@ -94,7 +94,7 @@ Per-domain offline/sync posture (what's local-only vs. pulled vs. pushed) is cat
 ```
 lib/
 ├── core/
-│   ├── config/            env.dart + env.g.dart (Envied — see DATABASE_GUIDE.md, SECURITY.md)
+│   ├── config/            env.dart + env.g.dart (Envied — see DATABASE_GUIDE.md, docs/skills/security.md)
 │   ├── database/
 │   │   ├── drift/         app_database.dart · tables/ · daos/ · migrations/
 │   │   ├── hive/          preference boxes (non-sensitive only)

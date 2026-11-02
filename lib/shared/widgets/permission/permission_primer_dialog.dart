@@ -8,13 +8,14 @@ import 'package:steelforce/core/localization/localized_builder.dart';
 import 'package:steelforce/core/permissions/presentation/app_permissions_cubit.dart';
 import 'package:steelforce/core/responsive/responsive_sizing.dart';
 import 'package:steelforce/core/theme/theme_extensions.dart';
+import 'package:steelforce/shared/widgets/brand_wallpaper_background.dart';
 
 /// Shows the permission primer and resolves to true once the rep has answered.
 ///
 /// ## Motion
 ///
-/// `docs/skills/motion-framer.md` is a **React/Framer Motion** skill — its API
-/// does not exist in Flutter — so what is carried across is its *method*, mapped
+/// The motion design follows the React/Framer Motion skill (not vendored here;
+/// its API does not exist in Flutter), so what is carried across is its *method*, mapped
 /// onto the motion tokens this repo already mandates
 /// (`docs/skills/feature-ui-standard.md` §14: `AppDurations`/`AppCurves` only,
 /// reduce-motion honoured):
@@ -85,8 +86,6 @@ class _PermissionPrimerDialog extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final colors = context.appColors;
-
     return LocalizedBuilder(
       builder: (context) =>
           BlocConsumer<AppPermissionsCubit, AppPermissionsState>(
@@ -104,15 +103,19 @@ class _PermissionPrimerDialog extends StatelessWidget {
                 // across 1032pt reads as a web page, not a decision.
                 constraints: const BoxConstraints(maxWidth: 420),
                 child: Material(
-                  color: colors.card,
+                  color: Colors.transparent,
                   borderRadius: BorderRadius.circular(24),
                   clipBehavior: Clip.antiAlias,
-                  child: SingleChildScrollView(
-                    // A short viewport — landscape, or a small phone at the
-                    // tablet type scale — must scroll rather than overflow.
-                    child: Padding(
-                      padding: EdgeInsets.all(context.rw(20)),
-                      child: _Body(state: state),
+                  child: BrandWallpaperBackground(
+                    style: BrandWallpaperStyle.subtle,
+                    fitToChild: true,
+                    child: SingleChildScrollView(
+                      // A short viewport — landscape, or a small phone at the
+                      // tablet type scale — must scroll rather than overflow.
+                      child: Padding(
+                        padding: EdgeInsets.all(context.rw(20)),
+                        child: _Body(state: state),
+                      ),
                     ),
                   ),
                 ),

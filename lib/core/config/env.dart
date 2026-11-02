@@ -12,16 +12,15 @@ part 'env.g.dart';
 /// passphrase, so recovering it from the binary alone does not expose the DB.
 @Envied(path: '.env', obfuscate: true)
 abstract class Env {
-  /// Base URL every Dio client is constructed against (`AppNetwork`).
-  ///
-  /// This is what makes environment switching work: swapping the `.env` file
-  /// (see `.env.development` / `.env.staging` / `.env.production`) repoints the
-  /// whole app without a source change (docs/release/environment.md).
-  /// It is also the target of the ADR-005 reachability probe. It previously lived as a hardcoded
-  /// literal in `AppConstants.baseUrl`, which silently pinned every build to
-  /// production.
-  @EnviedField(varName: 'API_BASE_URL', obfuscate: true)
-  static final String apiBaseUrl = _Env.apiBaseUrl;
+  /// Compatibility accessor; new code should select the environment through
+  /// [AppConfig.apiBaseUrl].
+  static String get apiBaseUrl => apiBaseUrlDev;
+
+  @EnviedField(varName: 'API_BASE_URL_DEV', obfuscate: true)
+  static final String apiBaseUrlDev = _Env.apiBaseUrlDev;
+
+  @EnviedField(varName: 'API_BASE_URL_PRO', obfuscate: true)
+  static final String apiBaseUrlPro = _Env.apiBaseUrlPro;
 
   /// Salt mixed into the database-key derivation. Defense-in-depth only.
   @EnviedField(varName: 'DB_SALT', obfuscate: true)

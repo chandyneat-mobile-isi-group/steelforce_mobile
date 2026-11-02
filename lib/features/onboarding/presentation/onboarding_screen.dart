@@ -11,7 +11,7 @@ import 'package:steelforce/features/authentication/presentation/bloc/auth_bloc.d
 import 'package:steelforce/features/authentication/presentation/bloc/auth_event.dart';
 import 'package:steelforce/features/authentication/presentation/bloc/auth_state.dart';
 import 'package:steelforce/routes/app_routes.dart';
-import 'package:steelforce/features/onboarding/presentation/widgets/story_scenes/story_scenes.dart';
+import 'package:steelforce/shared/animations/story_scenes.dart';
 
 /// First-run onboarding: the four beats of a rep's day, one per page.
 ///

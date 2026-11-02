@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:steelforce/core/error/failure_message.dart';
 import 'package:steelforce/features/order/domain/entities/quotation_api_entities.dart';
 import 'package:steelforce/features/order/domain/usecases/quotation_api_usecases.dart';
 import 'package:steelforce/features/order/presentation/bloc/quotation/quotation_builder_state.dart';
@@ -86,7 +87,7 @@ class QuotationBuilderCubit extends Cubit<QuotationBuilderState> {
           }
         },
         failure: (failure) {
-          emit(QuotationBuilderError(failure.message));
+          emit(QuotationBuilderError(failure.userMessage));
         },
       );
     } else {
@@ -105,7 +106,7 @@ class QuotationBuilderCubit extends Cubit<QuotationBuilderState> {
           ));
         },
         failure: (failure) {
-          emit(QuotationBuilderError(failure.message));
+          emit(QuotationBuilderError(failure.userMessage));
         },
       );
     }
@@ -139,7 +140,7 @@ class QuotationBuilderCubit extends Cubit<QuotationBuilderState> {
       failure: (failure) {
         emit(current.copyWith(
           isMutating: false,
-          errorMessage: () => failure.message,
+          errorMessage: () => failure.userMessage,
         ));
       },
     );
@@ -170,7 +171,7 @@ class QuotationBuilderCubit extends Cubit<QuotationBuilderState> {
       failure: (failure) {
         emit(current.copyWith(
           isMutating: false,
-          errorMessage: () => failure.message,
+          errorMessage: () => failure.userMessage,
         ));
       },
     );
@@ -201,7 +202,7 @@ class QuotationBuilderCubit extends Cubit<QuotationBuilderState> {
       failure: (failure) {
         emit(current.copyWith(
           isMutating: false,
-          errorMessage: () => failure.message,
+          errorMessage: () => failure.userMessage,
         ));
       },
     );
@@ -234,38 +235,10 @@ class QuotationBuilderCubit extends Cubit<QuotationBuilderState> {
       failure: (failure) {
         emit(current.copyWith(
           isMutating: false,
-          errorMessage: () => failure.message,
+          errorMessage: () => failure.userMessage,
         ));
       },
     );
-  }
-
-  /// Mirrors a cart quantity onto the server draft: removes, updates or adds
-  /// the line for [materialNumber]. A no-op until the draft is open.
-  Future<void> syncLineQuantity({
-    required String materialNumber,
-    required int quantity,
-    String? unit,
-  }) async {
-    final current = state;
-    if (current is! QuotationBuilderReady) return;
-
-    final line = current.lineForMaterial(materialNumber);
-    if (quantity <= 0 && line != null) {
-      await deleteLine(line.id);
-    } else if (line != null) {
-      await updateLineQuantity(
-        lineId: line.id,
-        quantity: quantity.toDouble(),
-        unit: unit,
-      );
-    } else if (quantity > 0) {
-      await addLine(
-        materialNumber: materialNumber,
-        quantity: quantity.toDouble(),
-        unit: unit,
-      );
-    }
   }
 
   Future<void> setDiscounts(List<QuotationDiscountIntent> lines) async {
@@ -287,7 +260,7 @@ class QuotationBuilderCubit extends Cubit<QuotationBuilderState> {
       failure: (failure) {
         emit(current.copyWith(
           isMutating: false,
-          errorMessage: () => failure.message,
+          errorMessage: () => failure.userMessage,
         ));
       },
     );
@@ -324,7 +297,7 @@ class QuotationBuilderCubit extends Cubit<QuotationBuilderState> {
         if (now is QuotationBuilderReady) {
           emit(now.copyWith(
             isDebouncingPreview: false,
-            errorMessage: () => failure.message,
+            errorMessage: () => failure.userMessage,
           ));
         }
       },

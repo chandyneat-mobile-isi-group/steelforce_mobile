@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:steelforce/core/localization/localization_services.dart';
 import 'package:steelforce/core/localization/localized_text_context.dart';
 import 'package:steelforce/core/responsive/responsive_sizing.dart';
 import 'package:steelforce/core/theme/theme_extensions.dart';
@@ -35,7 +36,9 @@ Future<double?> showManualPriceInputSheet({
 
   final resolvedUnit = (item?.unit.isNotEmpty == true ? item?.unit : null) ??
       (unit?.isNotEmpty == true ? unit : null) ??
-      (resolvedProduct.unit.isNotEmpty ? resolvedProduct.unit : 'unit');
+      (resolvedProduct.unit.isNotEmpty
+          ? resolvedProduct.unit
+          : 'orders.discount_summary.unit_fallback'.tr);
 
   final colors = Theme.of(context).extension<AppThemeColors>()!;
   final scheme = Theme.of(context).colorScheme;
@@ -97,7 +100,7 @@ Future<double?> showManualPriceInputSheet({
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(
-                              'Manual Unit Price (USD)',
+                              'orders.manual_price.title'.tr,
                               style: TextStyle(
                                 color: colors.textPrimary,
                                 fontSize: context.rsp(16),
@@ -105,7 +108,8 @@ Future<double?> showManualPriceInputSheet({
                               ),
                             ),
                             Text(
-                              'Currency: USD (Default) · Per $resolvedUnit',
+                              'orders.manual_price.currency_per_unit'
+                                  .trParams({'unit': resolvedUnit}),
                               style: TextStyle(
                                 color: colors.textSecondary,
                                 fontSize: context.rsp(12),
@@ -131,8 +135,10 @@ Future<double?> showManualPriceInputSheet({
                       children: [
                         Text(
                           resolvedProduct.materialCode.isNotEmpty
-                              ? 'Material: ${resolvedProduct.materialCode}'
-                              : 'SKU: ${resolvedProduct.sku}',
+                              ? 'orders.quotation_items.material'.trParams(
+                                  {'code': resolvedProduct.materialCode})
+                              : 'orders.quotation_items.sku'
+                                  .trParams({'sku': resolvedProduct.sku}),
                           style: TextStyle(
                             color: colors.textSecondary,
                             fontSize: context.rsp(11),
@@ -155,7 +161,7 @@ Future<double?> showManualPriceInputSheet({
                   ),
                   SizedBox(height: context.rh(16)),
                   Text(
-                    'Input Price (USD):',
+                    'orders.pricing.input_price_usd'.tr,
                     style: TextStyle(
                       color: colors.textPrimary,
                       fontSize: context.rsp(13),
@@ -225,7 +231,7 @@ Future<double?> showManualPriceInputSheet({
                               borderRadius: BorderRadius.circular(12),
                             ),
                           ),
-                          child: const Text('Clear'),
+                          child: Text('common.clear'.tr),
                         ),
                         SizedBox(width: context.rw(10)),
                       ],
@@ -248,9 +254,9 @@ Future<double?> showManualPriceInputSheet({
                               borderRadius: BorderRadius.circular(12),
                             ),
                           ),
-                          child: const Text(
-                            'Save Price (USD)',
-                            style: TextStyle(fontWeight: FontWeight.bold),
+                          child: Text(
+                            'orders.manual_price.save'.tr,
+                            style: const TextStyle(fontWeight: FontWeight.bold),
                           ),
                         ),
                       ),

@@ -24,8 +24,7 @@ import 'package:steelforce/features/my_visits/presentation/bloc/events/active_ro
 import 'package:steelforce/features/my_visits/presentation/bloc/state/active_route_state.dart';
 import 'package:steelforce/features/my_visits/presentation/bloc/state/location_tracking_state.dart';
 import 'package:steelforce/features/my_visits/presentation/bloc/state/visit_state.dart';
-import 'package:steelforce/features/my_visits/presentation/navigation/open_inventory_survey.dart';
-import 'package:steelforce/features/my_visits/presentation/widgets/visit_step_bar.dart';
+import 'package:steelforce/features/my_visits/presentation/navigation/open_inventory_visibility.dart';
 import 'package:steelforce/features/my_visits/presentation/screens/stop_information/stop_information_screen.dart';
 import 'package:steelforce/features/my_visits/domain/services/check_in_location_verifier.dart';
 import 'package:steelforce/features/my_visits/domain/services/outlet_location_source.dart';
@@ -36,6 +35,20 @@ import 'package:steelforce/features/my_visits/presentation/widgets/transit_map.d
 import 'package:steelforce/core/responsive/responsive_sizing.dart';
 import 'package:steelforce/shared/widgets/painters/dashed_rrect.dart';
 import 'package:steelforce/features/my_visits/domain/entities/visit_send_result.dart';
+import 'package:steelforce/features/app_coach/domain/entities/coach_action.dart';
+import 'package:steelforce/features/app_coach/presentation/services/app_coach.dart';
+import 'package:steelforce/features/app_coach/presentation/services/coach_keys.dart';
+import 'package:steelforce/features/my_visits/presentation/localization/my_visits_labels.dart';
+import 'package:steelforce/features/my_visits/domain/entities/depot_stop_info.dart';
+import 'package:steelforce/features/my_visits/domain/entities/plan_check_in.dart';
+import 'package:steelforce/features/my_visits/domain/entities/territory_type.dart';
+import 'package:steelforce/features/my_visits/domain/entities/visit_plan.dart';
+import 'package:steelforce/core/error/failure_message.dart';
+import 'package:steelforce/features/my_visits/presentation/bloc/cubit/plan_check_in_cubit.dart';
+import 'package:steelforce/features/my_visits/presentation/bloc/state/plan_check_in_state.dart';
+import 'package:steelforce/features/my_visits/presentation/screens/plan_check_in/widgets/plan_check_in_reason_sheet.dart';
+import 'package:steelforce/features/my_visits/presentation/screens/plan_check_in/widgets/plan_check_in_notes_field.dart';
+import 'package:steelforce/features/my_visits/presentation/screens/visit_plans/widgets/visit_plans_status_views.dart';
 
 part 'stops_check_in/check_in_screen_support.dart';
 part 'stops_check_in/check_in_location_bridge.dart';
@@ -46,6 +59,9 @@ part 'stops_check_in/check_in_geo_status_banner.dart';
 part 'stops_check_in/check_in_proof_photo.dart';
 part 'stops_check_in/check_in_bottom_bar.dart';
 part 'stops_check_in/check_in_map_controls.dart';
+part 'stops_check_in/visit_plan_check_in.dart';
+part 'stops_check_in/visit_plan_check_in_page.dart';
+part 'stops_check_in/visit_plan_check_in_board.dart';
 
 /// Forces the geo-status banner to read "inside geofence" regardless of the
 /// real verdict.
@@ -69,6 +85,9 @@ class RouteCheckInScreen extends StatefulWidget {
   });
 
   final RouteStop? stop;
+
+  /// `RouteSettings.name` for this screen.
+  static const String routeName = 'my-visits-check-in';
 
   @override
   State<RouteCheckInScreen> createState() => _RouteCheckInScreenState();
@@ -158,6 +177,9 @@ class _RouteCheckInScreenState extends State<RouteCheckInScreen>
     unawaited(_beginObservingLocation());
 
     _entranceController.forward();
+
+    // The screen opened — not a check-in. Outside a lesson this is a no-op.
+    AppCoach.notify(CoachAction.startCheckIn);
   }
 
   @override

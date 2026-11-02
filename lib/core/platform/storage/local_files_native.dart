@@ -18,12 +18,16 @@ Image localFileImage(
   BoxFit? fit,
   double? width,
   double? height,
+  int? cacheWidth,
 }) {
   return Image.file(
     File(path),
     fit: fit,
     width: width,
     height: height,
+    // Decode at display size: a full-resolution camera photo as a thumbnail
+    // costs tens of megabytes of memory per image.
+    cacheWidth: cacheWidth,
     errorBuilder: (context, error, stackTrace) => SizedBox(
       width: width,
       height: height,

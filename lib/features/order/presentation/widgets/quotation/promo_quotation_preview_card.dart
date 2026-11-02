@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:steelforce/core/localization/localization_services.dart';
 import 'package:steelforce/core/responsive/responsive_sizing.dart';
 import 'package:steelforce/core/theme/theme_extensions.dart';
 import 'package:steelforce/features/order/presentation/screens/quotation/promotions_mock_data.dart';
@@ -45,7 +46,7 @@ class PromoQuotationPreviewCard extends StatelessWidget {
                 ),
                 SizedBox(width: context.rw(6)),
                 Text(
-                  'QUOTATION FORMATTED PREVIEW',
+                  'orders.promo_preview.title'.tr,
                   style: TextStyle(
                     fontSize: context.rsp(10.5),
                     fontWeight: FontWeight.w800,
@@ -55,7 +56,8 @@ class PromoQuotationPreviewCard extends StatelessWidget {
                 ),
                 const Spacer(),
                 Text(
-                  'Currency: USD',
+                  'orders.quotation_items.currency'
+                      .trParams({'currency': 'USD'}),
                   style: TextStyle(
                     fontSize: context.rsp(10),
                     fontWeight: FontWeight.w600,
@@ -85,7 +87,8 @@ class PromoQuotationPreviewCard extends StatelessWidget {
                           borderRadius: BorderRadius.circular(context.rr(4)),
                         ),
                         child: Text(
-                          'NO. ${line.lineNo}',
+                          'orders.quotation_items.line_no'
+                              .trParams({'index': '${line.lineNo}'}),
                           style: TextStyle(
                             fontSize: context.rsp(10),
                             fontWeight: FontWeight.w800,
@@ -99,7 +102,8 @@ class PromoQuotationPreviewCard extends StatelessWidget {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(
-                              'Material: ${line.materialCode}',
+                              'orders.quotation_items.material'
+                                  .trParams({'code': line.materialCode}),
                               style: TextStyle(
                                 fontSize: context.rsp(11),
                                 fontWeight: FontWeight.w700,
@@ -130,7 +134,7 @@ class PromoQuotationPreviewCard extends StatelessWidget {
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Text('Quantity',
+                            Text('orders.quotation_extra.quantity'.tr,
                                 style: TextStyle(
                                     fontSize: context.rsp(9.5),
                                     fontWeight: FontWeight.w600,
@@ -148,7 +152,7 @@ class PromoQuotationPreviewCard extends StatelessWidget {
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Text('Unit Price (USD)',
+                            Text('orders.quotation_items.unit_price'.tr,
                                 style: TextStyle(
                                     fontSize: context.rsp(9.5),
                                     fontWeight: FontWeight.w600,
@@ -166,7 +170,7 @@ class PromoQuotationPreviewCard extends StatelessWidget {
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Text('Subtotal',
+                            Text('orders.quotation_extra.subtotal'.tr,
                                 style: TextStyle(
                                     fontSize: context.rsp(9.5),
                                     fontWeight: FontWeight.w600,
@@ -189,7 +193,7 @@ class PromoQuotationPreviewCard extends StatelessWidget {
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Text('Discount',
+                            Text('orders.quotation_extra.discount'.tr,
                                 style: TextStyle(
                                     fontSize: context.rsp(9.5),
                                     fontWeight: FontWeight.w600,
@@ -212,7 +216,9 @@ class PromoQuotationPreviewCard extends StatelessWidget {
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Text('Total (USD)',
+                            Text(
+                                'orders.quotation_items.total_currency'
+                                    .trParams({'currency': 'USD'}),
                                 style: TextStyle(
                                     fontSize: context.rsp(9.5),
                                     fontWeight: FontWeight.w600,

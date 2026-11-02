@@ -9,6 +9,9 @@ class CoachProgressModel extends CoachProgress {
     required super.currentStepId,
     required super.completedStepIds,
     required super.version,
+    super.completedModuleIds,
+    super.activeModuleId,
+    super.mascotHidden,
   });
 
   factory CoachProgressModel.fromEntity(CoachProgress e) => CoachProgressModel(
@@ -16,21 +19,31 @@ class CoachProgressModel extends CoachProgress {
         currentStepId: e.currentStepId,
         completedStepIds: e.completedStepIds,
         version: e.version,
+        completedModuleIds: e.completedModuleIds,
+        activeModuleId: e.activeModuleId,
+        mascotHidden: e.mascotHidden,
       );
 
   /// Tolerant parse: any malformed field degrades to a safe default rather than
   /// throwing, so a corrupt record can never crash startup.
   factory CoachProgressModel.fromMap(
       Map<dynamic, dynamic> map, int fallbackVersion) {
+    List<String> strings(Object? v) => v is List
+        ? v.whereType<String>().toList(growable: false)
+        : const <String>[];
+    String? string(Object? v) => v is String ? v : null;
+
     return CoachProgressModel(
       completed: map['completed'] == true,
-      currentStepId: map['currentStepId'] as String?,
-      completedStepIds: (map['completedStepIds'] as List?)
-              ?.whereType<String>()
-              .toList(growable: false) ??
-          const <String>[],
+      currentStepId: string(map['currentStepId']),
+      completedStepIds: strings(map['completedStepIds']),
       version:
           (map['version'] is int) ? map['version'] as int : fallbackVersion,
+      // Absent before the lessons existed (coach v10 and earlier).
+      completedModuleIds: strings(map['completedModuleIds']),
+      activeModuleId: string(map['activeModuleId']),
+      // Absent before the mascot could be hidden: shown.
+      mascotHidden: map['mascotHidden'] == true,
     );
   }
 
@@ -39,5 +52,8 @@ class CoachProgressModel extends CoachProgress {
         'currentStepId': currentStepId,
         'completedStepIds': completedStepIds,
         'version': version,
+        'completedModuleIds': completedModuleIds,
+        'activeModuleId': activeModuleId,
+        'mascotHidden': mascotHidden,
       };
 }

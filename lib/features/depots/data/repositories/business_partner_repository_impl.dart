@@ -7,12 +7,11 @@ import 'package:steelforce/core/utils/typedefs.dart';
 import 'package:steelforce/features/depots/data/datasources/business_partner_remote_data_source.dart';
 import 'package:steelforce/features/depots/data/local/bp_draft_cache.dart';
 import 'package:steelforce/features/depots/data/local/depot_reference_cache.dart';
-import 'package:steelforce/features/depots/domain/entities/bp_depot_draft.dart';
+import 'package:steelforce/features/depots/data/models/bp_depot_form_data.dart';
 import 'package:steelforce/features/depots/data/models/business_partner_request_model.dart';
-import 'package:steelforce/features/depots/data/models/business_partner_response_model.dart';
 import 'package:steelforce/features/depots/data/models/sap_reference_options.dart';
-import 'package:steelforce/features/depots/data/remote/depot_datasources.dart'
-    as legacy;
+import 'package:steelforce/features/depots/data/mappers/depot_reference_lists_to_catalogue.dart';
+import 'package:steelforce/features/depots/data/remote/depot_draft_remote_data_source.dart';
 import 'package:steelforce/features/depots/domain/entities/business_partner_request.dart';
 import 'package:steelforce/features/depots/domain/entities/business_partner_result.dart';
 import 'package:steelforce/features/depots/domain/repositories/business_partner_repository.dart';
@@ -22,7 +21,7 @@ const _trace = DebugTrace('registration');
 class BusinessPartnerRepositoryImpl implements BusinessPartnerRepository {
   const BusinessPartnerRepositoryImpl({
     required BusinessPartnerRemoteDataSource remote,
-    required legacy.DepotRemoteDataSource references,
+    required DepotDraftRemoteDataSource references,
     required DepotReferenceCache referenceCache,
     required BpDraftCache draftCache,
     NetworkInfo? network,
@@ -35,10 +34,9 @@ class BusinessPartnerRepositoryImpl implements BusinessPartnerRepository {
   /// The single-write registration endpoint.
   final BusinessPartnerRemoteDataSource _remote;
 
-  /// `GET /references` still lives on the older data source. Kept there rather
-  /// than duplicated onto [_remote]: the catalogues are unrelated to the write
-  /// and are also read by other screens.
-  final legacy.DepotRemoteDataSource _references;
+  /// `GET /api/v1/depots/references` — the six SAP lists, served by the same
+  /// data source as the depot-draft create the wizard submits to.
+  final DepotDraftRemoteDataSource _references;
 
   final DepotReferenceCache _referenceCache;
   final BpDraftCache _draftCache;
@@ -150,9 +148,9 @@ class BusinessPartnerRepositoryImpl implements BusinessPartnerRepository {
         });
         return const Failed(
           ServerFailure(
-            message: 'The server accepted the registration but returned no '
-                'reference for it. Check the depot list before submitting '
-                'again.',
+            // A translation key: shown to the rep through
+            // `Failure.userMessage`.
+            message: 'depots.error.no_reference',
             // 422, not 5xx. The call reached the server and the server
             // answered; a 5xx here would be classified downstream as a
             // gateway failure and reported to the rep as "held, will retry",
@@ -202,9 +200,8 @@ class BusinessPartnerRepositoryImpl implements BusinessPartnerRepository {
     final online = await _network?.isConnected ?? true;
     if (online) {
       try {
-        final fetched = await _references.fetchRegistrationReferences(
-          includeInactive: includeInactive,
-        );
+        // The new route has no `includeInactive`: it serves live values only.
+        final fetched = (await _references.fetchReferences()).toCatalogue();
         if (!fetched.isEmpty) {
           await _referenceCache.write(
             fetched,

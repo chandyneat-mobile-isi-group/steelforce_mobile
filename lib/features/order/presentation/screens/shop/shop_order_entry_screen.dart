@@ -140,7 +140,7 @@ class _ShopOrderEntryScreenState extends State<ShopOrderEntryScreen> {
         actions: [
           Padding(
             padding: EdgeInsets.only(right: context.rw(16)),
-            child: const BackToHomeButton(label: 'Back to home'),
+            child: const BackToHomeButton(),
           ),
         ],
       ),

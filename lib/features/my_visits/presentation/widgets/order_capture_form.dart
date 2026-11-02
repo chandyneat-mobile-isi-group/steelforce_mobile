@@ -132,7 +132,7 @@ class _OrderCaptureSheetState extends State<_OrderCaptureSheet> {
               Row(
                 children: [
                   Expanded(
-                    child: Text('Quantity',
+                    child: Text('my_visits.forms.quantity'.tr,
                         style: TextStyle(
                             color: colors.textSecondary,
                             fontSize: context.rsp(12.5))),

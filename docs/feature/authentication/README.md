@@ -5,6 +5,18 @@
 > Version 1.0 · Generated 2026-07-23 from the actual implementation (`lib/features/authentication/`, `lib/core/{auth,session,middleware,network}/`) via Graphify analysis.
 > Companion documents: [Architecture](architecture.md) · [Workflow](workflow.md) · [Overview](overview.md) · [Technical Design](technical-design.md) · [API](api.md) · [Database](data-model.md) · [Security](security.md) · [QA Test Plan](testing.md) · [UAT](uat.md) · [Use Cases](use-cases.md) · [Business Rules](business-rules.md) · [Changelog](changelog.md) · [Implementation Checklist](implementation-checklist.md) · [Roadmap](roadmap.md)
 > Canonical flow narrative (pre-existing): `docs/blueprint/authentication-architecture.md`
+> Setting up Firebase SMS codes and App Check: [firebase-otp-setup.md](firebase-otp-setup.md)
+> Password reset and change: [mobile-integration.md](mobile-integration.md) (the contract) · [firebase-sms-otp-test.md](firebase-sms-otp-test.md) (device test runbook) · [firebase-password-reset-mobile.md](firebase-password-reset-mobile.md) (old contract, kept for reference)
+> Backend references: [backend-auth-guide.md](backend-auth-guide.md) (the backend's full auth guide) · [mobile-location-reporting.md](mobile-location-reporting.md) (location heartbeat) · profile and avatar API moved to [../profile/api.md](../profile/api.md)
+>
+> ⚠️ **Content refresh pending (found 2026-10-24).** Parts of this package were
+> generated on 2026-07-23 and the code has moved on: the mock login (G-1) is
+> gone, password reset (G-2) is the real Firebase flow, `test/features/authentication/`
+> now has tests (G-3), and the interceptors moved from `core/middleware` to
+> `core/network/interceptors`. The start endpoint for both phone flows in code is
+> `POST /auth/otp/request` (`ApiEndpoints.startFirebaseResetEndpoint`); several
+> docs still say `/auth/forgot-password/phone/start`. Trust the code until these
+> pages are refreshed.
 
 ---
 

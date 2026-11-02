@@ -84,4 +84,4 @@ event producers ship.
 ## Related
 
 - [Business rules](business-rules.md) · [Architecture](architecture.md)
-- [Database architecture](../../blueprint/database-architecture.md)
+- Database architecture (`database-architecture.md` ⧉ backend repo)

@@ -35,17 +35,25 @@ class _StopActionBar extends StatelessWidget {
     }
 
     if (status != VisitStatus.checkedIn) {
-      return _Chrome(child: _PrimaryAction(onPressed: onStart));
+      return _Chrome(
+        child: CoachKeys.wrap(
+          CoachKeys.visitStart,
+          child: _PrimaryAction(onPressed: onStart),
+        ),
+      );
     }
 
     return _Chrome(
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          _PrimaryAction(
-            onPressed: onStart,
-            icon: Icons.arrow_forward_rounded,
-            labelKey: 'my_visits.stop_info.start_visit',
+          CoachKeys.wrap(
+            CoachKeys.visitStart,
+            child: _PrimaryAction(
+              onPressed: onStart,
+              icon: Icons.arrow_forward_rounded,
+              labelKey: 'my_visits.stop_info.start_visit',
+            ),
           ),
           SizedBox(height: context.rh(8)),
           SizedBox(
@@ -101,7 +109,7 @@ class _DoneMarker extends StatelessWidget {
           ),
           SizedBox(width: context.rw(6)),
           Text(
-            status.label,
+            status.localizedLabel,
             style: TextStyle(
               fontSize: context.rsp(13.5),
               fontWeight: FontWeight.w800,

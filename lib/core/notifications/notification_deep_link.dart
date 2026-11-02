@@ -104,6 +104,19 @@ abstract final class NotificationDeepLink {
           route: Static.myVisits,
           query: query,
         ),
+      // `visit-plans / 2026-10-22`: the Visits tab, on that day.
+      ['visit-plans', final day] => NotificationDestination(
+          route: Static.myVisits,
+          arguments: {'date': day},
+          query: query,
+        ),
+      // `depot-draft / {id}`: no screen opens a draft by its server id, so the
+      // Depots tab, which lists the rep's registrations.
+      ['depot-draft', final draftId] => NotificationDestination(
+          route: Static.depot,
+          arguments: {'depotDraftId': draftId},
+          query: query,
+        ),
 
       // Quotations and orders share the Orders tab, which is where both live.
       ['quotations', final quoteId] => NotificationDestination(
@@ -141,6 +154,18 @@ abstract final class NotificationDeepLink {
       // Anything this build does not know. §11: handle it gracefully.
       _ => _inbox(query),
     };
+  }
+
+  /// The app's own URI for the inbox API's `link` (`targetType`, `targetId`),
+  /// or null when there is none.
+  ///
+  /// This only re-encodes the server's pair so one router serves the inbox, a
+  /// push and a local alert alike; it never derives a target from other data.
+  static String? fromTarget(String? targetType, String? targetId) {
+    if (targetType == null || targetType.isEmpty) return null;
+    if (targetId == null || targetId.isEmpty) return null;
+    return '$scheme://${Uri.encodeComponent(targetType)}/'
+        '${Uri.encodeComponent(targetId)}';
   }
 
   /// True when [link] resolves to something this build can actually open, as

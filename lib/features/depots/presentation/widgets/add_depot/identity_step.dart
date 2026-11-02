@@ -11,6 +11,28 @@ extension IdentityStepExtension on _AddDepotBottomSheetState {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
+        // One wizard registers both kinds, so the rep says which first.
+        _inputCard(
+          label: 'add_depot.registration_type.label'.tr,
+          icon: Icons.store_mall_directory_outlined,
+          required: true,
+          compact: true,
+          child: _segmented(
+            value: draft.registrationType.storageValue,
+            options: [
+              for (final t in DepotRegistrationType.values)
+                SapOption(t.storageValue, t.labelKey.tr),
+            ],
+            compact: true,
+            onChanged: (v) => _edit((d) =>
+                d.registrationType = DepotRegistrationType.fromStorage(v)),
+          ),
+        ),
+        if (draft.registrationType == DepotRegistrationType.nonBp) ...[
+          _gap(8),
+          _buildSupplyingDepotsField(draft, errors['supplyingDepots']),
+        ],
+        _gap(8),
         _twoCol(
           _dropdown(
             label: 'add_depot.grouping'.tr,
@@ -116,6 +138,51 @@ extension IdentityStepExtension on _AddDepotBottomSheetState {
         _gap(8),
         _infoChip(Icons.qr_code_2_rounded, 'add_depot.code_assigned_by_sap'.tr),
       ],
+    );
+  }
+
+  /// A Non-BP depot names the depots it buys from (`depots`, 1-20).
+  Widget _buildSupplyingDepotsField(BpDepotDraft draft, String? error) {
+    final codes = draft.supplyingDepots;
+    return _inputCard(
+      label: 'add_depot.supplying_depots.label'.tr,
+      icon: Icons.warehouse_outlined,
+      required: true,
+      compact: true,
+      error: error,
+      child: InkWell(
+        onTap: () async {
+          final picked = await showSupplyingDepotPicker(
+            context,
+            selected: {
+              for (final c in codes) c: draft.supplyingDepotNames[c] ?? c,
+            },
+          );
+          if (picked == null) return;
+          _edit((d) => d
+            ..supplyingDepots = picked.keys.toList()
+            ..supplyingDepotNames = picked);
+        },
+        child: Padding(
+          padding: const EdgeInsets.symmetric(vertical: 6),
+          child: codes.isEmpty
+              ? Text(
+                  'add_depot.supplying_depots.placeholder'.tr,
+                  style: TextStyle(color: context.appColors.textSecondary),
+                )
+              : Wrap(
+                  spacing: 6,
+                  runSpacing: 6,
+                  children: [
+                    for (final code in codes)
+                      Chip(
+                        label: Text(draft.supplyingDepotNames[code] ?? code),
+                        visualDensity: VisualDensity.compact,
+                      ),
+                  ],
+                ),
+        ),
+      ),
     );
   }
 }

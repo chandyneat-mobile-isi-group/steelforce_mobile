@@ -2,7 +2,7 @@
 
 **Purpose:** where the notification pieces sit and the decisions that shape them.
 **Scope:** the feature's internals. System-level view is in
-[blueprint/notification-architecture.md](../../blueprint/notification-architecture.md).
+`blueprint/notification-architecture.md` ⧉ backend repo.
 **Status:** Active · **Last updated:** 2026-08-27
 
 ---
@@ -111,6 +111,6 @@ it, because the alternative is three clients disagreeing about what `route` mean
 
 ## Related
 
-- [Notification architecture](../../blueprint/notification-architecture.md) — the system view
+- Notification architecture (`notification-architecture.md` ⧉ backend repo) — the system view
 - [Workflow](workflow.md) · [Data model](data-model.md)
-- [API architecture § 4](../../blueprint/api-architecture.md#4-controller-organisation) — when a BFF controller is justified
+- API architecture § 4 (`api-architecture.md` ⧉ backend repo) — when a BFF controller is justified

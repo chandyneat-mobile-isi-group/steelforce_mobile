@@ -46,6 +46,12 @@ class AppThemeColors extends ThemeExtension<AppThemeColors> {
     required this.brandNavyDark,
     required this.accentPurple,
     required this.shadowColor,
+    required this.wallpaperTop,
+    required this.wallpaperBottom,
+    required this.wallpaperLine,
+    required this.wallpaperSubtleTop,
+    required this.wallpaperSubtleBottom,
+    required this.wallpaperSubtleLine,
   });
 
   final Color card;
@@ -71,6 +77,17 @@ class AppThemeColors extends ThemeExtension<AppThemeColors> {
   final Color brandNavyDark;
   final Color accentPurple;
   final Color shadowColor;
+
+  /// The home wallpaper's vertical blend and its zigzag lines
+  /// (`BrandWallpaperBackground`).
+  final Color wallpaperTop;
+  final Color wallpaperBottom;
+  final Color wallpaperLine;
+
+  /// The calm variant for text-heavy screens (`BrandWallpaperStyle.subtle`).
+  final Color wallpaperSubtleTop;
+  final Color wallpaperSubtleBottom;
+  final Color wallpaperSubtleLine;
 
   /// Soft elevation for flat enterprise cards — resolved for the active theme
   /// (replaces the const `Vibe.cardShadow`).
@@ -106,6 +123,12 @@ class AppThemeColors extends ThemeExtension<AppThemeColors> {
     brandNavyDark: AppColors.brandNavyDark,
     accentPurple: AppColors.accentPurple,
     shadowColor: AppColors.shadow,
+    wallpaperTop: AppColors.wallpaperTop,
+    wallpaperBottom: AppColors.wallpaperBottom,
+    wallpaperLine: AppColors.wallpaperLine,
+    wallpaperSubtleTop: AppColors.wallpaperSubtleTop,
+    wallpaperSubtleBottom: AppColors.wallpaperSubtleBottom,
+    wallpaperSubtleLine: AppColors.wallpaperSubtleLine,
   );
 
   /// Dark-mode tokens — sourced from [AppColorsDark].
@@ -126,11 +149,19 @@ class AppThemeColors extends ThemeExtension<AppThemeColors> {
     warning: AppColorsDark.warning,
     warningAlt: AppColorsDark.warningAlt,
     info: AppColorsDark.info,
-    slate: AppColorsDark.surfaceContainer,
+    // A foreground colour (the Offline icon, "Skipped"): light on dark. It
+    // was the dark surface colour, which drew those icons invisible.
+    slate: AppColorsDark.slate,
     brandNavy: AppColorsDark.brandNavy,
     brandNavyDark: AppColorsDark.brandNavyDark,
     accentPurple: AppColorsDark.accentPurple,
     shadowColor: AppColorsDark.shadow,
+    wallpaperTop: AppColorsDark.wallpaperTop,
+    wallpaperBottom: AppColorsDark.wallpaperBottom,
+    wallpaperLine: AppColorsDark.wallpaperLine,
+    wallpaperSubtleTop: AppColorsDark.wallpaperSubtleTop,
+    wallpaperSubtleBottom: AppColorsDark.wallpaperSubtleBottom,
+    wallpaperSubtleLine: AppColorsDark.wallpaperSubtleLine,
   );
 
   @override
@@ -156,6 +187,12 @@ class AppThemeColors extends ThemeExtension<AppThemeColors> {
     Color? brandNavyDark,
     Color? accentPurple,
     Color? shadowColor,
+    Color? wallpaperTop,
+    Color? wallpaperBottom,
+    Color? wallpaperLine,
+    Color? wallpaperSubtleTop,
+    Color? wallpaperSubtleBottom,
+    Color? wallpaperSubtleLine,
   }) {
     return AppThemeColors(
       card: card ?? this.card,
@@ -179,6 +216,13 @@ class AppThemeColors extends ThemeExtension<AppThemeColors> {
       brandNavyDark: brandNavyDark ?? this.brandNavyDark,
       accentPurple: accentPurple ?? this.accentPurple,
       shadowColor: shadowColor ?? this.shadowColor,
+      wallpaperTop: wallpaperTop ?? this.wallpaperTop,
+      wallpaperBottom: wallpaperBottom ?? this.wallpaperBottom,
+      wallpaperLine: wallpaperLine ?? this.wallpaperLine,
+      wallpaperSubtleTop: wallpaperSubtleTop ?? this.wallpaperSubtleTop,
+      wallpaperSubtleBottom:
+          wallpaperSubtleBottom ?? this.wallpaperSubtleBottom,
+      wallpaperSubtleLine: wallpaperSubtleLine ?? this.wallpaperSubtleLine,
     );
   }
 
@@ -207,6 +251,15 @@ class AppThemeColors extends ThemeExtension<AppThemeColors> {
       brandNavyDark: Color.lerp(brandNavyDark, other.brandNavyDark, t)!,
       accentPurple: Color.lerp(accentPurple, other.accentPurple, t)!,
       shadowColor: Color.lerp(shadowColor, other.shadowColor, t)!,
+      wallpaperTop: Color.lerp(wallpaperTop, other.wallpaperTop, t)!,
+      wallpaperBottom: Color.lerp(wallpaperBottom, other.wallpaperBottom, t)!,
+      wallpaperLine: Color.lerp(wallpaperLine, other.wallpaperLine, t)!,
+      wallpaperSubtleTop:
+          Color.lerp(wallpaperSubtleTop, other.wallpaperSubtleTop, t)!,
+      wallpaperSubtleBottom:
+          Color.lerp(wallpaperSubtleBottom, other.wallpaperSubtleBottom, t)!,
+      wallpaperSubtleLine:
+          Color.lerp(wallpaperSubtleLine, other.wallpaperSubtleLine, t)!,
     );
   }
 }

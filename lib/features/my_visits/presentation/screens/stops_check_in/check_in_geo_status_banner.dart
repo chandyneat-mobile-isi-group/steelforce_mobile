@@ -156,7 +156,7 @@ class _GeoStatusBanner extends StatelessWidget {
                 _StatusPill(
                   color: scheme.error,
                   icon: Icons.block_rounded,
-                  text: blockedReason!,
+                  text: localizeCheckInMessage(blockedReason!),
                 ),
               ],
               for (final warning in warnings) ...[
@@ -164,7 +164,7 @@ class _GeoStatusBanner extends StatelessWidget {
                 _StatusPill(
                   color: colors.warning,
                   icon: Icons.warning_amber_rounded,
-                  text: warning,
+                  text: localizeCheckInMessage(warning),
                 ),
               ],
             ],
@@ -205,14 +205,18 @@ class _StatusPill extends StatefulWidget {
 
 class _StatusPillState extends State<_StatusPill>
     with SingleTickerProviderStateMixin {
-  late final AnimationController _sweep = AnimationController(
-    vsync: this,
-    duration: const Duration(milliseconds: 1600),
-  );
+  // Created in initState, not as a lazy `late final` initializer: a pill
+  // without shimmer never touched it, so the first touch was `dispose()` —
+  // building a ticker on a deactivated element, which asserts.
+  late final AnimationController _sweep;
 
   @override
   void initState() {
     super.initState();
+    _sweep = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 1600),
+    );
     if (widget.shimmer) _sweep.repeat();
   }
 

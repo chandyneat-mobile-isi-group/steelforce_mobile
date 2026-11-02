@@ -18,7 +18,7 @@ import 'package:sqlite3/wasm.dart';
 /// get SQLCipher's guarantees in a browser today.
 ///
 /// **No persistence.** This is what makes the missing encryption acceptable
-/// rather than a `SECURITY.md` §3 violation. Drift *can* persist to
+/// rather than a `docs/skills/security.md` §3 violation. Drift *can* persist to
 /// OPFS/IndexedDB via `WasmDatabase.open()`, and doing so here would write
 /// depot PII, GPS traces, and quotation pricing to storage readable by any
 /// script on the origin — reintroducing on web precisely the finding that
@@ -26,7 +26,7 @@ import 'package:sqlite3/wasm.dart';
 /// satisfied on web by there being no rest.
 ///
 /// > **Do not "upgrade" this to `WasmDatabase.open()` for offline persistence.**
-/// > That is Option C in `docs/blueprint/web-migration-plan.md` §3.2, and it was
+/// > That is Option C in `docs/blueprint/web-architecture.md` §3.2, and it was
 /// > rejected: browsers have no hardware-backed keystore, so the key would sit
 /// > in the same storage as the data it claims to protect. Changing this needs
 /// > an ADR superseding ADR-010, not a patch.

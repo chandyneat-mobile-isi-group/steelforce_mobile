@@ -10,9 +10,9 @@ extension ContactStepExtension on _AddDepotBottomSheetState {
     final telephoneSwitchCard = Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: context.appColors.card,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: const Color(0xFFE2E8F0), width: 1.1),
+        border: Border.all(color: context.appColors.border, width: 1.1),
         boxShadow: [
           BoxShadow(
             color: Colors.black.withValues(alpha: 0.02),
@@ -37,8 +37,8 @@ extension ContactStepExtension on _AddDepotBottomSheetState {
                 ),
                 Text(
                   'add_depot.same_as_mobile'.tr,
-                  style: const TextStyle(
-                    color: Color(0xFF64748B),
+                  style: TextStyle(
+                    color: context.appColors.textSecondary,
                     fontSize: 10,
                   ),
                   maxLines: 1,
@@ -68,9 +68,9 @@ extension ContactStepExtension on _AddDepotBottomSheetState {
     final contactPerson = Container(
       padding: const EdgeInsets.fromLTRB(10, 8, 10, 10),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: context.appColors.card,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: const Color(0xFFE2E8F0), width: 1.1),
+        border: Border.all(color: context.appColors.border, width: 1.1),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,

@@ -39,7 +39,6 @@ import `firebase_messaging` directly into shared code — it breaks the web buil
 - Channel routing: the backend addresses channels by `channel_id` — see
   `notification_channels.dart`.
 - Deep link resolution and navigation: `notification_deep_link.dart`.
-  The payload is untrusted input — validate it per `security.md` §6.
 - Time zone: the backend needs an **IANA** zone (`Asia/Phnom_Penh`) for quiet
   hours and digests. Use `device_time_zone.dart` — `dart:io` gives only the
   abbreviation (`ICT`), which is not sufficient.

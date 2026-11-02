@@ -9,6 +9,7 @@ import 'package:steelforce/features/splash/presentation/animation/logo_reveal.da
 import 'package:steelforce/features/splash/presentation/animation/splash_timeline.dart';
 import 'package:steelforce/routes/app_routes.dart';
 import 'package:steelforce/shared/animations/steel_particle_field.dart';
+import 'package:steelforce/shared/widgets/brand_pattern_background.dart';
 
 /// The SteelForce launch screen: a steel field gathering into the brand mark.
 ///
@@ -93,7 +94,7 @@ class _SplashScreenState extends State<SplashScreen>
     }
 
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: AppColors.brandPattern,
       body: GestureDetector(
         // Tap anywhere to skip. Nothing here is worth making someone wait for.
         behavior: HitTestBehavior.opaque,
@@ -105,28 +106,14 @@ class _SplashScreenState extends State<SplashScreen>
             return Stack(
               fit: StackFit.expand,
               children: [
-                // Near-white, with the faintest cool wash so the screen is not
-                // a dead flat field behind the motion.
-                DecoratedBox(
-                  decoration: BoxDecoration(
-                    gradient: LinearGradient(
-                      begin: Alignment.topCenter,
-                      end: Alignment.bottomCenter,
-                      colors: [
-                        Color.lerp(
-                            Colors.white, AppColors.primary, 0.02 + 0.02 * p)!,
-                        Colors.white,
-                        Color.lerp(Colors.white, AppColors.slate, 0.035)!,
-                      ],
-                      stops: const [0.0, 0.55, 1.0],
-                    ),
-                  ),
-                ),
+                // The brand chevron, shared with sign-in and password reset.
+                const BrandPatternBackground(),
 
+                // Light motes on the blue: steel-grey dust, white sparks.
                 SteelParticleField(
                   progress: p,
-                  steel: AppColors.slate,
-                  highlight: AppColors.primary,
+                  steel: AppColors.secondaryLight,
+                  highlight: Colors.white,
                   convergeFrom: SplashTimeline.convergeFrom,
                 ),
 
@@ -134,7 +121,7 @@ class _SplashScreenState extends State<SplashScreen>
                   child: LogoReveal(
                     t: SplashTimeline.logo.transform(p),
                     settle: SplashTimeline.handoff.transform(p),
-                    highlight: AppColors.primary,
+                    highlight: Colors.white,
                   ),
                 ),
 

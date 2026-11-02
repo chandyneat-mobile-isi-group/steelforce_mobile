@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:steelforce/core/localization/localization_services.dart';
 import 'package:flutter/services.dart';
+import 'package:steelforce/core/localization/localization_services.dart';
 import 'package:steelforce/core/theme/theme_extensions.dart';
 import 'package:steelforce/core/responsive/responsive_sizing.dart';
 
@@ -59,7 +59,7 @@ class _DiscountSectionState extends State<DiscountSection> {
               );
             }),
             ChoiceChip(
-              label: const Text('Custom'),
+              label: Text('orders.discount_section.custom'.tr),
               selected: _isCustomActive,
               onSelected: (_) => _handleCustomTap(),
             ),

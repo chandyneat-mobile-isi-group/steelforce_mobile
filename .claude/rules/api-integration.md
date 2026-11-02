@@ -13,7 +13,7 @@ one**; a contract has exactly one home, next to its feature.
 1. Find the existing client: `lib/core/network/` —
    `app_network.dart`, `api_envelope.dart`, `api_error.dart`,
    `api_log_interceptor.dart`, `network_info.dart`,
-   `connectivity/connectivity_service.dart`, `sap_client.dart`.
+   `connectivity_service.dart`, `sap_client.dart`.
 2. Find the existing endpoint pattern and request/response models in the
    feature's `data/` layer.
 3. Read the feature's contract doc in `docs/feature/<feature>/`.
@@ -49,8 +49,7 @@ indicator, it does not blank the screen. Writes go to the local database and the
 sync queue **in the same transaction** (ADR-006) — never "call the API, then
 save on success".
 
-Check real reachability via
-`core/network/connectivity/connectivity_service.dart` (ADR-005), not a raw
+Check real reachability via `connectivity_service.dart` (ADR-005), not a raw
 `connectivity_plus` interface state.
 
 ---

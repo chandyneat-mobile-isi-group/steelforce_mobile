@@ -2,6 +2,224 @@
 
 Route management and fraud-safe field-visit capture for sales reps. A rep is assigned a daily route with ordered depot stops, walks through each stop with geofence-verified check-in/out, captures market data, and can pivot straight into building a quotation.
 
+## 0. Visits rebuild on the Plans API (in progress — 2026-10-27)
+
+The Visits tab is being rebuilt on the backend's **Plans API**
+(`/api/v1/mobile/plans…`), replacing the route-sync model described in §2–§11.
+It is built in stages; each stage lands only after the previous one is verified.
+
+| Stage | Scope | Endpoints | Status |
+|---|---|---|---|
+| 1 | Visits screen: today's list + month calendar | `GET /mobile/plans/today` (list), `GET /mobile/plans?period=ThisMonth` (calendar) | **Done** |
+| 2 | Visit details + GPS check-in | `GET /mobile/plans/{id}`, `POST /mobile/plans/{id}/check-in` | **Done** (2026-10-28) — see §0.2 |
+| 3 | Inventory photos, check-out, skip | `POST …/{id}/inventory-check-photo-upload`, `POST …/{id}/check-out`, `POST …/{id}/skip` | **Done** (2026-10-30) — see §0.1, §0.2 |
+| 4 | Ad hoc start + cancel | `POST /mobile/plans/ad-hoc`, `POST …/{id}/cancel` | Start **done** (2026-10-30) from the depot card and detail — see §0.4; cancel not started |
+| 5 | Check-in history + notification links | `GET /mobile/check-ins`, `GET /mobile/check-ins/{id}`, `/me/notifications…` | Not started |
+
+### 0.1 Stage 1 — what is wired
+
+**One endpoint per job:**
+
+| Part of the screen | Endpoint | Cubit |
+|---|---|---|
+| Summary + visit list (today) | `GET /api/v1/mobile/plans/today` | `VisitPlansCubit` |
+| Calendar day counts, and the list for any **other** picked day | `GET /api/v1/mobile/plans?period=ThisMonth` | `VisitPlanCalendarCubit` |
+
+```
+ShellTab.myVisits / Static.myVisits
+  └─ VisitPlansScreen                       presentation/screens/visit_plans/
+       ├─ StopCalendarSection (reused)       ← VisitPlanCalendarCubit → GetMyVisitPlans(ThisMonth)
+       └─ today list / picked-day list       ← VisitPlansCubit       → GetTodayVisitPlans
+            both → VisitPlanRepository → ApiVisitPlanRemoteDataSource (authenticated Dio)
+                                          → VisitPlansModel (same MyPlansView parser for both)
+```
+
+- **Today is picked by default.** The summary card and the list come from
+  `/plans/today`; today's calendar dot uses the same response, so the dot and
+  the list cannot disagree.
+- **Picking another day** lists that day's visits from the month the calendar
+  already loaded — no extra request. Picking today returns to `/plans/today`.
+- **Map (UI ready, waiting on backend):** the calendar's map button opens
+  `VisitPlansMapScreen` with the visits the list is showing for the picked
+  day. Items now carry `latitude`/`longitude` and they are parsed onto
+  `VisitPlan` (`hasLocation`), but the server still sends them as `null`, so
+  the map centres on Phnom Penh (and the rep's location when permission is
+  already granted), shows a "locations are coming soon" notice, and lists the
+  day's visits under it. **Next:** draw a pin for each plan with
+  `hasLocation` — the button, route and screen stay as they are.
+- **Calendar range:** the endpoint answers `Today`, `ThisWeek` or `ThisMonth`
+  only, so the calendar knows the current month. Other months show no dots.
+- **Nothing identifies the rep** but the bearer token — no territory or
+  employee code is sent to either endpoint.
+- **Response (`data`, both endpoints):** `period`, `from`, `to`, `total`,
+  `completed`, `remaining`, `skipped`, `missed`, `adHoc`, `items[]`. Each item:
+  `id`, `assignmentDate`, `visitType`, `outletType`, `depotCode`, `nonDepotId`,
+  `outletName`, `depotName`, `status`, `depotType`, `depotTier`,
+  `territoryCode`, `latitude`, `longitude` (the last five may be `null`).
+- **Name shown:** `depotName` only — `outletName` is parsed but not displayed.
+- **Visit card** (styled like the stop card): depot name and address, status
+  tag in the top-right corner, then `territory · channel · tier`, with a map
+  and a skip action. The plans API sends no channel: it is the depot's own
+  from the depots API, found on the device by `depotCode` (`nonDepotId` for a
+  Non-BP depot) — the same line the depot card shows. Any value sent as `null` reads **Null**. Address has no field in
+  the plans API yet, so it always reads Null. The map action opens the maps app
+  and is dimmed while the plan has no coordinates. Depot code and visit type
+  are not on the card.
+- **Skip** — `POST /api/v1/mobile/plans/{id}/skip` with `{ "reason" }`
+  (1–500 chars), `{id}` the plan id. The red × shows on **today's list only**,
+  for Planned or CheckedIn visits that are not ad hoc (`VisitPlan.canSkip`).
+  The rep picks one of four preset reasons (sent in English): Shop closed,
+  Depot not available, No stock needed, Access denied — no free text.
+  Online only; on success today's list and the calendar reload. Refusals:
+  `PLAN_NOT_TODAY`, `PLAN_STATUS_CONFLICT`, `PLAN_NOT_FOUND`/404,
+  `VALIDATION_FAILED`/400 each have their own message; 401/403 as for reads.
+  The 200 body (`MyPlanDetail`) is not parsed — its schema is not documented.
+  `territoryCode` is read only; it is never sent.
+- **Location:** a pin needs both coordinates; one alone, or a value off the
+  globe, is treated as no location.
+- **Identifiers:** the item `id` is the **plan id** — the only id check-in,
+  skip and complete accept. The depot code is never used as a plan id; cards
+  are keyed by plan id.
+- **Counts are the server's.** The summary shows `total/completed/remaining/
+  skipped/missed/adHoc` from `/plans/today` as sent; never recomputed.
+- **Dates:** `assignmentDate` is read as the calendar day in its text
+  (`yyyy-MM-dd`), never shifted through a time zone.
+- **Status:** `Planned`, `CheckedIn`, `Completed`, `Skipped`, `Missed`, plus
+  ad hoc `Draft`, `Cancelled`, `Expired`. An unrecognised value is shown as the
+  server's word. Each status has its own colour **and** icon.
+- **Parsing is tolerant:** missing counts read as 0, missing names as null,
+  numbers sent as strings still parse. An item without an `id` is dropped.
+
+**States (today list):** loading (card skeleton) · loaded · empty (counts +
+"No visits today") · error (message + Retry) · refresh (pull-to-refresh
+reloads both endpoints; a failed refresh keeps the list and shows a SnackBar
+with Retry). **Calendar:** a failed load while today is picked only costs the
+dots, so it is a SnackBar with Retry; with another day picked it is the error
+view. A picked day with nothing planned says "No visits on this day".
+
+**Errors:** offline → `NetworkFailure` without a request (ADR-005 reachability);
+401 → the auth interceptor refreshes once and replays, and only a 401 that
+survives that reaches the screen, as "session ended"; 403 → "only available to
+sales employees" (**never** a sign-out); anything else → the server's message
+or a generic one; an unreadable 200 → its own message, never a crash.
+
+**Duplicate requests:** each cubit joins a second `load`/`refresh` onto the
+one in flight. Opening the screen sends exactly one request to each endpoint;
+picking a day sends none.
+
+**Offline (v30):** each successful read of `/plans/today` and
+`/plans?period=ThisMonth` replaces a copy in `visit_plan_snapshots`.
+Offline, the copy is answered — today's only on the same calendar day, the
+month's only within the same month — and the list says "saved at HH:mm". The
+shell prefetch (`offline-architecture.md` §4.1) fills it on every start.
+Cards were display-only in this stage; Stage 2 (§0.2) wired them.
+The old `StopDashboardScreen` flow (§11) is no longer mounted on the tab but is
+still in the code; it is removed once Stages 2–3 replace check-in and
+check-out.
+
+### 0.5 Offline plan visits (2026-10-30)
+
+Check-in, inventory photos and check-out work offline; **ad hoc start does
+not** (online only — offline the rep is told at the tap, before the dialog).
+
+- **Outbox (schema v32):** `plan_visit_outbox`, one row per step, keyed by
+  the id the step is sent with (`checkInId` / `uploadId` / `checkOutId`), so
+  a resend after a lost answer is the same request. Photos are copied to
+  `<documents>/plan_outbox/<stepId>/` when saved, and deleted once sent.
+- **When a step queues:** offline; or the visit already has steps waiting
+  (it goes behind them); or online but no answer came (network, timeout).
+  Otherwise it goes live exactly as before.
+- **Sending:** `PlanVisitUnsentWorkSource` (sync engine — reconnect, resume,
+  launch, after each save). Each visit strictly oldest first: check-in →
+  photos → check-out. No network / timeout / 401 / 429 / 5xx → kept and
+  retried. `PLAN_INVENTORY_PHOTO_LIMIT` counts as sent. **Any other refusal
+  holds the visit** ("Needs attention") with the server's reason; nothing is
+  lost. The rep can **Resend** or **Discard** (confirmed) from the card; a
+  new check-in for the visit (e.g. with a reason) replaces the refused one
+  and releases the rest.
+- **Zone offline:** each successful `GET /plans/{id}` is kept (snapshot key
+  `target:<planId>`), and today's startable visits are fetched ahead while
+  online. Offline the kept copy drives the same zone check; a visit never
+  fetched falls back to today's plan item with no radius — the server judges
+  the zone when the check-in is sent.
+- **What the rep sees:** a check-in saved offline makes the visit read
+  CheckedIn on the phone (Continue card included), a check-out Completed,
+  each with a "Waiting to sync" chip until the server agrees. Messages say
+  "will be sent when you're back online". The lists reload after each drain.
+- **Sign-out** is refused while any step is left (as for quotations).
+
+### 0.4 Stage 4 — ad hoc start from Depots
+
+`POST /api/v1/mobile/plans/ad-hoc` with `{ visitId, outletType, depotCode | nonDepotId }`,
+called from the depot card's Add visit button and the depot detail screen
+(confirm dialog first; its note stays a local depot activity). Replaces the old
+`POST /mobile/visits/ad-hoc` call on those two entry points.
+
+- **Outlet:** a `Depot` row is sent as `outletType: 1` + `depotCode`; a
+  `NonDepot` row as `outletType: 2` + `nonDepotId` (its `depotId`). Rows
+  awaiting approval (`Draft`, `NonDepotDraft`) have no button. The 1/2 values
+  are read from the Swagger example — **to be confirmed by the backend.**
+- **visitId:** a v4 uuid kept per outlet in memory until the server answers
+  for good — reused after no network, timeout, 429, 5xx or an unreadable 200
+  (the server answers 200 with the same visit); dropped after success or any
+  other refusal, so the next tap is a new visit. Not persisted across restarts.
+- **Answer:** 201 new / 200 replay — `data` is read as a plan item (the id
+  falls back to the sent `visitId`). The SnackBar offers **Start visit**, which
+  checks in like any plan (`VisitPlan.canStart` now includes `Draft`).
+- **Refusals:** 403 `PLAN_EMPLOYEE_CODE_REQUIRED` → "sales employees only"
+  (never a sign-out); 404 `PLAN_OUTLET_NOT_FOUND`; 409
+  `PLAN_ALREADY_VISITED_TODAY` → "already on today" (a success, `details.planId`
+  kept); 409 `PLAN_AD_HOC_LIMIT_REACHED`; 409 `PLAN_ID_IN_USE` → try again with
+  a new id; 429 → wait. Online only.
+
+### 0.2 Stage 2 — card tap, Start Visit, check-in
+
+Contract: backend `features/visit-check-in/api-contract.md`.
+
+- **Card tap** opens the depot's `DepotDetailScreen`. The plan carries only a
+  `depotCode`, so it is resolved to the platform id: the local depot book
+  first (`BrowseDepots`, exact code), then `LookupDepotByCode`. Neither knows
+  it → a SnackBar, no navigation.
+- **Start Visit** is not on the card. It sits at the bottom of the depot
+  details opened from today's list (`VisitPlanStartBar`), for Planned or
+  CheckedIn plans. CheckedIn reads *Continue visit* and skips the check-in.
+- **Check-in** (`VisitPlanCheckInScreen` / `PlanCheckInCubit`) is the route
+  check-in UI — header, map, geofence banner, proof-photo dropzone, bottom
+  bar — as `part`s of `stops_check_in_screen.dart`, titled "Visit Plan
+  Check-in". It reads `GET /mobile/plans/{id}` for `depotLocation` +
+  `radiusMeters`, streams the fix from `LocationTrackingCubit`, takes 1–5
+  stamped photos (`ProofPhotoService`), and — when
+  the fix is outside the radius, or the server answers
+  `PLAN_CHECK_IN_REASON_REQUIRED` — a reason code + description. Sent as
+  multipart to `POST /mobile/plans/{id}/check-in`. `checkInId` is made once
+  per screen and reused on retry. Online only; each refusal code has its own
+  message.
+- **After check-in** the visit goes to Inventory Visibility with the plan's
+  id (`openInventoryVisibilityForDepot(planId:)`).
+- **Inventory photos** — Submit sends the three photos as multipart to
+  `POST /mobile/plans/{id}/inventory-check-photo-upload` (`photos` +
+  `uploadId`) instead of the local route-stop store
+  (`planInventoryUploader`). The `uploadId` stays the same while the photos
+  do, so a retry after a lost answer adds them once. A retaken photo gets a
+  new id. A refusal keeps the rep on the step with its message.
+  `PLAN_INVENTORY_PHOTO_LIMIT` counts as done, because the visit already
+  holds photos. Online only.
+- **Check out** — the completion screen shows *Check out*
+  (`PlanCheckOutButton` / `PlanCheckOutCubit`) where a route visit shows
+  *Complete visit*. It reads a GPS fix (fresh, else one at most 2 min old)
+  and posts JSON `{checkOutId, latitude, longitude, accuracyMeters}` to
+  `POST /mobile/plans/{id}/check-out`. `checkOutId` is made once per screen
+  and reused on retry. No notes are sent yet. On success the app goes back
+  to the Visits list, the lists reload, and a "Visit checked out" SnackBar
+  shows. With no fix, nothing is sent and the rep is told to turn location
+  on. Each refusal code has its own message. Online only.
+- A plan visit writes no route resume pointer: *Continue Working* does not
+  resume it. The server's status does — a CheckedIn plan reads *Continue
+  visit*.
+- **Not yet:** the Quotation Builder's *Complete visit*, reached from this
+  screen, still runs the legacy route path. It does not check the plan
+  out.
+
 ## 1. Folder structure (clean architecture)
 
 ```

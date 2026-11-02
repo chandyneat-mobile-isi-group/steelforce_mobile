@@ -1,8 +1,7 @@
 import 'dart:convert';
 
-import 'package:steelforce/features/depots/data/mappers/bp_draft_json_mapper.dart';
 import 'package:steelforce/core/database/hive/local_cache.dart';
-import 'package:steelforce/features/depots/domain/entities/bp_depot_draft.dart';
+import 'package:steelforce/features/depots/data/models/bp_depot_form_data.dart';
 
 /// Stores the one registration form the rep currently has open.
 ///
@@ -99,7 +98,7 @@ class BpDraftCache {
         await clear();
         return null;
       }
-      return bpDraftFromJson(decoded.cast<String, dynamic>());
+      return BpDepotDraft.fromDraftJson(decoded.cast<String, dynamic>());
     } on Object {
       await clear();
       return null;
@@ -114,7 +113,7 @@ class BpDraftCache {
       // Encoded as a JSON string rather than a nested map: Hive round-trips
       // nested structures as `Map<dynamic, dynamic>`, and the cast back is
       // where this kind of cache usually starts throwing.
-      await _cache.set(_key, jsonEncode(bpDraftToJson(draft)));
+      await _cache.set(_key, jsonEncode(draft.toDraftJson()));
     } on Object {
       // Intentionally ignored. The form is still in memory and still correct;
       // the only thing lost is resume-after-kill, which is not worth an error

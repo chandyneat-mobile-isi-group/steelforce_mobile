@@ -45,5 +45,8 @@ class Static {
   // After a sign-in with a temporary password. No way back to the shell
   // until the rep has set their own.
   static const String changeTemporaryPassword = '/change-temporary-password';
+  // Signed in: a new password without the current one, proven by an SMS to
+  // the account's own number.
+  static const String changePasswordByPhone = '/change-password-by-phone';
   static const String revenue = '/revenue';
 }

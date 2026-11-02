@@ -117,6 +117,29 @@ class Depots extends Table {
   /// than this feature change.
   TextColumn get syncState => text().withDefault(const Constant('synced'))();
 
+  // ── Outlet list fields (schema v29) ─────────────────────────────────
+  // From `GET /mobile/depots`. Nullable: rows from v28 have none, and the
+  // server sends null for whatever has not been captured.
+
+  /// `Depot`, `NonDepot` or `Draft`.
+  TextColumn get depotType => text().nullable()();
+
+  /// Employee code of whoever recorded the outlet.
+  TextColumn get createdBy => text().nullable()();
+
+  /// `salesEmployees`, as the server's JSON array.
+  TextColumn get salesEmployeesJson => text().nullable()();
+
+  /// `profile` (`fieldFacts`, `suppliers`, `management`), as the server's
+  /// JSON object. Kept whole because its shape is still settling.
+  TextColumn get profileJson => text().nullable()();
+
+  // ── SAP sales areas (schema v31) ────────────────────────────────────
+
+  /// `salesAreas` (sales org, channel, payment terms, credit limit and
+  /// credit term days), as the server's JSON array.
+  TextColumn get salesAreasJson => text().nullable()();
+
   @override
   Set<Column> get primaryKey => {id};
 }

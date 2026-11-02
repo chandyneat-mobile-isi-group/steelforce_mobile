@@ -39,14 +39,14 @@ class Shimmer extends StatefulWidget {
 }
 
 class _ShimmerState extends State<Shimmer> with SingleTickerProviderStateMixin {
-  late final AnimationController _controller = AnimationController(
-    vsync: this,
-    duration: widget.duration,
-  );
+  // Eager, not a lazy initializer: a disabled shimmer never touches it, and a
+  // first touch in dispose() builds a ticker on a deactivated element.
+  late final AnimationController _controller;
 
   @override
   void initState() {
     super.initState();
+    _controller = AnimationController(vsync: this, duration: widget.duration);
     if (widget.enabled) _controller.repeat();
   }
 

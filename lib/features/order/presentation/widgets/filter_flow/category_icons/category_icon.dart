@@ -40,15 +40,19 @@ class CategoryIcon extends StatefulWidget {
 
 class _CategoryIconState extends State<CategoryIcon>
     with SingleTickerProviderStateMixin {
-  late final AnimationController _ambient = AnimationController(
-    vsync: this,
-    duration: CategoryIconTokens.ambient,
-  );
+  // Eager, not a lazy initializer: an inactive icon under reduced motion never
+  // touches it, and a first touch in dispose() builds a ticker on a
+  // deactivated element.
+  late final AnimationController _ambient;
   bool _pressed = false;
 
   @override
   void initState() {
     super.initState();
+    _ambient = AnimationController(
+      vsync: this,
+      duration: CategoryIconTokens.ambient,
+    );
     if (widget.active) _ambient.repeat(reverse: true);
   }
 
@@ -71,6 +75,9 @@ class _CategoryIconState extends State<CategoryIcon>
   @override
   Widget build(BuildContext context) {
     final spec = specFor(widget.code, name: widget.name);
+    // The caller's name is already in the rep's language; the spec label is
+    // the English material-master name and only a fallback.
+    final semanticLabel = widget.name ?? spec.label;
     final colour = CategoryIconTokens.of(context, spec.family);
     final reduceMotion = MediaQuery.maybeDisableAnimationsOf(context) ?? false;
 
@@ -79,7 +86,7 @@ class _CategoryIconState extends State<CategoryIcon>
       width: widget.size,
       height: widget.size,
       theme: SvgTheme(currentColor: colour),
-      semanticsLabel: spec.label,
+      semanticsLabel: semanticLabel,
     );
 
     // Ambient breath: a 1.5% scale, nothing more. Off when not selected.
@@ -111,7 +118,7 @@ class _CategoryIconState extends State<CategoryIcon>
     return Semantics(
       button: widget.onTap != null,
       selected: widget.active,
-      label: spec.label,
+      label: semanticLabel,
       child: GestureDetector(
         onTap: widget.onTap,
         onTapDown: (_) => setState(() => _pressed = true),

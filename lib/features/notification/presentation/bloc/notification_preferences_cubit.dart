@@ -1,5 +1,6 @@
 import 'package:equatable/equatable.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:steelforce/core/error/failure_message.dart';
 import 'package:steelforce/core/error/failures.dart';
 import 'package:steelforce/core/localization/localization_services.dart';
 import 'package:steelforce/core/usecase/usecase.dart';
@@ -243,6 +244,6 @@ class NotificationPreferencesCubit extends Cubit<NotificationPreferencesState> {
   String _messageFor(Failure failure) => switch (failure) {
         NetworkFailure() => 'common.no_connection'.tr,
         ServerUnreachableFailure() => 'common.server_unreachable'.tr,
-        _ => failure.message,
+        _ => failure.userMessage,
       };
 }

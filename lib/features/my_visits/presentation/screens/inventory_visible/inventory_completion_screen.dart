@@ -2,7 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:steelforce/core/localization/localization_services.dart';
 import 'package:steelforce/core/theme/theme_extensions.dart';
 import 'package:steelforce/core/responsive/responsive_sizing.dart';
-import 'package:steelforce/shared/animations/coach_mascot.dart';
+import 'package:steelforce/features/my_visits/presentation/screens/inventory_visible/inventory_submitted_hero.dart';
+import 'package:steelforce/features/app_coach/domain/entities/coach_action.dart';
+import 'package:steelforce/features/app_coach/presentation/services/coach_keys.dart';
+import 'package:steelforce/features/my_visits/presentation/widgets/coach_on_open.dart';
+import 'package:steelforce/shared/widgets/brand_wallpaper_background.dart';
 
 class InventoryCompletionScreen extends StatelessWidget {
   const InventoryCompletionScreen({
@@ -10,7 +14,8 @@ class InventoryCompletionScreen extends StatelessWidget {
     required this.outletName,
     required this.onCreateQuotation,
     required this.onEndVisit,
-    this.showCreateQuotation = true,
+    this.photosUploaded = false,
+    this.checkOutAction,
   });
 
   /// `RouteSettings.name`, and the resume key for this step.
@@ -26,200 +31,157 @@ class InventoryCompletionScreen extends StatelessWidget {
   final VoidCallback onCreateQuotation;
   final VoidCallback onEndVisit;
 
-  /// Hides Create Quotation without removing it, for a build that should
-  /// end the visit here.
-  final bool showCreateQuotation;
+  /// True when the photos already reached the server (a planned visit), so
+  /// the subtitle does not promise a later sync.
+  final bool photosUploaded;
+
+  /// Takes the place of the Complete Visit button — a planned visit ends
+  /// with its own check-out, not the route visit's.
+  final Widget? checkOutAction;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context) => CoachOnOpen(
+        action: CoachAction.openVisitCompletion,
+        child: Builder(builder: _build),
+      );
+
+  Widget _build(BuildContext context) {
     final colors = context.appColors;
     final scheme = Theme.of(context).colorScheme;
+    // While the rep types a note the mascot steps aside, so the card with
+    // Complete the visit sits right above the keyboard.
+    final typing = MediaQuery.viewInsetsOf(context).bottom > 0;
 
     return Scaffold(
-      backgroundColor: colors.canvas,
-      body: SafeArea(
-        child: Padding(
-          padding: EdgeInsets.all(context.rw(24)),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              const Spacer(),
+      backgroundColor: Colors.transparent,
+      body: GestureDetector(
+        // A tap anywhere off the notes closes the keyboard.
+        behavior: HitTestBehavior.translucent,
+        onTap: () => FocusScope.of(context).unfocus(),
+        child: BrandWallpaperBody(
+          style: BrandWallpaperStyle.vivid,
+          child: SafeArea(
+            // Scrolls once the keyboard leaves too little room, so the
+            // button is never squeezed out of reach.
+            child: CustomScrollView(
+              slivers: [
+                SliverFillRemaining(
+                  hasScrollBody: false,
+                  child: Padding(
+                    padding: EdgeInsets.all(context.rw(24)),
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        const Spacer(),
 
-              // The moment the whole step builds to: the brand mascot acts out
-              // "photo sent" — snap, upload, check. A confirmation screen has
-              // one job, so it gets the room.
-              _SubmittedHero(
-                size: context.rr(260),
-                semanticLabel: 'my_visits.inventory.completion.title'.tr,
-              ),
-              SizedBox(height: context.rh(12)),
-
-              // Success Heading
-              Text(
-                'my_visits.inventory.completion.title'.tr,
-                style: TextStyle(
-                  fontSize: context.rsp(20),
-                  fontWeight: FontWeight.w800,
-                  color: colors.textPrimary,
-                ),
-                textAlign: TextAlign.center,
-              ),
-              SizedBox(height: context.rh(8)),
-              Text(
-                // `trParams`, not string interpolation: the outlet name sits
-                // in a different position in Khmer, and a concatenated
-                // sentence cannot be reordered by a translator.
-                'my_visits.inventory.completion.subtitle'
-                    .trParams({'outlet': outletName}),
-                style: TextStyle(
-                  fontSize: context.rsp(13),
-                  color: colors.textSecondary,
-                ),
-                textAlign: TextAlign.center,
-              ),
-
-              const Spacer(),
-
-              // Decision Card
-              Container(
-                width: double.infinity,
-                padding: EdgeInsets.all(context.rw(16)),
-                decoration: BoxDecoration(
-                  color: colors.card,
-                  borderRadius: BorderRadius.circular(context.rr(16)),
-                  border: Border.all(color: colors.border),
-                  boxShadow: colors.cardShadow,
-                ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    Text(
-                      'my_visits.inventory.completion.next_question'.tr,
-                      style: TextStyle(
-                        fontSize: context.rsp(13.5),
-                        fontWeight: FontWeight.w700,
-                        color: colors.textPrimary,
-                      ),
-                      textAlign: TextAlign.center,
-                    ),
-                    SizedBox(height: context.rh(16)),
-
-                    // Primary Action 1: Create Quotation
-                    if (showCreateQuotation) ...[
-                      ElevatedButton.icon(
-                        onPressed: onCreateQuotation,
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: scheme.primary,
-                          foregroundColor: scheme.onPrimary,
-                          padding:
-                              EdgeInsets.symmetric(vertical: context.rh(14)),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(context.rr(12)),
+                        // The moment the whole step builds to: the brand mascot acts out
+                        // "photo sent" — snap, upload, check. A confirmation screen has
+                        // one job, so it gets the room.
+                        if (!typing) ...[
+                          InventorySubmittedHero(
+                            size: context.rr(260),
+                            semanticLabel:
+                                'my_visits.inventory.completion.title'.tr,
                           ),
-                        ),
-                        icon: const Icon(Icons.request_quote_rounded),
-                        label: Text(
-                          // Reused rather than duplicated: the Route Information
-                          // screen already ships this exact action label, and two
-                          // keys for one button is how the two drift apart.
-                          'my_visits.route_info.create_quotation'.tr,
+                          SizedBox(height: context.rh(12)),
+                        ],
+
+                        // Success Heading
+                        Text(
+                          'my_visits.inventory.completion.title'.tr,
                           style: TextStyle(
-                            fontSize: context.rsp(15),
-                            fontWeight: FontWeight.bold,
+                            fontSize: context.rsp(20),
+                            fontWeight: FontWeight.w800,
+                            color: colors.textPrimary,
+                          ),
+                          textAlign: TextAlign.center,
+                        ),
+                        SizedBox(height: context.rh(8)),
+                        Text(
+                          // `trParams`, not string interpolation: the outlet name sits
+                          // in a different position in Khmer, and a concatenated
+                          // sentence cannot be reordered by a translator.
+                          (photosUploaded
+                                  ? 'my_visits.plans.inventory.uploaded'
+                                  : 'my_visits.inventory.completion.subtitle')
+                              .trParams({'outlet': outletName}),
+                          style: TextStyle(
+                            fontSize: context.rsp(13),
+                            color: colors.textSecondary,
+                          ),
+                          textAlign: TextAlign.center,
+                        ),
+
+                        const Spacer(),
+
+                        // Decision Card
+                        Container(
+                          width: double.infinity,
+                          padding: EdgeInsets.all(context.rw(16)),
+                          decoration: BoxDecoration(
+                            color: colors.card,
+                            borderRadius: BorderRadius.circular(context.rr(16)),
+                            border: Border.all(color: colors.border),
+                            boxShadow: colors.cardShadow,
+                          ),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.stretch,
+                            children: [
+                              Text(
+                                'my_visits.inventory.completion.next_question'
+                                    .tr,
+                                style: TextStyle(
+                                  fontSize: context.rsp(13.5),
+                                  fontWeight: FontWeight.w700,
+                                  color: colors.textPrimary,
+                                ),
+                                textAlign: TextAlign.center,
+                              ),
+                              SizedBox(height: context.rh(16)),
+
+                              // No Create Quotation here: after the photos the visit
+                              // is completed, nothing else.
+                              // The one action: End Visit, or the plan's
+                              // Complete the visit (its check-out).
+                              checkOutAction ??
+                                  CoachKeys.wrap(
+                                    CoachKeys.visitComplete,
+                                    child: OutlinedButton.icon(
+                                      onPressed: onEndVisit,
+                                      style: OutlinedButton.styleFrom(
+                                        foregroundColor: scheme.error,
+                                        side: BorderSide(
+                                            color: scheme.error
+                                                .withValues(alpha: 0.5)),
+                                        padding: EdgeInsets.symmetric(
+                                            vertical: context.rh(14)),
+                                        shape: RoundedRectangleBorder(
+                                          borderRadius: BorderRadius.circular(
+                                              context.rr(12)),
+                                        ),
+                                      ),
+                                      icon:
+                                          const Icon(Icons.stop_circle_rounded),
+                                      label: Text(
+                                        'my_visits.inventory.completion.complete_visit'
+                                            .tr,
+                                        style: TextStyle(
+                                          fontSize: context.rsp(15),
+                                          fontWeight: FontWeight.bold,
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                            ],
                           ),
                         ),
-                      ),
-                      SizedBox(height: context.rh(10)),
-                    ],
-
-                    // Primary Action 2: End Visit
-                    OutlinedButton.icon(
-                      onPressed: onEndVisit,
-                      style: OutlinedButton.styleFrom(
-                        foregroundColor: scheme.error,
-                        side: BorderSide(
-                            color: scheme.error.withValues(alpha: 0.5)),
-                        padding: EdgeInsets.symmetric(vertical: context.rh(14)),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(context.rr(12)),
-                        ),
-                      ),
-                      icon: const Icon(Icons.stop_circle_rounded),
-                      label: Text(
-                        'my_visits.inventory.completion.complete_visit'.tr,
-                        style: TextStyle(
-                          fontSize: context.rsp(15),
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
+                      ],
                     ),
-                  ],
+                  ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
-        ),
-      ),
-    );
-  }
-}
-
-/// The SteelForce mascot acting out the result, on a flat brand-tint stage.
-///
-/// The sticker tells the whole story without words, so it reads the same in
-/// Khmer and English: the mascot snaps a photo on its phone, the photo flies
-/// up into its speech bubble, an upload bar fills, a green check lands and
-/// the mascot hops. It then plays one calm idle pass and holds — a
-/// confirmation screen is read, not watched. Reduced motion shows the held,
-/// finished frame (photo in the bubble, check visible).
-class _SubmittedHero extends StatelessWidget {
-  const _SubmittedHero({required this.size, required this.semanticLabel});
-
-  /// Height of the hero box; the mascot fills it, the stage sits behind.
-  final double size;
-  final String semanticLabel;
-
-  @override
-  Widget build(BuildContext context) {
-    final colors = context.appColors;
-    final reduceMotion =
-        MediaQuery.maybeOf(context)?.disableAnimations ?? false;
-
-    final stage = size * 0.62;
-
-    return Semantics(
-      // One announcement for the whole picture; the mascot itself is
-      // decorative and a rep should hear the result, not "animation".
-      label: semanticLabel,
-      image: true,
-      excludeSemantics: true,
-      child: SizedBox(
-        width: size,
-        height: size,
-        child: Stack(
-          alignment: Alignment.center,
-          children: [
-            // Stage behind the robot's body, low enough that its shadow sits
-            // on it and clear of the speech bubble at upper-right.
-            Align(
-              alignment: const Alignment(-0.1, 0.55),
-              child: Container(
-                width: stage,
-                height: stage,
-                decoration: BoxDecoration(
-                  color: colors.surfaceStrong,
-                  shape: BoxShape.circle,
-                ),
-              ),
-            ),
-            CoachMascot(
-              animationAsset: CoachMascot.inventorySuccessAsset,
-              mood: CoachMood.cheer,
-              size: size,
-              loop: false,
-              animate: !reduceMotion,
-            ),
-          ],
         ),
       ),
     );

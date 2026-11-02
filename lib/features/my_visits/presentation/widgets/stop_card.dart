@@ -8,6 +8,7 @@ import 'package:steelforce/core/animations/press_scale.dart';
 import 'package:steelforce/core/responsive/responsive_sizing.dart';
 import 'package:steelforce/core/theme/theme_extensions.dart';
 import 'package:steelforce/features/my_visits/domain/entities/visit_status.dart';
+import 'package:steelforce/features/my_visits/presentation/localization/my_visits_labels.dart';
 import 'package:steelforce/features/my_visits/presentation/models/today_stop.dart';
 import 'package:steelforce/features/my_visits/presentation/widgets/skip_visit_dialog.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -36,14 +37,23 @@ class StopCard extends StatelessWidget {
 
     switch (_status) {
       case VisitStatus.checkedOut:
-        return (color: colors.success, label: 'Visited');
+        return (
+          color: colors.success,
+          label: 'my_visits.stops_map.legend_visited'.tr
+        );
       case VisitStatus.checkedIn:
-        return (color: Colors.blue, label: 'In Progress');
+        return (color: Colors.blue, label: 'my_visits.status.in_progress'.tr);
       case VisitStatus.missed:
-        return (color: Theme.of(context).colorScheme.error, label: 'Skipped');
+        return (
+          color: Theme.of(context).colorScheme.error,
+          label: 'my_visits.stop_dashboard.filter_skipped'.tr
+        );
       case VisitStatus.pending:
       default:
-        return (color: colors.textSecondary, label: 'Pending');
+        return (
+          color: colors.textSecondary,
+          label: 'my_visits.status.pending'.tr
+        );
     }
   }
 
@@ -69,8 +79,9 @@ class StopCard extends StatelessWidget {
     final canStartVisit = isToday && !isVisitedOrSkipped;
 
     // Retrieve channel (Wholesale/Retail) and tier (Diamond/Gold/Silver/Bronze)
-    final channelTag = depot.territoryType.label;
-    final tierTag = 'Silver'; // Fallback / mock field from depot entity
+    final channelTag = depot.territoryType.localizedLabel;
+    // Fallback / mock field from depot entity
+    final tierTag = 'my_visits.tier.silver'.tr;
 
     // An ad hoc visit wears the brand: an Apex → Ironclad Blue rail down its
     // leading edge, a border and wash in Apex Blue, and a solid chip. A rep
@@ -262,9 +273,8 @@ class StopCard extends StatelessWidget {
                   ),
                   SizedBox(width: context.rw(8)),
 
-                  // Basket Order Button — hidden when pending, or when
-                  // quotations are switched off (no handler).
-                  if (_status != VisitStatus.pending && onQuotationTap != null)
+                  // Basket Order Button — hidden when pending
+                  if (_status != VisitStatus.pending)
                     _ActionButton(
                       icon: Icons.shopping_basket_rounded,
                       color: Theme.of(context).colorScheme.primary,

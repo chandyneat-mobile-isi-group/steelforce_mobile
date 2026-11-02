@@ -111,5 +111,5 @@ log remains explicable after the notification stops being actionable.
 
 ## Related
 
-- [Business rules](business-rules.md) · [Diagram](diagram.md)
+- [Business rules](business-rules.md) · [Diagram](README.md)
 - [API — mobile](api/mobile.md) · [API — admin](api/admin.md)

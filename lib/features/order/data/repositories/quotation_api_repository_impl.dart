@@ -23,7 +23,7 @@ class QuotationApiRepositoryImpl implements QuotationApiRepository {
   Failure _mapException(Object e) {
     if (e is ApiException) {
       return ServerFailure(
-        message: e.error.message ?? e.error.detail ?? 'Server error',
+        message: e.error.message ?? e.error.detail ?? 'common.generic_error',
         statusCode: e.error.statusCode,
         code: e.error.code,
       );

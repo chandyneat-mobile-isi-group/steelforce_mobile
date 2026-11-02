@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:steelforce/core/localization/localization_services.dart';
 import 'package:steelforce/core/responsive/responsive_sizing.dart';
 import 'package:steelforce/core/theme/theme_extensions.dart';
 import 'package:steelforce/features/order/domain/entities/cart_item.dart';
@@ -99,8 +100,8 @@ class DiscountSummarySection extends StatelessWidget {
 
         lines.add(
           SkuDiscountLine(
-            promotionName:
-                DemoCartPromotions.promotionNameFor(item) ?? 'Rep Discount',
+            promotionName: DemoCartPromotions.promotionNameFor(item) ??
+                'orders.discount_summary.rep_discount'.tr,
             rule: percentFormatted,
             calculatedAmount: item.lineDiscount,
           ),
@@ -110,11 +111,14 @@ class DiscountSummarySection extends StatelessWidget {
       // 2. Free quantity promotion on this line (if any)
       final freeUnits = DemoCartPromotions.freeQuantityFor(item);
       if (freeUnits > 0) {
-        final freeRule =
-            DemoCartPromotions.freeRuleFor(item) ?? 'Free $freeUnits';
-        final promoName =
-            DemoCartPromotions.promotionNameFor(item) ?? 'Free Goods Promotion';
-        final unitLabel = item.unit.isNotEmpty ? item.unit : 'unit';
+        final freeRule = DemoCartPromotions.freeRuleFor(item) ??
+            'orders.discount_summary.free_rule'
+                .trParams({'count': '$freeUnits'});
+        final promoName = DemoCartPromotions.promotionNameFor(item) ??
+            'orders.discount_summary.free_goods_promotion'.tr;
+        final unitLabel = item.unit.isNotEmpty
+            ? item.unit
+            : 'orders.discount_summary.unit_fallback'.tr;
 
         lines.add(
           SkuDiscountLine(
@@ -129,7 +133,9 @@ class DiscountSummarySection extends StatelessWidget {
       if (lines.isNotEmpty) {
         final pName = item.product.name.isNotEmpty
             ? item.product.name
-            : (item.product.code.isNotEmpty ? item.product.code : 'Product');
+            : (item.product.code.isNotEmpty
+                ? item.product.code
+                : 'orders.discount_summary.product_fallback'.tr);
         final skuCode = item.product.sku.isNotEmpty
             ? item.product.sku
             : (item.product.materialCode.isNotEmpty
@@ -206,7 +212,7 @@ class DiscountSummarySection extends StatelessWidget {
               SizedBox(width: context.rw(6)),
               Expanded(
                 child: Text(
-                  'Discount Summary',
+                  'orders.discount_summary.title'.tr,
                   style: TextStyle(
                     fontSize: context.rsp(13),
                     fontWeight: FontWeight.w800,
@@ -242,7 +248,7 @@ class DiscountSummarySection extends StatelessWidget {
 
           // ── A. Invoice Discounts ──
           Text(
-            'Invoice Discounts',
+            'orders.discount_summary.invoice_discounts'.tr,
             style: TextStyle(
               fontSize: context.rsp(11.5),
               fontWeight: FontWeight.w700,
@@ -255,7 +261,7 @@ class DiscountSummarySection extends StatelessWidget {
             Padding(
               padding: EdgeInsets.only(left: context.rw(8), top: context.rh(2)),
               child: Text(
-                'None',
+                'orders.discount_summary.none'.tr,
                 style: TextStyle(
                   fontSize: context.rsp(11.5),
                   color: colors.textHint,
@@ -318,7 +324,7 @@ class DiscountSummarySection extends StatelessWidget {
 
           // ── B. SKU Discounts ──
           Text(
-            'SKU Discounts',
+            'orders.discount_summary.sku_discounts'.tr,
             style: TextStyle(
               fontSize: context.rsp(11.5),
               fontWeight: FontWeight.w700,
@@ -331,7 +337,7 @@ class DiscountSummarySection extends StatelessWidget {
             Padding(
               padding: EdgeInsets.only(left: context.rw(8), top: context.rh(2)),
               child: Text(
-                'None',
+                'orders.discount_summary.none'.tr,
                 style: TextStyle(
                   fontSize: context.rsp(11.5),
                   color: colors.textHint,
@@ -415,7 +421,7 @@ class DiscountSummarySection extends StatelessWidget {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Text(
-                'Total Discount',
+                'orders.discount_summary.total_discount'.tr,
                 style: TextStyle(
                   fontSize: context.rsp(12.5),
                   fontWeight: FontWeight.w800,
@@ -453,7 +459,10 @@ class DiscountSummarySection extends StatelessWidget {
                           borderRadius: BorderRadius.circular(context.rr(4)),
                         ),
                         child: Text(
-                          '+$totalFreeUnits free ${totalFreeUnits == 1 ? 'unit' : 'units'}',
+                          (totalFreeUnits == 1
+                                  ? 'orders.discount_summary.total_free_units_one'
+                                  : 'orders.discount_summary.total_free_units_other')
+                              .trParams({'count': '$totalFreeUnits'}),
                           style: TextStyle(
                             fontSize: context.rsp(10.5),
                             fontWeight: FontWeight.w700,
@@ -477,7 +486,8 @@ class DiscountSummarySection extends StatelessWidget {
     SkuDiscountLine line,
   ) {
     final prefix = line.promotionName != null && line.promotionName!.isNotEmpty
-        ? 'Promotion: ${line.promotionName} — '
+        ? 'orders.discount_summary.promotion_prefix'
+            .trParams({'name': line.promotionName!})
         : '';
     final amountFormatted = line.calculatedAmount != null
         ? '-\$${line.calculatedAmount!.toStringAsFixed(2)}'
@@ -522,13 +532,16 @@ class DiscountSummarySection extends StatelessWidget {
     SkuDiscountLine line,
   ) {
     final prefix = line.promotionName != null && line.promotionName!.isNotEmpty
-        ? 'Promotion: ${line.promotionName} — '
+        ? 'orders.discount_summary.promotion_prefix'
+            .trParams({'name': line.promotionName!})
         : '';
-    final unit =
-        line.unit != null && line.unit!.isNotEmpty ? line.unit! : 'unit';
-    final unitsLabel = line.freeQuantity == 1
-        ? '1 free $unit'
-        : '${line.freeQuantity} free ${unit}s';
+    final unit = line.unit != null && line.unit!.isNotEmpty
+        ? line.unit!
+        : 'orders.discount_summary.unit_fallback'.tr;
+    final unitsLabel = (line.freeQuantity == 1
+            ? 'orders.discount_summary.free_units_one'
+            : 'orders.discount_summary.free_units_other')
+        .trParams({'count': '${line.freeQuantity}', 'unit': unit});
 
     return Text.rich(
       TextSpan(

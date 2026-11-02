@@ -48,11 +48,22 @@ class DepotDao extends DatabaseAccessor<AppDatabase> with _$DepotDaoMixin {
     String? productCategory,
     String? salesOrg,
     String? division,
+    String? province,
+    String? distributionChannel,
+    Iterable<String>? depotTypes,
+    bool includeUntypedDepots = false,
     DepotBrowseSort sort = DepotBrowseSort.nameAsc,
   }) {
     final statement = select(depots)
       ..where((t) {
         var cond = t.deleted.equals(false);
+        // The list the row belongs to (schema v29 `depot_type`). A row with no
+        // type predates it and is only ever a depot.
+        if (depotTypes != null) {
+          final typed = t.depotType.isIn(depotTypes);
+          cond = cond &
+              (includeUntypedDepots ? (typed | t.depotType.isNull()) : typed);
+        }
         if (territory != null) cond = cond & t.territory.equals(territory);
         if (status != null) cond = cond & t.status.equals(status);
         if (productCategory != null) {
@@ -63,6 +74,10 @@ class DepotDao extends DatabaseAccessor<AppDatabase> with _$DepotDaoMixin {
         // partial match would silently widen the filter.
         if (salesOrg != null) cond = cond & t.salesOrg.equals(salesOrg);
         if (division != null) cond = cond & t.division.equals(division);
+        if (province != null) cond = cond & t.province.equals(province);
+        if (distributionChannel != null) {
+          cond = cond & t.distributionChannel.equals(distributionChannel);
+        }
         // Zero-width characters are stripped from the term here and from the
         // name columns in SQL below, mirroring what the server does. Without
         // it, roughly a fifth of Khmer names are unfindable by typing the
@@ -90,6 +105,65 @@ class DepotDao extends DatabaseAccessor<AppDatabase> with _$DepotDaoMixin {
       ..orderBy([(t) => _ordering(t, sort)])
       ..limit(pageSize + 1, offset: page * pageSize);
     return statement.get();
+  }
+
+  /// The stored channel of the live depot with [code] — or, for a Non-BP
+  /// depot, with [id]. Null when no such depot is held or it has none.
+  Future<String?> channelOf({String? code, String? id}) async {
+    if ((code == null || code.isEmpty) && (id == null || id.isEmpty)) {
+      return null;
+    }
+    final row = await (select(depots)
+          ..where((t) =>
+              t.deleted.equals(false) &
+              (code != null && code.isNotEmpty
+                  ? t.depotCode.equals(code)
+                  : t.id.equals(id!)))
+          ..limit(1))
+        .getSingleOrNull();
+    return row?.distributionChannel;
+  }
+
+  /// The values present in one list, for its filter choices: each status,
+  /// province and channel at least one live row carries, sorted. Typed like
+  /// [browse], so the choices are those of the list on screen.
+  Future<
+      ({
+        List<String> statuses,
+        List<String> provinces,
+        List<String> channels
+      })> filterChoices({
+    Iterable<String>? depotTypes,
+    bool includeUntypedDepots = false,
+  }) async {
+    Expression<bool> live() {
+      Expression<bool> cond = depots.deleted.equals(false);
+      if (depotTypes != null) {
+        final typed = depots.depotType.isIn(depotTypes);
+        cond = cond &
+            (includeUntypedDepots
+                ? (typed | depots.depotType.isNull())
+                : typed);
+      }
+      return cond;
+    }
+
+    Future<List<String>> distinct(GeneratedColumn<String> column) async {
+      final query = selectOnly(depots, distinct: true)
+        ..addColumns([column])
+        ..where(live())
+        ..orderBy([OrderingTerm(expression: column)]);
+      return [
+        for (final row in await query.get())
+          if (row.read(column)?.trim() case final v? when v.isNotEmpty) v,
+      ];
+    }
+
+    return (
+      statuses: await distinct(depots.status),
+      provinces: await distinct(depots.province),
+      channels: await distinct(depots.distributionChannel),
+    );
   }
 
   /// A name column with SAP's zero-width word-break hints removed, for
@@ -165,11 +239,23 @@ class DepotDao extends DatabaseAccessor<AppDatabase> with _$DepotDaoMixin {
     await transaction(() async {
       for (final record in records) {
         final id = record.depot.id.value;
+        // The server's row owns its SAP id. A stale copy kept under an older
+        // id (the `customers` contract keyed rows differently) would trip the
+        // UNIQUE index and fail the whole sync, so it is retired first.
+        final sapId = record.depot.sapDepotId;
+        if (sapId.present && sapId.value != null) {
+          await (update(depots)
+                ..where((t) =>
+                    t.sapDepotId.equals(sapId.value!) & t.id.equals(id).not()))
+              .write(const DepotsCompanion(
+                  sapDepotId: Value(null), deleted: Value(true)));
+        }
         await into(depots)
             .insert(record.depot, onConflict: DoUpdate((_) => record.depot));
         await (delete(depotContacts)..where((t) => t.depotId.equals(id))).go();
         for (final contact in record.contacts) {
-          await into(depotContacts).insert(contact);
+          // A contact id may still sit under that older depot id.
+          await into(depotContacts).insertOnConflictUpdate(contact);
         }
       }
     });
@@ -179,6 +265,25 @@ class DepotDao extends DatabaseAccessor<AppDatabase> with _$DepotDaoMixin {
     if (ids.isEmpty) return;
     await (update(depots)..where((t) => t.id.isIn(ids)))
         .write(const DepotsCompanion(deleted: Value(true)));
+  }
+
+  /// Soft-deletes every live row whose id is not in [keepIds]; returns how
+  /// many. Only for an answer that lists the rep's whole book at once — a
+  /// draft approved since the last pull, say, must leave the waiting list.
+  Future<int> markDeletedExcept(Set<String> keepIds) {
+    return (update(depots)
+          ..where((t) => t.deleted.equals(false) & t.id.isNotIn(keepIds)))
+        .write(const DepotsCompanion(deleted: Value(true)));
+  }
+
+  /// Whether any live row has no `depot_type` — synced before the lists
+  /// were typed (schema v29), so it cannot be told apart by list.
+  Future<bool> hasUntypedDepots() async {
+    final row = await (select(depots)
+          ..where((t) => t.deleted.equals(false) & t.depotType.isNull())
+          ..limit(1))
+        .getSingleOrNull();
+    return row != null;
   }
 
   Future<int> softDelete(String id) {

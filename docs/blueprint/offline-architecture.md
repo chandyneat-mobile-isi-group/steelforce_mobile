@@ -135,6 +135,7 @@ Every domain declares upfront how it behaves offline and how it eventually syncs
 | Lead/Opportunity | Offline draft | Push queue | Partial |
 | Catalog/Product/Category/PriceBook | Full offline catalog, including search (FTS) | Pull, paged + delta | Built |
 | Territory/Route/Visit/Check-in | Full offline | Pull + push telemetry | Built |
+| Visit plans (Plans API) | Last answer of `/plans/today` and `/plans?period=ThisMonth` kept in `visit_plan_snapshots` (v30); offline the Visits tab and Home badge read it, badged "saved at" — today's copy only on the same day | Pull, replaced whole | Built |
 | Inventory/Stock Count | Offline capture | Push queue | Built |
 | Cart | Local only | None — never leaves the device until converted to a quotation/order | Built |
 | Quotation | Local-only until submitted | Push → SAP | Built |
@@ -148,6 +149,18 @@ Every domain declares upfront how it behaves offline and how it eventually syncs
 | Settings/Profile | Hive | None | Built |
 
 ---
+
+### 4.1 Shell prefetch
+
+A rep may open the app once, see Home, and drive out of signal. So the
+signed-in shell pulls everything above that has a pull — depots then routes,
+catalog, today's and this month's visit plans, profile, check-out reasons,
+notifications — when it starts and on every return to real reachability
+(`core/sync/offline_data_prefetcher.dart`; the list is
+`core/di/offline_data_sources.dart`). Each entry reuses the feature's own
+pull, so permission gates and initial-vs-delta logic stay in one place.
+Sources run side by side and fail alone; a run within 5 minutes of the last
+is skipped.
 
 ## 5. Connectivity handling
 

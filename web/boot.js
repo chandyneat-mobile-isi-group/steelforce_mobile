@@ -15,3 +15,20 @@ window.addEventListener('flutter-first-frame', function () {
   // the node is removed only after it has finished fading out.
   setTimeout(function () { boot.remove(); }, 400);
 });
+
+// App-shell cache so the installed app still opens offline. Relative URL, so it
+// registers under the GitHub Pages sub-path and scopes itself to it.
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', function () {
+    navigator.serviceWorker.register('offline_sw.js').catch(function () {});
+  });
+}
+
+// ADR-010: web keeps business data in memory only, so closing the tab while
+// offline loses whatever has not synced yet. The browser shows its own generic
+// "leave site?" prompt; custom text is not allowed by any modern browser.
+window.addEventListener('beforeunload', function (event) {
+  if (navigator.onLine) return;
+  event.preventDefault();
+  event.returnValue = '';
+});

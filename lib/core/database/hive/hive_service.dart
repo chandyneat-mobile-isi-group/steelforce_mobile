@@ -1,7 +1,8 @@
 import 'dart:convert';
 
-import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:hive_flutter/hive_flutter.dart';
+import 'package:steelforce/core/database/secure/app_secure_storage.dart';
+import 'package:steelforce/core/database/secure/secure_storage_keys.dart';
 
 /// Owns Hive setup and the opened boxes.
 ///
@@ -16,7 +17,7 @@ class HiveService {
 
   static const String secureBoxName = 'kic_secure_box';
   static const String cacheBoxName = 'kic_cache_box';
-  static const String _encryptionKeyName = 'kic_hive_encryption_key';
+  static const String _encryptionKeyName = SecureStorageKeys.kHiveEncryptionKey;
 
   static late final Box<dynamic> secureBox;
   static late final Box<dynamic> cacheBox;
@@ -36,9 +37,7 @@ class HiveService {
   static Future<void> dispose() => Hive.close();
 
   static Future<List<int>> _readOrCreateEncryptionKey() async {
-    const storage = FlutterSecureStorage(
-      aOptions: AndroidOptions(encryptedSharedPreferences: true),
-    );
+    final storage = appSecureStorage();
 
     final existing = await storage.read(key: _encryptionKeyName);
     if (existing != null) {

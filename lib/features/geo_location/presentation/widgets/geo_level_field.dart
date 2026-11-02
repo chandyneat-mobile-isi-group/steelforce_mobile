@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:steelforce/core/localization/localization_services.dart';
+import 'package:steelforce/core/theme/theme_extensions.dart';
 import 'package:steelforce/core/localization/localized_text_context.dart';
 import 'package:steelforce/features/geo_location/domain/entities/geo_unit.dart';
 import 'package:steelforce/features/geo_location/presentation/bloc/geo_location_bloc.dart';
@@ -58,10 +59,10 @@ class GeoLevelField extends StatelessWidget {
         vertical: compact ? 8 : 10,
       ),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: context.appColors.card,
         borderRadius: BorderRadius.circular(14),
         border: Border.all(
-          color: hasError ? theme.colorScheme.error : const Color(0xFFE2E8F0),
+          color: hasError ? theme.colorScheme.error : context.appColors.border,
           width: 1.1,
         ),
         boxShadow: [
@@ -83,7 +84,10 @@ class GeoLevelField extends StatelessWidget {
                       width: 24,
                       height: 24,
                       decoration: BoxDecoration(
-                        color: const Color(0xFFEFF6FF),
+                        color: Theme.of(context)
+                            .colorScheme
+                            .primary
+                            .withValues(alpha: 0.10),
                         borderRadius: BorderRadius.circular(6),
                       ),
                       child: Center(
@@ -143,11 +147,11 @@ class GeoLevelField extends StatelessWidget {
                       ),
                       decoration: BoxDecoration(
                         color: _isLocked
-                            ? const Color(0xFFF1F5F9)
-                            : const Color(0xFFF8FAFC),
+                            ? context.appColors.divider
+                            : context.appColors.surfaceSoft,
                         borderRadius: BorderRadius.circular(8),
                         border: Border.all(
-                          color: const Color(0xFFE2E8F0),
+                          color: context.appColors.border,
                         ),
                       ),
                       child: Row(
@@ -160,7 +164,7 @@ class GeoLevelField extends StatelessWidget {
                               style: theme.textTheme.bodyMedium?.copyWith(
                                 color: selected != null
                                     ? theme.colorScheme.onSurface
-                                    : const Color(0xFF94A3B8),
+                                    : context.appColors.textHint,
                                 fontWeight: selected != null
                                     ? FontWeight.w600
                                     : FontWeight.w400,
@@ -183,7 +187,10 @@ class GeoLevelField extends StatelessWidget {
                   width: 32,
                   height: 32,
                   decoration: BoxDecoration(
-                    color: const Color(0xFFEFF6FF),
+                    color: Theme.of(context)
+                        .colorScheme
+                        .primary
+                        .withValues(alpha: 0.10),
                     borderRadius: BorderRadius.circular(8),
                   ),
                   child: Center(
@@ -244,11 +251,11 @@ class GeoLevelField extends StatelessWidget {
                             ),
                             decoration: BoxDecoration(
                               color: _isLocked
-                                  ? const Color(0xFFF1F5F9)
-                                  : const Color(0xFFF8FAFC),
+                                  ? context.appColors.divider
+                                  : context.appColors.surfaceSoft,
                               borderRadius: BorderRadius.circular(8),
                               border: Border.all(
-                                color: const Color(0xFFE2E8F0),
+                                color: context.appColors.border,
                               ),
                             ),
                             child: Row(
@@ -261,7 +268,7 @@ class GeoLevelField extends StatelessWidget {
                                     style: theme.textTheme.bodyMedium?.copyWith(
                                       color: selected != null
                                           ? theme.colorScheme.onSurface
-                                          : const Color(0xFF94A3B8),
+                                          : context.appColors.textHint,
                                       fontWeight: selected != null
                                           ? FontWeight.w600
                                           : FontWeight.w400,

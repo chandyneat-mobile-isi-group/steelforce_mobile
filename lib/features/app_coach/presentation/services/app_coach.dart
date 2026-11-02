@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:get_it/get_it.dart';
 import 'package:steelforce/features/app_coach/domain/entities/coach_action.dart';
 import 'package:steelforce/features/app_coach/presentation/blocs/app_coach_bloc.dart';
@@ -14,6 +15,10 @@ abstract final class AppCoach {
 
   /// Report that the user performed [action]. Advances the tutorial only if the
   /// active step was waiting for exactly this action.
+  ///
+  /// Report a `…Succeeded` action only once the app has confirmed the result
+  /// (the repository returned success, the status changed) — never on the tap
+  /// that started it. Outside a lesson this is a no-op.
   static void notify(CoachAction action) =>
       _bloc?.add(CoachActionTriggered(action));
 
@@ -23,4 +28,19 @@ abstract final class AppCoach {
 
   /// Restart the walkthrough from step one (e.g. from a Help menu).
   static void restart() => _bloc?.add(const CoachRestarted());
+
+  /// Start — or restart from its first step — the lesson [moduleId]
+  /// (`CoachModuleIds`).
+  static void startLesson(String moduleId) =>
+      _bloc?.add(CoachModuleStarted(moduleId));
+
+  static VoidCallback? _lessonsOpener;
+
+  /// Set by the coach host while it is mounted: it owns the lessons sheet.
+  static void attachLessonsOpener(VoidCallback? opener) =>
+      _lessonsOpener = opener;
+
+  /// Opens the lessons sheet — the Profile screen's way in, now that the
+  /// mascot can be hidden. A no-op while no host is mounted.
+  static void openLessons() => _lessonsOpener?.call();
 }

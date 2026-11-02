@@ -79,8 +79,7 @@ class NotificationPreferencesRepositoryImpl
         return const Failed(NetworkFailure());
       }
       return Failed(ServerFailure(
-        message:
-            e.error.message ?? 'Could not load your notification settings.',
+        message: e.error.message ?? 'notifications.settings.load_failed',
         statusCode: e.error.statusCode,
       ));
     }
@@ -111,7 +110,7 @@ class NotificationPreferencesRepositoryImpl
       NotificationPreferences preferences) async {
     if (!_session.canCallProtectedApi) {
       return const Failed(AuthenticationFailure(
-        message: 'Sign in to change your notification settings.',
+        message: 'notifications.error.sign_in_for_settings',
       ));
     }
 
@@ -140,8 +139,7 @@ class NotificationPreferencesRepositoryImpl
       // it omits locked categories and drops a half-set window — so reaching
       // this branch with one of those codes means the contract moved.
       return Failed(ServerFailure(
-        message:
-            e.error.message ?? 'Could not save your notification settings.',
+        message: e.error.message ?? 'notifications.error.save_settings_failed',
         statusCode: e.error.statusCode,
       ));
     }

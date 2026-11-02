@@ -340,4 +340,4 @@ Until ETag / `If-Match` support lands:
 
 - [get-depot-by-id.md](get-depot-by-id.md) — the record you must read first
 - [create-depot.md](create-depot.md) — the three creation paths
-- [mobile.md](mobile.md) — the whole mobile depot surface
+- [mobile.md](api.md) — the whole mobile depot surface

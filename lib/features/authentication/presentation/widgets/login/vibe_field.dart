@@ -4,6 +4,7 @@ import 'package:steelforce/core/responsive/responsive_sizing.dart';
 import 'package:steelforce/core/theme/app_typography.dart';
 import 'package:steelforce/core/theme/theme_extensions.dart';
 import 'package:steelforce/core/theme/app_colors.dart';
+import 'package:steelforce/features/authentication/presentation/widgets/auth_ink.dart';
 
 Widget vibeFieldLabel(
   BuildContext context,
@@ -86,65 +87,78 @@ InputDecoration vibeFieldDecoration(
   );
 }
 
-/// The underline look: no box, a leading icon, and a single line under the
-/// text — for a form laid straight onto a dark photo (the sign-in screen).
-/// Always light ink, whatever the theme: the surface beneath is always dark.
-InputDecoration lineFieldDecoration(
+/// The sign-in look: a rounded pill in navy ink ([AuthInk]) on a pale fill,
+/// for the forms on the white brand backdrop. The same ink whatever the
+/// theme: the auth screens are always light ([AuthLightTheme]).
+///
+/// The label sits inside the pill as its placeholder and never floats — the
+/// pill has no border gap to float into — but it is still the field's label,
+/// so a screen reader announces "Phone Number", not an empty edit box.
+InputDecoration photoFieldDecoration(
   BuildContext context, {
   required String label,
-  String? hint,
-  bool required = false,
   IconData? icon,
   Widget? suffix,
+  bool required = false,
 }) {
-  final error = Theme.of(context).colorScheme.error;
-  const ink = Colors.white;
+  const ink = AuthInk.text;
   final muted = ink.withValues(alpha: 0.72);
-  UnderlineInputBorder line(Color c, [double w = 1]) =>
-      UnderlineInputBorder(borderSide: BorderSide(color: c, width: w));
+  final radius = BorderRadius.circular(context.rr(28));
+  OutlineInputBorder edge(Color c, [double w = 1]) => OutlineInputBorder(
+        borderRadius: radius,
+        borderSide: BorderSide(color: c, width: w),
+      );
 
+  final labelStyle = TextStyle(
+    color: muted,
+    fontSize: context.rsp(16),
+    height: AppTypography.compactLineHeight,
+  );
   return InputDecoration(
-    label: DefaultTextStyle.merge(
-      style: TextStyle(color: muted),
-      child: Text.rich(
-        TextSpan(children: [
-          TextSpan(text: label),
-          if (required)
-            TextSpan(
-              text: ' *',
-              style: TextStyle(color: error, fontWeight: FontWeight.w700),
-            ),
-        ]),
-        style: TextStyle(
-          color: muted,
-          fontSize: context.rsp(16),
-          height: AppTypography.compactLineHeight,
-        ),
-      ),
-    ),
-    floatingLabelStyle: TextStyle(color: muted),
-    hintText: hint,
-    hintStyle: TextStyle(
-      color: ink.withValues(alpha: 0.45),
-      fontSize: context.rsp(14),
-      height: AppTypography.compactLineHeight,
-    ),
-    hintMaxLines: 2,
-    prefixIcon:
-        icon == null ? null : Icon(icon, color: muted, size: context.rr(22)),
-    prefixIconConstraints: BoxConstraints(minWidth: context.rr(40)),
+    labelText: required ? null : label,
+    // A required field marks itself like the themed fields do: a red star.
+    label: required
+        ? Text.rich(
+            TextSpan(children: [
+              TextSpan(text: label),
+              const TextSpan(
+                text: ' *',
+                style: TextStyle(
+                  color: AuthInk.error,
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+            ]),
+            style: labelStyle,
+          )
+        : null,
+    floatingLabelBehavior: FloatingLabelBehavior.never,
+    labelStyle: labelStyle,
+    prefixIcon: icon == null
+        ? null
+        : Padding(
+            padding: EdgeInsetsDirectional.only(
+                start: context.rw(14), end: context.rw(6)),
+            child: Icon(icon, color: muted, size: context.rr(22)),
+          ),
+    prefixIconConstraints: BoxConstraints(minWidth: context.rr(48)),
     suffixIcon: suffix,
-    filled: false,
-    border: line(ink.withValues(alpha: 0.35)),
-    enabledBorder: line(ink.withValues(alpha: 0.35)),
-    focusedBorder: line(ink, 1.6),
-    errorBorder: line(error),
-    focusedErrorBorder: line(error, 1.6),
-    // A lighter red than the theme's: the theme error is tuned for white
-    // backgrounds and is hard to read on the dark photo.
-    errorStyle:
-        TextStyle(color: const Color(0xFFFF8A80), fontSize: context.rsp(12)),
-    contentPadding: EdgeInsets.symmetric(vertical: context.rh(14)),
+    filled: true,
+    fillColor: AuthInk.fieldFill,
+    // A lit-blue outline, as in the approved artwork; strong enough to hold
+    // in sunlight.
+    border: edge(AuthInk.fieldBorder),
+    enabledBorder: edge(AuthInk.fieldBorder),
+    focusedBorder: edge(AuthInk.accent, 1.6),
+    errorBorder: edge(AuthInk.error),
+    focusedErrorBorder: edge(AuthInk.error, 1.6),
+    errorStyle: TextStyle(color: AuthInk.error, fontSize: context.rsp(12)),
+    // Room for a two-line Khmer error without the field jumping wider.
+    errorMaxLines: 2,
+    contentPadding: EdgeInsets.symmetric(
+      horizontal: context.rw(20),
+      vertical: context.rh(17),
+    ),
   );
 }
 
@@ -165,9 +179,9 @@ class VibeField extends StatelessWidget {
   final TextCapitalization textCapitalization;
   final List<TextInputFormatter>? inputFormatters;
 
-  /// Draw with [lineFieldDecoration] (underline, light ink) instead of the
-  /// filled box.
-  final bool underline;
+  /// Draw with [photoFieldDecoration] (the sign-in pill, navy ink) instead
+  /// of the filled box.
+  final bool onPhoto;
 
   const VibeField({
     super.key,
@@ -186,7 +200,7 @@ class VibeField extends StatelessWidget {
     this.formFieldKey,
     this.textCapitalization = TextCapitalization.none,
     this.inputFormatters,
-    this.underline = false,
+    this.onPhoto = false,
   });
 
   @override
@@ -211,11 +225,9 @@ class VibeField extends StatelessWidget {
     // none of that. The glass look is `GlassCard`'s job, and it already does
     // it.
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final fill = isDark
-        ? Colors.white.withValues(alpha: 0.06)
-        : Colors.white.withValues(alpha: 0.22);
+    final fill = isDark ? AuthInk.hairline : AuthInk.hairline;
 
-    if (underline) {
+    if (onPhoto) {
       return TextFormField(
         key: formFieldKey,
         controller: controller,
@@ -228,16 +240,14 @@ class VibeField extends StatelessWidget {
         onFieldSubmitted: onSubmitted,
         validator: validator,
         style: TextStyle(
-          color: Colors.white,
+          color: AuthInk.text,
           fontSize: context.rsp(16),
           height: AppTypography.compactLineHeight,
         ),
-        cursorColor: Colors.white,
-        decoration: lineFieldDecoration(
+        cursorColor: AuthInk.text,
+        decoration: photoFieldDecoration(
           context,
           label: label,
-          hint: hint,
-          required: required,
           icon: icon,
           suffix: suffix,
         ),

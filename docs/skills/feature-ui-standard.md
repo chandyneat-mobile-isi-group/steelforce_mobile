@@ -359,7 +359,7 @@ Not optional — Khmer is a first-class locale here.
 ## 14. PR checklist (copy into every PR)
 
 ```markdown
-### Feature & UI Standard — docs/FEATURE_UI_STANDARD.md
+### Feature & UI Standard — docs/skills/feature-ui-standard.md
 
 **Blocking**
 - [ ] `flutter analyze` — no new issues

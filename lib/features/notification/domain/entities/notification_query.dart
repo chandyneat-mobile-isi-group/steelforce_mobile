@@ -11,8 +11,11 @@ import 'package:steelforce/features/notification/domain/entities/notification_st
 /// `actionRequired=true` across several states, and **History** is the union of
 /// every closed state.
 enum NotificationScope {
-  /// Everything currently live — unread and read.
+  /// Everything currently live — unread and read. The **All** tab.
   inbox,
+
+  /// Unread only. The **Unread** tab.
+  unread,
 
   /// `actionRequired=true`. Pinned to the top, and its items are not
   /// swipeable (§5.4).
@@ -42,6 +45,10 @@ class NotificationQuery extends Equatable {
   /// synced, and this only bounds how much is rendered at once.
   static const int defaultLimit = 60;
 
+  /// How far [limit] grows each time the list reaches its end — one server
+  /// page.
+  static const int page = 50;
+
   final NotificationScope scope;
 
   /// Null means every category. A concrete value backs the filter chips.
@@ -58,6 +65,7 @@ class NotificationQuery extends Equatable {
             NotificationState.unread,
             NotificationState.read,
           },
+        NotificationScope.unread => const {NotificationState.unread},
         // Action-needed is not a state filter — an item awaiting
         // acknowledgement can be unread or read and is still outstanding
         // (§5.4, "reading is not acting"). The state set here only excludes the

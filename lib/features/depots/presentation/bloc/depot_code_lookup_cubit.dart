@@ -1,3 +1,4 @@
+import 'package:steelforce/core/error/failure_message.dart';
 import 'package:equatable/equatable.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:steelforce/features/depots/domain/entities/depot_code_lookup.dart';
@@ -83,7 +84,7 @@ class DepotCodeLookupCubit extends Cubit<DepotCodeLookupState> {
           DepotCodeAbsent() => CodeLookupAbsent(trimmed),
           DepotCodeUnavailable() => const CodeLookupUnavailable(),
         },
-        failure: (failure) => CodeLookupFailed(failure.message),
+        failure: (failure) => CodeLookupFailed(failure.userMessage),
       ),
     );
   }

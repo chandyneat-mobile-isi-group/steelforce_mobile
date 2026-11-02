@@ -59,6 +59,10 @@ class ProfileInfoSection extends StatelessWidget {
             if (profile.department case final v?)
               _Row(Icons.apartment_rounded, 'profile.department'.tr, v,
                   stacked: true),
+            if (profile.salesOrgName case final v?)
+              _Row(
+                  Icons.store_mall_directory_rounded, 'profile.sales_org'.tr, v,
+                  stacked: true, wide: true),
             if (profile.territoryCode case final v?)
               _Row(Icons.map_rounded, 'profile.territory'.tr, v, stacked: true),
             if (profile.position case final v?)
@@ -66,10 +70,6 @@ class ProfileInfoSection extends StatelessWidget {
             if (profile.depotCode case final v?)
               _Row(Icons.warehouse_rounded, 'profile.depot'.tr, v,
                   stacked: true),
-            if (profile.lineManager case final v?)
-              _Row(Icons.supervisor_account_rounded, 'profile.line_manager'.tr,
-                  v,
-                  stacked: true, wide: true),
           ],
           // The note explains the rows above it, so it sits inside their card.
           footer: Row(

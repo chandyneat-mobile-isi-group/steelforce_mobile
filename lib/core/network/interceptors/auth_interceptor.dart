@@ -159,10 +159,25 @@ class AuthInterceptor extends QueuedInterceptor {
     if (err.response?.statusCode != 401) return false;
     if (err.requestOptions.extra[_retriedFlag] == true) return false;
 
+    // A refused one-time proof is the answer too. Replaying it would resend a
+    // single-use token the server has already judged, and burn a rotation.
+    if (_isProofRefusal(err.response?.data)) return false;
+
     // A 401 from /auth/login or /auth/refresh is the answer, not a symptom.
     final path = err.requestOptions.path;
     return !ApiEndpoints.authRoutes.any(path.endsWith);
   }
+
+  /// `{success: false, error: {code: AUTH_PHONE_PROOF_INVALID}}`: the phone
+  /// proof or the Firebase token behind it was refused, not the bearer token.
+  static bool _isProofRefusal(Object? body) {
+    if (body is! Map) return false;
+    final error = body['error'];
+    return error is Map && error['code'] == phoneProofInvalidCode;
+  }
+
+  /// The wrapped-envelope code for a refused phone proof.
+  static const phoneProofInvalidCode = 'AUTH_PHONE_PROOF_INVALID';
 
   static String? _bearerOf(RequestOptions options) {
     final header = options.headers['Authorization'];

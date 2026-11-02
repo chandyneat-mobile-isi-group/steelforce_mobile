@@ -229,40 +229,48 @@ class _ManualPriceAmount extends StatelessWidget {
           ),
         ],
         SizedBox(width: context.rw(6)),
-        InkWell(
-          onTap: onInputPrice,
-          borderRadius: BorderRadius.circular(context.rr(4)),
-          child: Container(
-            padding: EdgeInsets.symmetric(
-              horizontal: context.rw(5),
-              vertical: context.rh(2),
-            ),
-            decoration: BoxDecoration(
-              color: scheme.primary.withValues(alpha: 0.12),
-              borderRadius: BorderRadius.circular(context.rr(4)),
-              border: Border.all(
-                color: scheme.primary.withValues(alpha: 0.35),
-                width: 0.8,
+        // Flexible so a longer translation ellipsizes instead of overflowing
+        // the price row.
+        Flexible(
+          child: InkWell(
+            onTap: onInputPrice,
+            borderRadius: BorderRadius.circular(context.rr(4)),
+            child: Container(
+              padding: EdgeInsets.symmetric(
+                horizontal: context.rw(5),
+                vertical: context.rh(2),
               ),
-            ),
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Text(
-                  '(Manual USD)',
-                  style: TextStyle(
-                    fontSize: context.rsp(9.5),
-                    fontWeight: FontWeight.w800,
+              decoration: BoxDecoration(
+                color: scheme.primary.withValues(alpha: 0.12),
+                borderRadius: BorderRadius.circular(context.rr(4)),
+                border: Border.all(
+                  color: scheme.primary.withValues(alpha: 0.35),
+                  width: 0.8,
+                ),
+              ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Flexible(
+                    child: Text(
+                      'orders.pricing.manual_usd'.tr,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: TextStyle(
+                        fontSize: context.rsp(9.5),
+                        fontWeight: FontWeight.w800,
+                        color: scheme.primary,
+                      ),
+                    ),
+                  ),
+                  SizedBox(width: context.rw(2)),
+                  Icon(
+                    Icons.edit_outlined,
+                    size: context.rr(10),
                     color: scheme.primary,
                   ),
-                ),
-                SizedBox(width: context.rw(2)),
-                Icon(
-                  Icons.edit_outlined,
-                  size: context.rr(10),
-                  color: scheme.primary,
-                ),
-              ],
+                ],
+              ),
             ),
           ),
         ),
@@ -354,7 +362,7 @@ class _PriceMissing extends StatelessWidget {
               SizedBox(width: context.rw(4)),
               Flexible(
                 child: Text(
-                  "Material doesn't have price",
+                  'orders.pricing.material_no_price'.tr,
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                   style: TextStyle(
@@ -412,12 +420,16 @@ class _PriceMissing extends StatelessWidget {
                         color: scheme.primary,
                       ),
                       SizedBox(width: context.rw(3)),
-                      Text(
-                        'Input Price (USD)',
-                        style: TextStyle(
-                          color: scheme.primary,
-                          fontSize: context.rsp(11),
-                          fontWeight: FontWeight.w800,
+                      Flexible(
+                        child: Text(
+                          'orders.pricing.input_price_usd'.tr,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: TextStyle(
+                            color: scheme.primary,
+                            fontSize: context.rsp(11),
+                            fontWeight: FontWeight.w800,
+                          ),
                         ),
                       ),
                     ],

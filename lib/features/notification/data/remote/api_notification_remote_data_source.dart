@@ -7,26 +7,22 @@ import 'package:steelforce/core/network/api/api_endpoints.dart';
 import 'package:steelforce/core/network/api/api_envelope.dart';
 import 'package:steelforce/core/network/api/api_error.dart';
 import 'package:steelforce/core/utils/typedefs.dart';
+import 'package:steelforce/features/notification/data/models/inbox_item_mapper.dart';
 import 'package:steelforce/features/notification/data/models/notification_api_mapper.dart';
 import 'package:steelforce/features/notification/data/remote/notification_remote_data_source.dart';
 import 'package:steelforce/features/notification/domain/entities/notification_counts.dart';
-import 'package:steelforce/features/notification/domain/entities/notification_message.dart';
 import 'package:steelforce/features/notification/domain/entities/notification_preferences.dart';
 import 'package:steelforce/features/notification/domain/entities/push_registration.dart';
 
-/// The real notification API (`docs/feature/notification/README.md` §3).
+/// The real notification API: the inbox at `/me/notifications` (backend
+/// `InboxEndpoints`) and the device registry at `/me/devices`.
 ///
-/// ## Two response shapes, one envelope family
-///
-/// The inbox list returns `data` as a **JSON array** — [ApiListEnvelope] — while
-/// counts, preferences and device registration return `data` as an object —
-/// [ApiEnvelope]. Running the wrong reader over either throws "missing its
-/// payload", which is why the two are used explicitly here rather than behind
-/// one helper that guesses.
-///
-/// Mutations answer `204 No Content` with no envelope at all, so they are not
-/// parsed: a reader run over an empty body is how a successful call starts
-/// reporting failure.
+/// Every success is `{ "success": true, "data": { … } }` — [ApiEnvelope].
+/// Mark-read answers `204 No Content` and is not parsed: a reader run over an
+/// empty body is how a successful call starts reporting failure. Errors are
+/// `{ "success": false, "error": { "code", "message" } }`, which
+/// [ApiError.fromDio] reads, so callers branch on codes such as
+/// `NOTIFICATION_NOT_FOUND` and `NOTIFICATION_CURSOR_INVALID`.
 class ApiNotificationRemoteDataSource implements NotificationRemoteDataSource {
   const ApiNotificationRemoteDataSource(this._client);
 
@@ -34,42 +30,25 @@ class ApiNotificationRemoteDataSource implements NotificationRemoteDataSource {
 
   @override
   Future<NotificationPage> fetchPage({
-    DateTime? since,
-    int pageNumber = 1,
-    int pageSize = ApiDefaults.notificationPageSize,
+    String? cursor,
+    int limit = ApiDefaults.notificationPageSize,
+    bool unreadOnly = false,
   }) async {
     try {
-      final response = await _client.get<Object?>(
+      final response = await _client.get<DataMap>(
         ApiEndpoints.notificationsEndpoint,
         queryParameters: {
-          // Only ever a server-issued `syncTimestamp`. See
-          // `NotificationPage.syncTimestamp` for why the device clock must
-          // never appear here.
-          if (since != null) 'since': since.toUtc().toIso8601String(),
-          'pageNumber': pageNumber,
-          'pageSize': pageSize,
+          if (cursor != null) 'cursor': cursor,
+          'limit': limit,
+          if (unreadOnly) 'unreadOnly': true,
         },
       );
-
-      final envelope = ApiListEnvelope.fromBody(response.data);
-      final items = <NotificationMessage>[];
-      for (final json in envelope.items) {
-        final parsed = NotificationApiMapper.fromJson(json);
-        // A row with no usable id is skipped rather than failing the page. One
-        // malformed record must not cost a rep the other ninety-nine — and
-        // the next catch-up will present it again if the server fixes it.
-        if (parsed != null) items.add(parsed);
-      }
-
-      final metadata = envelope.metadata;
+      final page = ApiEnvelope.fromBody(response.data).data;
       return NotificationPage(
-        items: items,
-        // Read from the server rather than inferred from `items.length ==
-        // pageSize`: `pageSize` is clamped to 200 rather than rejected, so a
-        // length comparison against what was *asked for* can both loop forever
-        // and stop early.
-        hasMore: metadata?.hasNextPage ?? false,
-        syncTimestamp: metadata?.syncTimestamp,
+        // A row with no id is skipped rather than failing the page: one
+        // malformed record must not cost the rep the rest.
+        items: InboxItemMapper.itemsFromJson(page['items']),
+        nextCursor: page['nextCursor'] as String?,
       );
     } on DioException catch (e) {
       throw ApiException(ApiError.fromDio(e));
@@ -81,8 +60,8 @@ class ApiNotificationRemoteDataSource implements NotificationRemoteDataSource {
     try {
       final response =
           await _client.get<DataMap>(ApiEndpoints.notificationCountsEndpoint);
-      final envelope = ApiEnvelope.fromBody(response.data);
-      return NotificationApiMapper.countsFromJson(envelope.data);
+      return InboxItemMapper.countsFromJson(
+          ApiEnvelope.fromBody(response.data).data);
     } on DioException catch (e) {
       throw ApiException(ApiError.fromDio(e));
     }
@@ -91,7 +70,7 @@ class ApiNotificationRemoteDataSource implements NotificationRemoteDataSource {
   @override
   Future<void> markRead(String id) async {
     try {
-      await _client.patch<void>(ApiEndpoints.notificationReadEndpoint(id));
+      await _client.post<void>(ApiEndpoints.notificationReadEndpoint(id));
     } on DioException catch (e) {
       throw ApiException(ApiError.fromDio(e));
     }
@@ -100,17 +79,10 @@ class ApiNotificationRemoteDataSource implements NotificationRemoteDataSource {
   @override
   Future<int> markAllRead({String? categoryCode}) async {
     try {
-      final response = await _client.patch<DataMap>(
-        ApiEndpoints.notificationReadAllEndpoint,
-        queryParameters: {
-          if (categoryCode != null) 'category': categoryCode,
-        },
-      );
-      // `data` is a bare integer here, not an object, so `ApiEnvelope` would
-      // reject it as a missing payload — this endpoint is read directly.
-      final body = response.data;
-      if (body == null) return 0;
-      return (body['data'] as num?)?.toInt() ?? 0;
+      final response =
+          await _client.post<DataMap>(ApiEndpoints.notificationReadAllEndpoint);
+      final data = ApiEnvelope.fromBody(response.data).data;
+      return (data['marked'] as num?)?.toInt() ?? 0;
     } on DioException catch (e) {
       throw ApiException(ApiError.fromDio(e));
     }
@@ -172,37 +144,62 @@ class ApiNotificationRemoteDataSource implements NotificationRemoteDataSource {
   Future<PushRegistrationResult> registerDevice(
       PushRegistration registration) async {
     final body = NotificationApiMapper.registrationToJson(registration);
+    final path = ApiEndpoints.deviceRegisterEndpoint(registration.deviceId);
 
     try {
-      final response = await _client.post<DataMap>(
-        ApiEndpoints.deviceRegisterEndpoint,
-        data: body,
-      );
+      if (kDebugMode) {
+        debugPrint('=========== PUT device registration ===========');
+        debugPrint('path: $path');
+        debugPrint('platform: ${body['platform']}');
+        debugPrint('pushToken: [REDACTED]');
+        debugPrint('locale: ${body['locale']}');
+        debugPrint('appVersion: ${body['appVersion']}');
+      }
 
-      _dump(
-        'DEVICE REGISTER',
-        method: 'POST',
-        path: ApiEndpoints.deviceRegisterEndpoint,
-        request: body,
-        status: response.statusCode,
-        response: response.data,
-      );
-
-      final envelope = ApiEnvelope.fromBody(response.data);
-      return NotificationApiMapper.registrationFromJson(envelope.data);
+      Response<Object?> response;
+      try {
+        response = await _client.put<Object?>(path, data: body);
+      } on DioException catch (error) {
+        if (error.response?.statusCode != 409) rethrow;
+        if (kDebugMode) {
+          debugPrint('device registration: retrying once after 409');
+        }
+        response = await _client.put<Object?>(path, data: body);
+      }
+      // The registration contract only guarantees successful status, and may
+      // return 204. Parse an optional representation when supplied.
+      try {
+        final envelope = ApiEnvelope.fromBody(response.data);
+        final result = NotificationApiMapper.registrationFromJson({
+          ...envelope.data,
+          'pushPermissionGranted': envelope.data['pushPermissionGranted'] ??
+              registration.pushPermissionGranted,
+        });
+        if (kDebugMode) {
+          debugPrint('============== result ==============');
+          debugPrint('status: ${response.statusCode}');
+          debugPrint('success: true');
+        }
+        return result;
+      } on Object {
+        if (kDebugMode) {
+          debugPrint('============== result ==============');
+          debugPrint('status: ${response.statusCode}');
+          debugPrint('success: true');
+        }
+        return PushRegistrationResult(
+          id: registration.deviceId,
+          deviceId: registration.deviceId,
+          isActive: true,
+          pushPermissionGranted: registration.pushPermissionGranted,
+        );
+      }
     } on DioException catch (e) {
-      // Dumped on the failure path too. A 400 `General.Validation` names the
-      // field it rejected, and that message is the whole diagnosis — losing it
-      // to a thrown exception is how an over-length `deviceName` turns into
-      // "push just doesn't work".
-      _dump(
-        'DEVICE REGISTER — FAILED',
-        method: 'POST',
-        path: ApiEndpoints.deviceRegisterEndpoint,
-        request: body,
-        status: e.response?.statusCode,
-        response: e.response?.data,
-      );
+      if (kDebugMode) {
+        debugPrint('============== result ==============');
+        debugPrint('status: ${e.response?.statusCode ?? 'no response'}');
+        debugPrint('success: false');
+      }
       throw ApiException(ApiError.fromDio(e));
     }
   }

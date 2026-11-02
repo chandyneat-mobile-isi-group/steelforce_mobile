@@ -75,14 +75,14 @@ class QuotationListView extends StatelessWidget {
                 physics: const BouncingScrollPhysics(),
                 children: [
                   _StatusGroupChip(
-                    label: 'All',
+                    label: 'orders.tabs.all'.tr,
                     isSelected: loaded.selectedGroup == null,
                     onTap: () =>
                         context.read<QuotationListCubit>().selectGroup(null),
                   ),
                   const SizedBox(width: 8),
                   _StatusGroupChip(
-                    label: 'Drafts',
+                    label: 'orders.quotation_list.drafts'.tr,
                     isSelected:
                         loaded.selectedGroup == QuotationStatusGroup.drafts,
                     onTap: () => context
@@ -91,7 +91,7 @@ class QuotationListView extends StatelessWidget {
                   ),
                   const SizedBox(width: 8),
                   _StatusGroupChip(
-                    label: 'Waiting',
+                    label: 'orders.quotation_list.waiting'.tr,
                     isSelected:
                         loaded.selectedGroup == QuotationStatusGroup.waiting,
                     onTap: () => context
@@ -100,7 +100,7 @@ class QuotationListView extends StatelessWidget {
                   ),
                   const SizedBox(width: 8),
                   _StatusGroupChip(
-                    label: 'With Depot',
+                    label: 'orders.quotation_list.with_depot'.tr,
                     isSelected:
                         loaded.selectedGroup == QuotationStatusGroup.withDepot,
                     onTap: () => context
@@ -109,7 +109,7 @@ class QuotationListView extends StatelessWidget {
                   ),
                   const SizedBox(width: 8),
                   _StatusGroupChip(
-                    label: 'Won',
+                    label: 'orders.quotation_list.won'.tr,
                     isSelected:
                         loaded.selectedGroup == QuotationStatusGroup.won,
                     onTap: () => context
@@ -118,7 +118,7 @@ class QuotationListView extends StatelessWidget {
                   ),
                   const SizedBox(width: 8),
                   _StatusGroupChip(
-                    label: 'Closed',
+                    label: 'orders.quotation_list.closed'.tr,
                     isSelected:
                         loaded.selectedGroup == QuotationStatusGroup.closed,
                     onTap: () => context
@@ -331,7 +331,8 @@ class _QuotationCard extends StatelessWidget {
             Text(
               summary.depotName.isNotEmpty
                   ? summary.depotName
-                  : 'Depot #${summary.depotId}',
+                  : 'orders.quotation_detail.depot_fallback'
+                      .trParams({'id': summary.depotId}),
               style: TextStyle(
                 color: colors.textPrimary,
                 fontSize: context.rsp(13.5),
@@ -348,7 +349,10 @@ class _QuotationCard extends StatelessWidget {
               textBaseline: TextBaseline.alphabetic,
               children: [
                 Text(
-                  '${summary.lineCount} ${summary.lineCount == 1 ? 'item' : 'items'}',
+                  (summary.lineCount == 1
+                          ? 'orders.quotation_list.items_one'
+                          : 'orders.quotation_list.items_other')
+                      .trParams({'count': '${summary.lineCount}'}),
                   style: TextStyle(
                     color: colors.textSecondary,
                     fontSize: context.rsp(12),

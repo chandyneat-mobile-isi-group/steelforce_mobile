@@ -1,3 +1,4 @@
+import 'package:steelforce/core/localization/localization_services.dart';
 import 'package:steelforce/core/platform/storage/local_files.dart';
 import 'package:flutter/material.dart';
 import 'package:steelforce/core/responsive/responsive_sizing.dart';
@@ -48,7 +49,7 @@ class DrawingUploadComponent extends StatelessWidget {
                       icon:
                           const Icon(Icons.delete_outline, color: Colors.white),
                       onPressed: onRemoveImage,
-                      tooltip: 'Remove Drawing',
+                      tooltip: 'orders.drawing.remove'.tr,
                     ),
                   ),
                 ),
@@ -62,18 +63,21 @@ class DrawingUploadComponent extends StatelessWidget {
                   Icon(Icons.check_circle_rounded,
                       color: colorScheme.primary, size: context.rr(20)),
                   SizedBox(width: context.rw(8)),
-                  Text(
-                    'Custom Drawing Attached',
-                    style: theme.textTheme.labelLarge?.copyWith(
-                      fontWeight: FontWeight.bold,
-                      color: colorScheme.primary,
+                  Flexible(
+                    child: Text(
+                      'orders.drawing.attached'.tr,
+                      overflow: TextOverflow.ellipsis,
+                      style: theme.textTheme.labelLarge?.copyWith(
+                        fontWeight: FontWeight.bold,
+                        color: colorScheme.primary,
+                      ),
                     ),
                   ),
                   const Spacer(),
                   TextButton.icon(
                     onPressed: () => _showSourcePicker(context),
                     icon: Icon(Icons.refresh_rounded, size: context.rr(18)),
-                    label: const Text('Replace'),
+                    label: Text('orders.drawing.replace'.tr),
                   ),
                 ],
               ),
@@ -100,14 +104,14 @@ class DrawingUploadComponent extends StatelessWidget {
               size: context.rr(48), color: colorScheme.primary),
           SizedBox(height: context.rh(12)),
           Text(
-            'Attach Product Drawing or Sketch',
+            'orders.drawing.attach_title'.tr,
             style: theme.textTheme.titleMedium?.copyWith(
               fontWeight: FontWeight.bold,
             ),
           ),
           SizedBox(height: context.rh(4)),
           Text(
-            'Capture site measurements or technical sketches',
+            'orders.drawing.attach_subtitle'.tr,
             style: theme.textTheme.bodySmall?.copyWith(
               color: colorScheme.onSurfaceVariant,
             ),
@@ -120,13 +124,13 @@ class DrawingUploadComponent extends StatelessWidget {
               FilledButton.icon(
                 onPressed: () => onPickImage(ImageCaptureSource.camera),
                 icon: Icon(Icons.camera_alt_rounded, size: context.rr(18)),
-                label: const Text('Camera'),
+                label: Text('orders.drawing.camera'.tr),
               ),
               SizedBox(width: context.rw(12)),
               OutlinedButton.icon(
                 onPressed: () => onPickImage(ImageCaptureSource.gallery),
                 icon: Icon(Icons.photo_library_rounded, size: context.rr(18)),
-                label: const Text('Gallery'),
+                label: Text('orders.drawing.gallery'.tr),
               ),
             ],
           ),
@@ -147,7 +151,7 @@ class DrawingUploadComponent extends StatelessWidget {
           children: [
             ListTile(
               leading: const Icon(Icons.camera_alt_rounded),
-              title: const Text('Take Photo via Camera'),
+              title: Text('orders.drawing.take_photo'.tr),
               onTap: () {
                 Navigator.pop(ctx);
                 onPickImage(ImageCaptureSource.camera);
@@ -155,7 +159,7 @@ class DrawingUploadComponent extends StatelessWidget {
             ),
             ListTile(
               leading: const Icon(Icons.photo_library_rounded),
-              title: const Text('Choose from Gallery'),
+              title: Text('orders.drawing.choose_gallery'.tr),
               onTap: () {
                 Navigator.pop(ctx);
                 onPickImage(ImageCaptureSource.gallery);

@@ -3,6 +3,8 @@ import 'package:intl/intl.dart';
 import 'package:steelforce/core/theme/theme_extensions.dart';
 import 'calendar_day_cell.dart';
 import 'package:steelforce/core/responsive/responsive_sizing.dart';
+import 'package:steelforce/core/localization/localization_services.dart';
+import 'package:steelforce/core/localization/localized_text_context.dart';
 
 class CalendarMonthView extends StatelessWidget {
   const CalendarMonthView({
@@ -52,7 +54,14 @@ class CalendarMonthView extends StatelessWidget {
     final now = DateTime.now();
     final monthDates = _generateMonToSatDates(focusedMonth);
 
-    const weekdayLabels = ['Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa'];
+    final weekdayLabels = [
+      'my_visits.calendar.weekday_mo'.tr,
+      'my_visits.calendar.weekday_tu'.tr,
+      'my_visits.calendar.weekday_we'.tr,
+      'my_visits.calendar.weekday_th'.tr,
+      'my_visits.calendar.weekday_fr'.tr,
+      'my_visits.calendar.weekday_sa'.tr,
+    ];
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -65,7 +74,7 @@ class CalendarMonthView extends StatelessWidget {
               onPressed: () => _goToMonth(-1),
             ),
             Text(
-              DateFormat.yMMMM().format(focusedMonth),
+              DateFormat.yMMMM(context.languageCode).format(focusedMonth),
               style: TextStyle(
                 color: colors.textPrimary,
                 fontSize: context.rsp(16),

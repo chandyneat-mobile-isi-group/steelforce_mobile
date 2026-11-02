@@ -13,7 +13,7 @@ import workmanager_apple
     // Read from Info.plist, which resolves $(GOOGLE_MAPS_API_KEY) from
     // ios/Flutter/Env.xcconfig (generated from .env, git-ignored). The key was
     // previously a literal here and leaked via git history —
-    // docs/SECURITY.md §9.
+    // docs/skills/security.md §9.
     if let apiKey = Bundle.main.object(forInfoDictionaryKey: "GoogleMapsApiKey") as? String,
        !apiKey.isEmpty,
        !apiKey.hasPrefix("$(") {
@@ -28,7 +28,7 @@ import workmanager_apple
     // `flutter_local_notifications` needs an explicit delegate to deliver a
     // tap on an alert it drew itself (the foreground card, and the
     // "already handled elsewhere" message the offline action queue shows on a
-    // 409 — docs/features/notification-mobile.md §8.5). Without this those
+    // 409 — docs/feature/notification/README.md §8.5). Without this those
     // taps are swallowed and the notification simply dismisses.
     //
     // This composes with Firebase rather than competing with it:
@@ -38,7 +38,7 @@ import workmanager_apple
     // a cold start from a notification tap, which is why it is here.
     //
     // ⚠️ Do not delete this on the strength of
-    // `docs/feature/notification/notification-mobile.md` Step 4.2 ("AppDelegate
+    // `docs/feature/notification/README.md` Step 4.2 ("AppDelegate
     // — no change needed"). That paragraph is about **Firebase**: it is telling
     // you not to add `FirebaseApp.configure()`, which double-initialises and
     // throws. `flutter_local_notifications` is a separate plugin, and its

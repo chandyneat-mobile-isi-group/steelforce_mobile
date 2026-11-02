@@ -1,8 +1,6 @@
 import 'package:dio/dio.dart';
 import 'package:get_it/get_it.dart';
-import 'package:steelforce/core/config/data_source_mode.dart';
 import 'package:steelforce/core/database/drift/local_database_reset.dart';
-import 'package:steelforce/core/demo/demo_network.dart';
 import 'package:steelforce/core/session/unsent_work.dart';
 import 'package:steelforce/core/platform/device/device_identity.dart';
 import 'package:steelforce/core/logging/app_logger.dart';
@@ -11,19 +9,29 @@ import 'package:steelforce/core/network/app_network.dart';
 import 'package:steelforce/core/session/session_manager.dart';
 import 'package:steelforce/features/authentication/data/datasources/auth_local_data_source.dart';
 import 'package:steelforce/features/authentication/data/datasources/auth_remote_data_source.dart';
+import 'package:steelforce/features/authentication/data/datasources/phone_ownership_verifier.dart';
+import 'package:steelforce/features/authentication/data/datasources/phone_password_change_remote_data_source.dart';
+import 'package:steelforce/features/authentication/data/datasources/phone_reset_remote_data_source.dart';
 import 'package:steelforce/features/authentication/data/datasources/secure_sign_in_memory.dart';
-import 'package:steelforce/features/authentication/data/mock/demo_auth_remote_data_source.dart';
 import 'package:steelforce/features/authentication/data/repositories/auth_repository_impl.dart';
+import 'package:steelforce/features/authentication/data/repositories/phone_ownership_reset_repository_impl.dart';
+import 'package:steelforce/features/authentication/data/repositories/phone_password_change_repository_impl.dart';
 import 'package:steelforce/features/authentication/domain/notification_lifecycle.dart';
 import 'package:steelforce/features/authentication/domain/repositories/auth_repository.dart';
+import 'package:steelforce/features/authentication/domain/repositories/phone_ownership_reset_repository.dart';
+import 'package:steelforce/features/authentication/domain/repositories/phone_password_change_repository.dart';
 import 'package:steelforce/features/authentication/domain/repositories/sign_in_memory.dart';
 import 'package:steelforce/features/authentication/domain/usecases/get_remembered_phone.dart';
 import 'package:steelforce/features/authentication/domain/usecases/update_remembered_phone.dart';
 import 'package:steelforce/features/authentication/domain/usecases/get_current_user.dart';
+import 'package:steelforce/features/authentication/domain/usecases/refresh_profile.dart';
 import 'package:steelforce/features/authentication/domain/usecases/login.dart';
 import 'package:steelforce/features/authentication/domain/usecases/logout.dart';
+import 'package:steelforce/features/authentication/domain/usecases/phone_password_change.dart';
 import 'package:steelforce/features/authentication/presentation/bloc/auth_bloc.dart';
+import 'package:steelforce/features/authentication/presentation/bloc/phone_password_change_cubit.dart';
 import 'package:steelforce/features/my_visits/domain/services/location_fix_provider.dart';
+import 'package:steelforce/core/network/work_mode/work_mode_service.dart';
 
 /// Registers every dependency the authentication feature needs.
 /// Externals (secure storage, connectivity, network info) are registered
@@ -60,18 +68,59 @@ void registerAuthFeature(GetIt sl) {
     ),
   );
 
+  // Signed-in password change by SMS. A factory taking whether Firebase phone
+  // auth exists on this build, so the cubit — and the phone proof it holds —
+  // dies with its route.
+  sl.registerFactoryParam<PhonePasswordChangeCubit, bool, void>(
+    (available, _) => PhonePasswordChangeCubit(
+      startVerification: sl(),
+      verifyProof: sl(),
+      changePassword: sl(),
+      available: available,
+    ),
+  );
+
   // ── Domain (use cases) ─────────────────────────────────────────────
   sl.registerLazySingleton(() => Login(sl()));
   sl.registerLazySingleton(() => Logout(sl()));
   sl.registerLazySingleton(() => GetCurrentUser(sl()));
+  sl.registerLazySingleton(() => RefreshProfile(sl()));
   sl.registerLazySingleton(() => GetRememberedPhone(sl()));
   sl.registerLazySingleton(() => UpdateRememberedPhone(sl()));
+  sl.registerLazySingleton(() => StartOwnPhoneVerification(sl()));
+  sl.registerLazySingleton(() => VerifyOwnPhoneProof(sl()));
+  sl.registerLazySingleton(() => ChangePasswordWithPhoneProof(sl()));
 
   // ── Data (repository) ──────────────────────────────────────────────
   sl.registerLazySingleton<AuthRepository>(
     () => AuthRepositoryImpl(
       remote: sl(),
       local: sl(),
+      networkInfo: sl(),
+      logger: sl<AppLogger>(),
+    ),
+  );
+
+  // Password reset through Firebase Phone Auth. Lazy, and only resolved when
+  // `AppConfig.passwordResetViaFirebase` routes a reset here — so a build with
+  // the flag off, and the web build, never touch Firebase Auth.
+  sl.registerLazySingleton<PhoneOwnershipResetRepository>(
+    () => PhoneOwnershipResetRepositoryImpl(
+      verifier: sl(),
+      remote: sl(),
+      networkInfo: sl(),
+      logger: sl<AppLogger>(),
+    ),
+  );
+
+  // Lazy for the same reason: only the signed-in change-password route
+  // resolves it, and only where Firebase phone auth exists.
+  sl.registerLazySingleton<PhonePasswordChangeRepository>(
+    () => PhonePasswordChangeRepositoryImpl(
+      verifier: sl(),
+      remote: sl(),
+      ownPhoneNumber: () async =>
+          (await sl<AuthLocalDataSource>().readProfile())?.phoneNumber,
       networkInfo: sl(),
       logger: sl<AppLogger>(),
     ),
@@ -108,6 +157,8 @@ void registerAuthFeature(GetIt sl) {
       // protected screens, and every subsequent request failed with no
       // explanation. The session was gone but the app did not know it.
       onSessionExpired: () => sl<SessionManager>().expire(),
+      // The rep's offline choice, enforced for every feature data source.
+      workMode: sl<WorkModeService>(),
     ),
   );
 
@@ -118,19 +169,27 @@ void registerAuthFeature(GetIt sl) {
     instanceName: bareClientName,
   );
 
-  // TODO(release-gate): the demo source is selected only when
-  // `DataSourceMode.useMocks`; a live build never constructs it.
   sl.registerLazySingleton<AuthRemoteDataSource>(
-    () => DataSourceMode.useLiveApi
-        ? AuthRemoteDataSourceImpl(
-            authedClient: sl<Dio>(),
-            bareClient: sl<Dio>(instanceName: bareClientName),
-            device: sl(),
-            getFixProvider: () => sl.isRegistered<LocationFixProvider>()
-                ? sl<LocationFixProvider>()
-                : null,
-          )
-        : DemoAuthRemoteDataSource(sl<DemoNetwork>()),
+    () => AuthRemoteDataSourceImpl(
+      authedClient: sl<Dio>(),
+      bareClient: sl<Dio>(instanceName: bareClientName),
+      device: sl(),
+      getFixProvider: () => sl.isRegistered<LocationFixProvider>()
+          ? sl<LocationFixProvider>()
+          : null,
+    ),
+  );
+
+  sl.registerLazySingleton<PhoneOwnershipVerifier>(
+    () => FirebasePhoneOwnershipVerifier(logger: sl<AppLogger>()),
+  );
+  sl.registerLazySingleton<PhonePasswordChangeRemoteDataSource>(
+    () => PhonePasswordChangeRemoteDataSourceImpl(authedClient: sl<Dio>()),
+  );
+  sl.registerLazySingleton<PhoneResetRemoteDataSource>(
+    () => PhoneResetRemoteDataSourceImpl(
+      bareClient: sl<Dio>(instanceName: bareClientName),
+    ),
   );
 }
 

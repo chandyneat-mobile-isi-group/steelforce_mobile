@@ -2,14 +2,28 @@ import 'package:flutter/material.dart';
 import 'package:steelforce/core/localization/localization_services.dart';
 import 'package:steelforce/core/responsive/responsive_sizing.dart';
 import 'package:steelforce/core/theme/theme_extensions.dart';
+import 'package:steelforce/features/authentication/presentation/widgets/auth_ink.dart';
 
 enum AuthVibeStatus { idle, verifying, error, success }
 
 class StatusPill extends StatelessWidget {
-  const StatusPill({super.key, required this.status, this.message});
+  const StatusPill({
+    super.key,
+    required this.status,
+    this.message,
+    this.verifyingLabel,
+    this.onDark = false,
+  });
 
   final AuthVibeStatus status;
   final String? message;
+
+  /// Replaces the generic "Verifying…" while [status] is verifying.
+  final String? verifyingLabel;
+
+  /// Drawn on the sign-in photo's navy rather than a themed surface: the
+  /// theme's error red is tuned for white and goes dim there.
+  final bool onDark;
 
   @override
   Widget build(BuildContext context) {
@@ -18,14 +32,18 @@ class StatusPill extends StatelessWidget {
     final scheme = Theme.of(context).colorScheme;
     final colors = context.appColors;
     final (Color color, IconData? icon, String text) = switch (status) {
-      AuthVibeStatus.verifying => (scheme.primary, null, 'auth.verifying'.tr),
+      AuthVibeStatus.verifying => (
+          onDark ? AuthInk.accent : scheme.primary,
+          null,
+          verifyingLabel ?? 'auth.verifying'.tr,
+        ),
       AuthVibeStatus.success => (
           colors.success,
           Icons.check_circle,
           'auth.youre_in'.tr
         ),
       AuthVibeStatus.error => (
-          scheme.error,
+          onDark ? AuthInk.error : scheme.error,
           Icons.error_outline,
           message ?? 'common.something_went_wrong'.tr
         ),

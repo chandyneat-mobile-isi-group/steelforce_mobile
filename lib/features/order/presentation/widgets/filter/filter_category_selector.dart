@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:steelforce/core/localization/localization_services.dart';
 import 'package:steelforce/core/localization/localized_text_context.dart';
 import 'package:steelforce/core/theme/theme_extensions.dart';
 import 'package:steelforce/features/order/domain/entities/category.dart';
@@ -74,7 +75,7 @@ class _FilterCategorySelectorState extends State<FilterCategorySelector> {
         children: [
           _Tile(
             key: _keyFor(_allKey),
-            label: 'All',
+            label: 'orders.catalog.all_categories'.tr,
             icon: Icons.grid_view_rounded,
             selected: widget.selectedCategoryId == null,
             onTap: () => widget.onSelect(null),

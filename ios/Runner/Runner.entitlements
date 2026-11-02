@@ -14,5 +14,16 @@
 	     what makes this the single easiest push misconfiguration to ship. -->
 	<key>aps-environment</key>
 	<string>development</string>
+	<!-- App Attest, used by Firebase App Check's
+	     `AppleAppAttestWithDeviceCheckFallbackProvider` in release builds.
+	     Without this entitlement App Attest cannot run and every iOS device
+	     drops to the weaker DeviceCheck. `production` because debug builds use
+	     the App Check debug provider and never reach App Attest.
+
+	     Automatic signing registers the capability on the App ID on the next
+	     build. A manually managed provisioning profile must be regenerated
+	     with "App Attest" enabled, or signing fails (docs/security/README.md §6). -->
+	<key>com.apple.developer.devicecheck.appattest-environment</key>
+	<string>production</string>
 </dict>
 </plist>

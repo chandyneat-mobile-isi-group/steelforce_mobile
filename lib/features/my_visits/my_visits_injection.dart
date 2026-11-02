@@ -1,11 +1,14 @@
 import 'package:dio/dio.dart';
 import 'package:get_it/get_it.dart';
-import 'package:steelforce/core/config/data_source_mode.dart';
+import 'package:steelforce/features/my_visits/presentation/bloc/cubit/pending_plan_visits_cubit.dart';
+import 'package:steelforce/features/my_visits/domain/usecases/watch_pending_plan_visits.dart';
+import 'package:steelforce/features/my_visits/domain/repositories/pending_plan_visits_source.dart';
+import 'package:steelforce/features/my_visits/data/repositories/plan_visit_pending_reader.dart';
 import 'package:steelforce/core/database/drift/app_database.dart';
-import 'package:steelforce/core/demo/demo_network.dart';
 import 'package:steelforce/core/database/hive/hive_service.dart';
 import 'package:steelforce/core/logging/app_logger.dart';
 import 'package:steelforce/core/network/connectivity/network_info.dart';
+import 'package:steelforce/core/practice/practice_session.dart';
 import 'package:steelforce/core/session/location_heartbeat_service.dart';
 import 'package:steelforce/core/session/session_manager.dart';
 import 'package:steelforce/features/my_visits/domain/services/location_fix_provider.dart';
@@ -17,14 +20,29 @@ import 'package:steelforce/features/my_visits/data/local/route_local_data_source
 import 'package:steelforce/features/my_visits/data/local/visit_drift_local_data_source.dart';
 import 'package:steelforce/features/my_visits/data/local/visit_local_data_source.dart';
 import 'package:steelforce/features/my_visits/data/local/workflow_state_local_data_source.dart';
-import 'package:steelforce/features/my_visits/data/mock/demo_ad_hoc_visit_remote_data_source.dart';
-import 'package:steelforce/features/my_visits/data/mock/demo_location_tracking_service.dart';
-import 'package:steelforce/features/my_visits/data/mock/demo_route_remote_data_source.dart';
-import 'package:steelforce/features/my_visits/data/mock/demo_visit_check_remote_data_source.dart';
-import 'package:steelforce/features/my_visits/data/mock/demo_visit_ledger.dart';
-import 'package:steelforce/features/my_visits/data/mock/demo_visit_sync_remote_data_source.dart';
 import 'package:steelforce/features/my_visits/data/remote/ad_hoc_visit_remote_data_source.dart';
 import 'package:steelforce/features/my_visits/data/remote/api_ad_hoc_visit_remote_data_source.dart';
+import 'package:steelforce/features/my_visits/data/remote/api_visit_plan_remote_data_source.dart';
+import 'package:steelforce/features/my_visits/data/remote/visit_plan_remote_data_source.dart';
+import 'package:steelforce/features/my_visits/data/repositories/visit_plan_repository_impl.dart';
+import 'package:steelforce/features/my_visits/domain/repositories/visit_plan_repository.dart';
+import 'package:steelforce/features/my_visits/domain/usecases/get_my_visit_plans.dart';
+import 'package:steelforce/features/my_visits/domain/usecases/skip_visit_plan.dart';
+import 'package:steelforce/features/my_visits/domain/usecases/start_ad_hoc_plan.dart';
+import 'package:steelforce/features/my_visits/domain/usecases/plan_visit_steps_held.dart';
+import 'package:steelforce/features/my_visits/data/local/plan_visit_outbox_store.dart';
+import 'package:steelforce/features/my_visits/data/repositories/plan_visit_outbox_sender.dart';
+import 'package:steelforce/features/my_visits/data/repositories/plan_visit_steps.dart';
+import 'package:steelforce/features/my_visits/data/local/visit_plan_local_data_source.dart';
+import 'package:steelforce/features/my_visits/domain/usecases/check_in_visit_plan.dart';
+import 'package:steelforce/features/my_visits/domain/usecases/check_out_visit_plan.dart';
+import 'package:steelforce/features/my_visits/domain/usecases/upload_plan_inventory_photos.dart';
+import 'package:steelforce/features/my_visits/domain/usecases/get_plan_check_in_target.dart';
+import 'package:steelforce/features/my_visits/domain/usecases/get_today_visit_plans.dart';
+import 'package:steelforce/features/my_visits/presentation/bloc/cubit/visit_plan_calendar_cubit.dart';
+import 'package:steelforce/features/my_visits/presentation/bloc/cubit/visit_plans_cubit.dart';
+import 'package:steelforce/features/my_visits/presentation/bloc/cubit/plan_check_in_cubit.dart';
+import 'package:steelforce/features/my_visits/presentation/bloc/cubit/plan_check_out_cubit.dart';
 import 'package:steelforce/features/my_visits/data/remote/api_route_remote_data_source.dart';
 import 'package:steelforce/features/my_visits/data/remote/api_visit_sync_remote_data_source.dart';
 import 'package:steelforce/features/my_visits/data/remote/route_remote_data_source.dart';
@@ -37,6 +55,7 @@ import 'package:steelforce/features/my_visits/data/repositories/route_sync_repos
 import 'package:steelforce/features/my_visits/data/repositories/visit_repository_impl.dart';
 import 'package:steelforce/features/my_visits/data/repositories/visit_sync_repository_impl.dart';
 import 'package:steelforce/features/my_visits/data/services/geolocator_tracking_service.dart';
+import 'package:steelforce/features/my_visits/practice/my_visits_practice.dart';
 import 'package:steelforce/features/my_visits/domain/repositories/active_workflow_repository.dart';
 import 'package:steelforce/features/my_visits/domain/repositories/ad_hoc_visit_repository.dart';
 import 'package:steelforce/features/my_visits/domain/repositories/location_sample_repository.dart';
@@ -85,6 +104,7 @@ import 'package:steelforce/features/my_visits/presentation/bloc/cubit/location_t
 import 'package:steelforce/features/my_visits/presentation/bloc/cubit/route_dashboard_cubit.dart';
 import 'package:steelforce/features/my_visits/presentation/bloc/cubit/route_sync_cubit.dart';
 import 'package:steelforce/features/my_visits/presentation/bloc/cubit/stop_dashboard_cubit.dart';
+import 'package:steelforce/features/my_visits/presentation/bloc/cubit/active_plan_visit_cubit.dart';
 import 'package:steelforce/features/my_visits/presentation/bloc/cubit/resumable_visit_cubit.dart';
 import 'package:steelforce/features/my_visits/presentation/bloc/cubit/today_call_plan_count_cubit.dart';
 import 'package:steelforce/features/my_visits/presentation/bloc/cubit/depot_selection_cubit.dart';
@@ -110,6 +130,9 @@ import 'package:steelforce/features/my_visits/domain/usecases/send_check_in.dart
 import 'package:steelforce/features/my_visits/domain/usecases/send_check_out.dart';
 import 'package:steelforce/features/order/domain/repositories/quotation_repository.dart';
 import 'package:steelforce/features/my_visits/presentation/bloc/cubit/check_out_reasons_cubit.dart';
+import 'package:steelforce/features/my_visits/presentation/navigation/visit_plan_day_request.dart';
+import 'package:steelforce/features/my_visits/data/local/plan_inventory_log.dart';
+import 'package:steelforce/features/my_visits/domain/usecases/is_plan_inventory_done.dart';
 
 /// Registers the route-management feature: GPS tracking, geofence
 /// check-in/out, offline visit capture, and the route sync engine.
@@ -118,25 +141,14 @@ import 'package:steelforce/features/my_visits/presentation/bloc/cubit/check_out_
 /// awaited here any more — see the matching note on `registerOrderFeature`.
 Future<void> registerMyVisitsFeature(GetIt sl) async {
   // ── Data sources ────────────────────────────────────────────────────
-  // Live by default. The old bundled route fixtures were removed because a
-  // fixed set is wrong the moment the calendar moves and a mock that always
-  // answers made a broken feed look healthy. The demo sources below answer
-  // neither way: their routes are built against the clock, and they fail
-  // like the live API whenever the demo is switched offline (`DemoNetwork`).
-  //
-  // TODO(release-gate): the `Demo*` sources, `DemoVisitLedger` and
-  // `DemoLocationTrackingService` are demo-only, selected only when
-  // `DataSourceMode.useMocks`. A live build never constructs them.
-  if (DataSourceMode.useMocks) {
-    // The demo backend's shared memory: an online check-in, the same row in
-    // a later push, and the next route pull all read one ledger.
-    sl.registerLazySingleton<DemoVisitLedger>(() => DemoVisitLedger());
-  }
+  // Live only. The bundled route fixtures (`assets/mock/routes.json`,
+  // `MockRouteRemoteDataSource` and its generator) were removed once the real
+  // endpoints landed: routes are rep- and day-scoped, so a fixture set is
+  // wrong the moment the calendar moves, and a mock that always answers made
+  // a broken feed look healthy. `USE_MOCK_DATA` still switches the *other*
+  // features; My Visits has one source of truth now.
   sl.registerLazySingleton<RouteRemoteDataSource>(
-    () => DataSourceMode.useLiveApi
-        ? ApiRouteRemoteDataSource(sl<Dio>())
-        : DemoRouteRemoteDataSource(sl<DemoNetwork>(), sl<DemoVisitLedger>()),
-  );
+      () => ApiRouteRemoteDataSource(sl<Dio>()));
   sl.registerLazySingleton<RouteLocalDataSource>(
       () => RouteDriftLocalDataSource(sl<AppDatabase>().routeDao, sl()));
   sl.registerLazySingleton<VisitLocalDataSource>(
@@ -151,42 +163,26 @@ Future<void> registerMyVisitsFeature(GetIt sl) async {
       LocationSampleDriftLocalDataSource(sl<AppDatabase>().routeTelemetryDao));
   sl.registerLazySingleton<WorkflowStateLocalDataSource>(() =>
       WorkflowStateLocalDataSourceImpl(sl<AppDatabase>().workflowStateDao));
-  // The live push is the one to trust for rejected/pending handling; the
-  // demo push answers only while the demo is online, so the queue and the
-  // drain are still what a presenter sees.
+  // Likewise live only. The mock accepted every row unconditionally, which is
+  // the one behaviour a push endpoint must never be trusted to have — it hid
+  // exactly the rejected/pending handling this feature depends on.
   sl.registerLazySingleton<VisitSyncRemoteDataSource>(
-    () => DataSourceMode.useLiveApi
-        ? ApiVisitSyncRemoteDataSource(sl<Dio>())
-        : DemoVisitSyncRemoteDataSource(
-            sl<DemoNetwork>(), sl<DemoVisitLedger>()),
-  );
-  // Check-in / check-out and the "no order" reasons
+      () => ApiVisitSyncRemoteDataSource(sl<Dio>()));
+  // Live check-in / check-out and the "no order" reasons
   // (check-in-check-out-mobile.md).
   sl.registerLazySingleton<VisitCheckRemoteDataSource>(
-    () => DataSourceMode.useLiveApi
-        ? ApiVisitCheckRemoteDataSource(sl<Dio>())
-        : DemoVisitCheckRemoteDataSource(
-            sl<DemoNetwork>(), sl<DemoVisitLedger>()),
-  );
+      () => ApiVisitCheckRemoteDataSource(sl<Dio>()));
   sl.registerLazySingleton(() => CheckOutReasonStore(HiveService.cacheBox));
-  // Ad hoc visits: the one operation that genuinely requires connectivity
-  // (the server owns stop ids). The demo source refuses while the demo is
-  // offline, so the queue and replay behaviour still show.
+  // Ad hoc visits. No mock counterpart by design: the operation is the one
+  // place in this app that genuinely requires connectivity (the server owns
+  // stop ids), so a source that always answers would hide exactly the queue
+  // and replay behaviour the feature is built around.
   sl.registerLazySingleton<AdHocVisitRemoteDataSource>(
-    () => DataSourceMode.useLiveApi
-        ? ApiAdHocVisitRemoteDataSource(sl<Dio>())
-        : DemoAdHocVisitRemoteDataSource(
-            sl<DemoNetwork>(), sl<DemoVisitLedger>()),
-  );
+      () => ApiAdHocVisitRemoteDataSource(sl<Dio>()));
 
   // ── Services ────────────────────────────────────────────────────────
-  // TODO(release-gate): demo-only GPS — a fixed fix at today's first demo
-  // stop, no permission prompt. Selected only when `DataSourceMode.useMocks`.
   sl.registerLazySingleton<LocationTrackingService>(
-    () => DataSourceMode.useLiveApi
-        ? GeolocatorTrackingService()
-        : DemoLocationTrackingService() as LocationTrackingService,
-  );
+      () => GeolocatorTrackingService());
   sl.registerLazySingleton<LocationFixProvider>(
       () => sl<LocationTrackingService>() as LocationFixProvider);
 
@@ -194,6 +190,7 @@ Future<void> registerMyVisitsFeature(GetIt sl) async {
   sl.registerSingleton<LocationHeartbeatService>(
     LocationHeartbeatService(
       trackingService: sl(),
+      locationFixProvider: sl<LocationFixProvider>(),
       authRemoteDataSource: sl(),
       sessionManager: sl(),
       logger: sl(),
@@ -271,34 +268,20 @@ Future<void> registerMyVisitsFeature(GetIt sl) async {
   );
 
   // ── Use cases ───────────────────────────────────────────────────────
-  sl.registerLazySingleton(() => FetchTodayRoutes(sl()));
-  sl.registerLazySingleton(() => FetchAllRoutes(sl()));
-  sl.registerLazySingleton(() => WatchTodayRoutes(sl()));
-  sl.registerLazySingleton(() => WatchAllRoutes(sl()));
-  sl.registerLazySingleton(() => GetRoute(sl()));
-  sl.registerLazySingleton(() => UpdateRouteStatus(sl()));
-  sl.registerLazySingleton(() => UpdateStopStatus(sl()));
+  registerMyVisitsUseCases(sl);
 
-  sl.registerLazySingleton(() => CheckIn(sl()));
-  sl.registerLazySingleton(() => CheckOut(sl()));
-  sl.registerLazySingleton(() => AddOrderLine(sl()));
-  sl.registerLazySingleton(() => AddStockUpdate(sl()));
-  sl.registerLazySingleton(() => AddReturn(sl()));
-  sl.registerLazySingleton(() => AddCollection(sl()));
-  sl.registerLazySingleton(() => AddVisitNote(sl()));
-  sl.registerLazySingleton(() => AddVisitPhoto(sl()));
-  sl.registerLazySingleton(() => FetchVisitData(sl()));
+  // ── Practice ────────────────────────────────────────────────────────
+  // The same use cases again, inside the practice scope, over in-memory
+  // stand-ins — so a lesson walks the real visit screens and blocs without
+  // a record reaching Drift, the sync queue or the API.
+  if (sl.isRegistered<PracticeSession>()) {
+    sl<PracticeSession>().contribute((scope, world) {
+      registerMyVisitsPractice(scope, world);
+      registerMyVisitsUseCases(scope);
+    });
+  }
 
-  sl.registerLazySingleton(() => RecordLocationSample(sl()));
-  sl.registerLazySingleton(() => FetchLocationSamples(sl()));
-  sl.registerLazySingleton(() => RecordFraudFlag(sl()));
-
-  sl.registerLazySingleton(() => RunRouteInitialSync(sl()));
-  sl.registerLazySingleton(() => RunRouteDeltaSync(sl()));
-  sl.registerLazySingleton(() => GetRouteLastSyncedAt(sl()));
-  sl.registerLazySingleton(() => PushPendingVisitData(sl()));
-  sl.registerLazySingleton(() => GetPendingVisitSync(sl()));
-  sl.registerLazySingleton(() => DiscardPendingVisitStop(sl(), sl()));
+  // ── Presentation ────────────────────────────────────────────────────
   // A factory: the Sync Center sheet creates and closes one each time it
   // opens.
   sl.registerFactory(() {
@@ -316,42 +299,73 @@ Future<void> registerMyVisitsFeature(GetIt sl) async {
       onStopDiscarded: () => sl<ResumableVisitCubit>().refresh(),
     );
   });
-
-  sl.registerLazySingleton(() => AddAdHocVisit(sl()));
-  sl.registerLazySingleton(() => DrainAdHocVisitQueue(sl()));
-  sl.registerLazySingleton(() => GetDepotIdsOnDay(sl()));
-  sl.registerLazySingleton(() => WatchPendingAdHocVisits(sl()));
-
-  sl.registerLazySingleton(() => SaveActiveWorkflow(sl()));
-  sl.registerLazySingleton(() => ClearActiveWorkflow(sl()));
-  sl.registerLazySingleton(() => GetActiveWorkflow(sl()));
-  sl.registerLazySingleton(() => GetResumableRoute(sl(), sl()));
-  // Write-side for business-task transitions (Quotation/Sales Order/…): records
-  // the current workflow + screen + navigation args onto the active pointer so
-  // the resume dispatcher can restore the exact screen.
-  sl.registerLazySingleton(() => UpdateWorkflowStep(sl()));
-  // Deferred check-out: closes the visit off the persisted pointer (no live
-  // ActiveRouteBloc needed) — triggered by the explicit "Check out" on the
-  // Continue-Working card now that Stock Count no longer auto-checks-out.
-  sl.registerLazySingleton(() => CompleteVisitCheckOut(
-        sl(),
-        sl(),
-        sl(),
-        sl(),
-        sl<AppLogger>(),
-        sl<FetchLocationSamples>(),
-        sl<VisitRepository>(),
-        sl<SendCheckOut>(),
-      ));
-  sl.registerLazySingleton(() => SendCheckIn(sl()));
-  sl.registerLazySingleton(() => SendCheckOut(sl()));
-  sl.registerLazySingleton(() => GetCheckOutReasons(sl()));
   sl.registerFactory(() => CheckOutReasonsCubit(sl()));
-  // Reads the Order feature's quotations through its domain interface.
-  sl.registerLazySingleton(
-      () => GetCheckOutContext(sl(), sl(), sl<QuotationRepository>()));
 
-  // ── Presentation ────────────────────────────────────────────────────
+  // Visit plans (`GET /api/v1/mobile/plans`). Registered here rather than in
+  // `registerMyVisitsUseCases`: practice scopes have no plan repository of
+  // their own, and the root one is the only source.
+  sl.registerLazySingleton<VisitPlanRemoteDataSource>(
+      () => ApiVisitPlanRemoteDataSource(sl<Dio>(), logger: sl<AppLogger>()));
+  sl.registerLazySingleton<VisitPlanLocalDataSource>(
+      () => DriftVisitPlanLocalDataSource(sl<AppDatabase>().visitPlanDao));
+  // Check-in, inventory photos and check-out worked offline wait here, and
+  // the sync engine sends them in order (resolved lazily — it is registered
+  // after every feature).
+  sl.registerLazySingleton(
+      () => PlanVisitOutboxStore(sl<AppDatabase>().visitPlanDao));
+  sl.registerLazySingleton(() => PlanVisitOutboxSender(
+      remote: sl(), store: sl(), logger: sl<AppLogger>()));
+  sl.registerLazySingleton<VisitPlanRepository>(() => VisitPlanRepositoryImpl(
+        remote: sl(),
+        network: sl<NetworkInfo>(),
+        local: sl(),
+        inventory: PlanInventoryLog(
+            box: HiveService.cacheBox, store: sl<PlanVisitOutboxStore>()),
+        steps: PlanVisitSteps(
+          store: sl(),
+          sender: sl(),
+          network: sl<NetworkInfo>(),
+          remote: sl(),
+          local: sl(),
+          onQueued: () {
+            if (sl.isRegistered<SyncEngine>()) sl<SyncEngine>().requestSync();
+          },
+        ),
+      ));
+  sl.registerLazySingleton(() => GetMyVisitPlans(sl()));
+  sl.registerLazySingleton(() => GetTodayVisitPlans(sl()));
+  sl.registerLazySingleton(() => SkipVisitPlan(sl()));
+  sl.registerLazySingleton(() => GetPlanCheckInTarget(sl()));
+  sl.registerLazySingleton(() => CheckInVisitPlan(sl()));
+  sl.registerLazySingleton(() => UploadPlanInventoryPhotos(sl()));
+  sl.registerLazySingleton(() => CheckOutVisitPlan(sl()));
+  sl.registerLazySingleton(() => ResendPlanVisitSteps(sl()));
+  sl.registerLazySingleton(() => DiscardPlanVisitSteps(sl()));
+  // The Sync Center's "Planned visits": the same outbox, one entry a visit.
+  sl.registerLazySingleton<PendingPlanVisitsSource>(
+      () => PlanVisitPendingReader(store: sl(), local: sl()));
+  sl.registerLazySingleton(() => WatchPendingPlanVisits(sl()));
+  sl.registerFactory(
+      () => PendingPlanVisitsCubit(watch: sl(), resend: sl(), discard: sl()));
+  sl.registerLazySingleton(() => StartAdHocPlan(sl()));
+  sl.registerFactory(() => PlanCheckInCubit(
+        getTarget: sl(),
+        checkIn: sl(),
+        location: sl<LocationFixProvider>(),
+        logger: sl<AppLogger>(),
+      ));
+  sl.registerFactory(() => PlanCheckOutCubit(
+        checkOut: sl(),
+        location: sl<LocationFixProvider>(),
+      ));
+  // The Visits list reads `/plans/today`; its calendar reads `/plans`.
+  sl.registerFactory(() => VisitPlansCubit(
+      getTodayVisitPlans: sl(),
+      skipVisitPlan: sl(),
+      synced: _planStepsSynced(sl)));
+  sl.registerFactory(() => VisitPlanCalendarCubit(
+      getMyVisitPlans: sl(), synced: _planStepsSynced(sl)));
+
   // Reads the depots feature's domain interface, never its data layer.
   sl.registerFactory(
       () => StopInformationCubit(sl<DepotStopInformationRepository>()));
@@ -425,10 +439,13 @@ Future<void> registerMyVisitsFeature(GetIt sl) async {
 
   // Home "My Visits" badge. A factory: the Home grid owns and closes it, so a
   // sign-out that tears down the shell leaves no rep's count behind.
-  sl.registerFactory(() => TodayCallPlanCountCubit(
-        watchTodayRoutes: sl(),
-        fetchTodayRoutes: sl(),
-      ));
+  sl.registerFactory(() => TodayCallPlanCountCubit(getTodayVisitPlans: sl()));
+
+  // Home "Continue visit" for a checked-in plan. A factory for the same
+  // reason: Home owns and closes it, so sign-out leaves no visit behind.
+  sl.registerLazySingleton(() => IsPlanInventoryDone(sl()));
+  sl.registerFactory(() =>
+      ActivePlanVisitCubit(getTodayVisitPlans: sl(), isInventoryDone: sl()));
 
   // ── Depot Stock flow ────────────────────────────────────────────────
   sl.registerLazySingleton(() => DepotSelectionStore(HiveService.cacheBox));
@@ -442,3 +459,80 @@ Future<void> registerMyVisitsFeature(GetIt sl) async {
         sessionManager: sl<SessionManager>(),
       ));
 }
+
+/// Every my_visits use case. Called once by [registerMyVisitsFeature] for the
+/// real app, and again inside the practice scope, where each `sl()` resolves
+/// the practice stand-ins registered just before it
+/// (`practice/my_visits_practice.dart`).
+///
+/// Use cases only: blocs and cubits are factories, so they already resolve
+/// these from whichever scope is current when a screen builds them.
+void registerMyVisitsUseCases(GetIt sl) {
+  sl.registerLazySingleton(() => FetchTodayRoutes(sl()));
+  sl.registerLazySingleton(() => FetchAllRoutes(sl()));
+  sl.registerLazySingleton(() => WatchTodayRoutes(sl()));
+  sl.registerLazySingleton(() => WatchAllRoutes(sl()));
+  sl.registerLazySingleton(() => GetRoute(sl()));
+  sl.registerLazySingleton(() => UpdateRouteStatus(sl()));
+  sl.registerLazySingleton(() => UpdateStopStatus(sl()));
+
+  sl.registerLazySingleton(() => CheckIn(sl()));
+  sl.registerLazySingleton(() => CheckOut(sl()));
+  sl.registerLazySingleton(() => AddOrderLine(sl()));
+  sl.registerLazySingleton(() => AddStockUpdate(sl()));
+  sl.registerLazySingleton(() => AddReturn(sl()));
+  sl.registerLazySingleton(() => AddCollection(sl()));
+  sl.registerLazySingleton(() => AddVisitNote(sl()));
+  sl.registerLazySingleton(() => AddVisitPhoto(sl()));
+  sl.registerLazySingleton(() => FetchVisitData(sl()));
+
+  sl.registerLazySingleton(() => RecordLocationSample(sl()));
+  sl.registerLazySingleton(() => FetchLocationSamples(sl()));
+  sl.registerLazySingleton(() => RecordFraudFlag(sl()));
+
+  sl.registerLazySingleton(() => RunRouteInitialSync(sl()));
+  sl.registerLazySingleton(() => RunRouteDeltaSync(sl()));
+  sl.registerLazySingleton(() => GetRouteLastSyncedAt(sl()));
+  sl.registerLazySingleton(() => PushPendingVisitData(sl()));
+  sl.registerLazySingleton(() => GetPendingVisitSync(sl()));
+  sl.registerLazySingleton(() => DiscardPendingVisitStop(sl(), sl()));
+
+  sl.registerLazySingleton(() => AddAdHocVisit(sl()));
+  sl.registerLazySingleton(() => DrainAdHocVisitQueue(sl()));
+  sl.registerLazySingleton(() => GetDepotIdsOnDay(sl()));
+  sl.registerLazySingleton(() => WatchPendingAdHocVisits(sl()));
+
+  sl.registerLazySingleton(() => SaveActiveWorkflow(sl()));
+  sl.registerLazySingleton(() => ClearActiveWorkflow(sl()));
+  sl.registerLazySingleton(() => GetActiveWorkflow(sl()));
+  sl.registerLazySingleton(() => GetResumableRoute(sl(), sl()));
+  // Write-side for business-task transitions (Quotation/Sales Order/…): records
+  // the current workflow + screen + navigation args onto the active pointer so
+  // the resume dispatcher can restore the exact screen.
+  sl.registerLazySingleton(() => UpdateWorkflowStep(sl()));
+  // Deferred check-out: closes the visit off the persisted pointer (no live
+  // ActiveRouteBloc needed) — triggered by the explicit "Check out" on the
+  // Continue-Working card now that Stock Count no longer auto-checks-out.
+  sl.registerLazySingleton(() => CompleteVisitCheckOut(
+        sl(),
+        sl(),
+        sl(),
+        sl(),
+        sl<AppLogger>(),
+        sl<FetchLocationSamples>(),
+        sl<VisitRepository>(),
+        sl<SendCheckOut>(),
+      ));
+  sl.registerLazySingleton(() => SendCheckIn(sl()));
+  sl.registerLazySingleton(() => SendCheckOut(sl()));
+  sl.registerLazySingleton(() => GetCheckOutReasons(sl()));
+  sl.registerLazySingleton(VisitPlanDayRequest.new);
+  // Reads the Order feature's quotations through its domain interface.
+  sl.registerLazySingleton(
+      () => GetCheckOutContext(sl(), sl(), sl<QuotationRepository>()));
+}
+
+/// Each sync drain, so the visit lists reload once offline steps went out.
+/// Null where no engine runs (tests, practice).
+Stream<Object?>? _planStepsSynced(GetIt sl) =>
+    sl.isRegistered<SyncEngine>() ? sl<SyncEngine>().reports : null;

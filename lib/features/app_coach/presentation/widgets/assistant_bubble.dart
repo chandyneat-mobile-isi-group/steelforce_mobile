@@ -8,6 +8,11 @@ import 'package:steelforce/core/responsive/responsive_sizing.dart';
 /// The assistant tooltip: a compact card with an avatar, a short title + message
 /// (≤ 2 lines), a slim progress bar, and one primary CTA (plus an optional
 /// "Skip tour"). Const-friendly and theme-aware for light/dark.
+///
+/// In a lesson ([lessonTitleKey] set) it also names the lesson, allows a
+/// longer message — a field explanation needs more than two lines — shows
+/// retry guidance when the step's operation failed ([failureKey]), can be
+/// minimised, and offers "Exit lesson" instead of "Skip tour".
 class AssistantBubble extends StatelessWidget {
   const AssistantBubble({
     super.key,
@@ -18,9 +23,19 @@ class AssistantBubble extends StatelessWidget {
     required this.onCta,
     required this.onSkip,
     required this.onClose,
+    this.lessonTitleKey,
+    this.failureKey,
+    this.onMinimize,
+    this.autoplay,
+    this.onToggleAutoplay,
   });
 
   final CoachStep step;
+  final bool? autoplay;
+  final VoidCallback? onToggleAutoplay;
+  final String? lessonTitleKey;
+  final String? failureKey;
+  final VoidCallback? onMinimize;
   final int stepNumber;
   final int totalSteps;
   final double progress;
@@ -32,11 +47,18 @@ class AssistantBubble extends StatelessWidget {
   Widget build(BuildContext context) {
     final colors = context.appColors;
     final scheme = Theme.of(context).colorScheme;
+    final lesson = lessonTitleKey;
+    final failure = failureKey;
 
     return Semantics(
       container: true,
       liveRegion: true,
-      label: '${step.titleKey.tr}. ${step.messageKey.tr}',
+      label: [
+        if (lesson != null) lesson.tr,
+        step.titleKey.tr,
+        step.messageKey.tr,
+        if (failure != null) failure.tr,
+      ].join('. '),
       child: Material(
         color: Colors.transparent,
         child: Container(
@@ -75,9 +97,25 @@ class AssistantBubble extends StatelessWidget {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       mainAxisSize: MainAxisSize.min,
                       children: [
+                        if (lesson != null) ...[
+                          Text(
+                            autoplay == true
+                                ? '${lesson.tr.toUpperCase()} · ${'coach.autoplay.playing'.tr}'
+                                : lesson.tr.toUpperCase(),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: TextStyle(
+                              fontSize: context.rsp(10.5),
+                              fontWeight: FontWeight.w800,
+                              letterSpacing: 0.6,
+                              color: scheme.primary,
+                            ),
+                          ),
+                          SizedBox(height: context.rh(2)),
+                        ],
                         Text(
                           step.titleKey.tr,
-                          maxLines: 1,
+                          maxLines: lesson == null ? 1 : 2,
                           overflow: TextOverflow.ellipsis,
                           style: TextStyle(
                             fontSize: context.rsp(15.5),
@@ -90,7 +128,7 @@ class AssistantBubble extends StatelessWidget {
                         SizedBox(height: context.rh(4)),
                         Text(
                           step.messageKey.tr,
-                          maxLines: 2,
+                          maxLines: lesson == null ? 2 : 5,
                           overflow: TextOverflow.ellipsis,
                           style: TextStyle(
                             fontSize: context.rsp(12.5),
@@ -101,6 +139,15 @@ class AssistantBubble extends StatelessWidget {
                       ],
                     ),
                   ),
+                  if (onMinimize case final minimize?) ...[
+                    _IconButton(
+                      icon: Icons.unfold_less_rounded,
+                      tooltip: 'coach.cta.minimize'.tr,
+                      color: colors.iconMuted,
+                      onTap: minimize,
+                    ),
+                    SizedBox(width: context.rw(6)),
+                  ],
                   // Dismiss → pause (surfaces the floating assistant to resume).
                   _IconButton(
                     icon: Icons.close_rounded,
@@ -110,6 +157,10 @@ class AssistantBubble extends StatelessWidget {
                   ),
                 ],
               ),
+              if (failure != null) ...[
+                SizedBox(height: context.rh(12)),
+                _FailureNote(message: failure.tr, color: scheme.error),
+              ],
               SizedBox(height: context.rh(14)),
               _ProgressBar(
                 value: progress,
@@ -123,16 +174,56 @@ class AssistantBubble extends StatelessWidget {
                 children: [
                   if (step.canSkip)
                     _TextButton(
-                      label: 'coach.cta.skip_tour'.tr,
+                      label: lesson == null
+                          ? 'coach.cta.skip_tour'.tr
+                          : 'coach.cta.exit_lesson'.tr,
                       color: colors.textHint,
                       onTap: onSkip,
                     ),
-                  const Spacer(),
-                  _PrimaryButton(
-                    label: step.ctaKey.tr,
-                    background: scheme.primary,
-                    foreground: scheme.onPrimary,
-                    onTap: onCta,
+                  // Khmer labels run wider than English: the right-hand
+                  // buttons take only the space left and wrap, rather
+                  // than overflow the card.
+                  Expanded(
+                    child: Align(
+                      alignment: AlignmentDirectional.centerEnd,
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          if (autoplay == true) ...[
+                            // The coach is driving: the only thing to offer
+                            // is the wheel.
+                            Flexible(
+                              child: _PrimaryButton(
+                                label: 'coach.autoplay.take_over'.tr,
+                                background: scheme.primary,
+                                foreground: scheme.onPrimary,
+                                onTap: onToggleAutoplay ?? () {},
+                              ),
+                            ),
+                          ] else ...[
+                            if (autoplay == false &&
+                                onToggleAutoplay != null) ...[
+                              Flexible(
+                                child: _TextButton(
+                                  label: 'coach.autoplay.resume'.tr,
+                                  color: scheme.primary,
+                                  onTap: onToggleAutoplay!,
+                                ),
+                              ),
+                              SizedBox(width: context.rw(4)),
+                            ],
+                            Flexible(
+                              child: _PrimaryButton(
+                                label: step.ctaKey.tr,
+                                background: scheme.primary,
+                                foreground: scheme.onPrimary,
+                                onTap: onCta,
+                              ),
+                            ),
+                          ],
+                        ],
+                      ),
+                    ),
                   ),
                 ],
               ),
@@ -142,6 +233,44 @@ class AssistantBubble extends StatelessWidget {
       ),
     );
   }
+}
+
+/// What went wrong and what to do next, under the step's own message. Icon
+/// and text both — never colour alone.
+class _FailureNote extends StatelessWidget {
+  const _FailureNote({required this.message, required this.color});
+  final String message;
+  final Color color;
+
+  @override
+  Widget build(BuildContext context) => Container(
+        width: double.infinity,
+        padding: EdgeInsets.symmetric(
+            horizontal: context.rw(10), vertical: context.rh(8)),
+        decoration: BoxDecoration(
+          color: color.withValues(alpha: 0.08),
+          borderRadius: BorderRadius.circular(context.rr(12)),
+          border: Border.all(color: color.withValues(alpha: 0.28)),
+        ),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Icon(Icons.refresh_rounded, size: context.rr(16), color: color),
+            SizedBox(width: context.rw(8)),
+            Expanded(
+              child: Text(
+                message,
+                style: TextStyle(
+                  fontSize: context.rsp(12.5),
+                  height: 1.35,
+                  fontWeight: FontWeight.w600,
+                  color: color,
+                ),
+              ),
+            ),
+          ],
+        ),
+      );
 }
 
 class _Avatar extends StatelessWidget {
@@ -318,6 +447,9 @@ class _PrimaryButtonState extends State<_PrimaryButton> {
                   horizontal: context.rw(20), vertical: context.rh(11)),
               child: Text(
                 widget.label,
+                textAlign: TextAlign.center,
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
                 style: TextStyle(
                   fontSize: context.rsp(13),
                   fontWeight: FontWeight.w800,
@@ -352,6 +484,8 @@ class _TextButton extends StatelessWidget {
               horizontal: context.rw(8), vertical: context.rh(8)),
           child: Text(
             label,
+            maxLines: 2,
+            overflow: TextOverflow.ellipsis,
             style: TextStyle(
               fontSize: context.rsp(12.5),
               fontWeight: FontWeight.w700,

@@ -4,12 +4,11 @@ import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:get_it/get_it.dart';
 import 'package:steelforce/core/camera/camera_factory.dart';
 import 'package:steelforce/core/camera/image_capture_service.dart';
-import 'package:steelforce/core/config/data_source_mode.dart';
 import 'package:steelforce/core/config/env.dart';
-import 'package:steelforce/core/demo/demo_network.dart';
 import 'package:steelforce/core/database/drift/app_database.dart';
 import 'package:steelforce/core/database/drift/app_database_rekey_executor.dart';
 import 'package:steelforce/core/database/secure/app_database_key_provider.dart';
+import 'package:steelforce/core/database/secure/app_secure_storage.dart';
 import 'package:steelforce/core/database/secure/database_key_rotator.dart';
 import 'package:steelforce/core/database/secure/dynamic_key_store.dart';
 import 'package:steelforce/core/database/secure/key_derivation.dart';
@@ -25,11 +24,19 @@ import 'package:steelforce/core/pdf/pdf_service.dart';
 import 'package:steelforce/core/pdf/sharing/pdf_share_service.dart';
 import 'package:steelforce/core/session/app_restart_controller.dart';
 import 'package:steelforce/core/session/session_manager.dart';
+import 'package:steelforce/core/practice/practice_session.dart';
+import 'package:steelforce/core/practice/practice_session_scoped_store.dart';
 import 'package:steelforce/core/session/session_scoped_store.dart';
+import 'package:steelforce/core/session/session_sync_store.dart';
 import 'package:steelforce/core/session/device_storage_session_store.dart';
 import 'package:steelforce/core/session/unsent_work.dart';
 import 'package:steelforce/core/sync/background/background_sync_runner.dart';
+import 'package:steelforce/core/di/offline_data_sources.dart';
+import 'package:steelforce/core/sync/offline_data_prefetcher.dart';
 import 'package:steelforce/core/sync/sync_engine.dart';
+import 'package:steelforce/features/my_visits/data/local/plan_visit_outbox_store.dart';
+import 'package:steelforce/features/my_visits/data/repositories/plan_visit_outbox_sender.dart';
+import 'package:steelforce/features/my_visits/data/session/plan_visit_unsent_work_source.dart';
 import 'package:steelforce/features/authentication/domain/usecases/get_current_user.dart';
 import 'package:steelforce/core/database/drift/local_database_reset.dart';
 import 'package:steelforce/features/order/data/local/sync_queue_local_data_source.dart';
@@ -49,7 +56,7 @@ import 'package:steelforce/features/app_coach/app_coach_injection.dart';
 import 'package:steelforce/features/authentication/authentication_injection.dart';
 import 'package:steelforce/features/localization/localization_injection.dart';
 import 'package:steelforce/features/depots/depots_injection.dart';
-import 'package:steelforce/features/shell/presentation/bloc/home_cubit.dart';
+import 'package:steelforce/features/shell/presentation/navigation/shell_tab_controller.dart';
 import 'package:steelforce/features/geo_location/geo_location_injection.dart';
 import 'package:steelforce/features/my_visits/my_visits_injection.dart';
 import 'package:steelforce/features/order/domain/usecases/check_material_availability.dart';
@@ -65,6 +72,9 @@ import 'package:steelforce/core/permissions/presentation/app_permissions_cubit.d
 import 'package:steelforce/core/usecase/usecase.dart';
 import 'package:steelforce/features/notification/domain/usecases/push_device_usecases.dart';
 import 'package:steelforce/routes/app_routes.dart';
+import 'package:steelforce/core/network/work_mode/mode_aware_connectivity_service.dart';
+import 'package:steelforce/core/network/work_mode/work_mode_service.dart';
+import 'package:steelforce/features/shell/presentation/bloc/work_mode_cubit.dart';
 
 /// Global service locator.
 final GetIt sl = GetIt.instance;
@@ -72,21 +82,8 @@ final GetIt sl = GetIt.instance;
 /// Call once from `main()` before `runApp`.
 Future<void> initDependencies() async {
   // ── External singletons ────────────────────────────────────────────
-  sl.registerLazySingleton<FlutterSecureStorage>(
-    () => const FlutterSecureStorage(
-      aOptions: AndroidOptions(encryptedSharedPreferences: true),
-    ),
-  );
-  // TODO(release-gate): a demo build (`USE_MOCK_DATA=true`) replaces the radio
-  // and the reachability probe with a switch on the DEMO badge, so online and
-  // offline can both be shown without a backend. A live build never registers
-  // [DemoNetwork].
-  if (DataSourceMode.useMocks) {
-    sl.registerLazySingleton<DemoNetwork>(() => DemoNetwork());
-    sl.registerLazySingleton<Connectivity>(() => DemoConnectivity(sl()));
-  } else {
-    sl.registerLazySingleton<Connectivity>(() => Connectivity());
-  }
+  sl.registerLazySingleton<FlutterSecureStorage>(appSecureStorage);
+  sl.registerLazySingleton<Connectivity>(() => Connectivity());
 
   // ── Encrypted database (Blueprint §3: composite-key SQLCipher) ──────
   sl.registerLazySingleton<DynamicKeyStore>(() => DynamicKeyStore(sl()));
@@ -112,7 +109,7 @@ Future<void> initDependencies() async {
     ),
   );
 
-  // ── Observability (SECURITY.md §10: structured, PII-free) ──────────
+  // ── Observability (docs/skills/security.md §10: structured, PII-free) ──────────
   sl.registerLazySingleton<AppLogger>(() => const ConsoleAppLogger());
 
   // ── Camera ──────────────────────────────────────────────────────────
@@ -131,20 +128,36 @@ Future<void> initDependencies() async {
   // One instance, app-wide: the UI status pill and the sync drain trigger must
   // never disagree. No UI/bloc/repository/DAO may touch connectivity_plus.
   sl.registerLazySingleton<ReachabilityProbe>(
-    () => DataSourceMode.useMocks
-        ? DemoReachabilityProbe(sl())
-        : HttpReachabilityProbe(dio: Dio(), logger: sl()),
+    () => HttpReachabilityProbe(dio: Dio(), logger: sl()),
+  );
+  // The rep's chosen work mode, persisted in Hive. Registered before
+  // connectivity because the app-wide [ConnectivityService] is the device's
+  // reachability *combined with* this choice: offline mode reads as offline
+  // to every consumer, so sync, pulls and banners follow it with no per-feature
+  // wiring (see [ModeAwareConnectivityService]).
+  sl.registerLazySingleton<WorkModeService>(
+    () => HiveWorkModeService(HiveService.cacheBox),
   );
   sl.registerLazySingleton<ConnectivityService>(
-    () => ConnectivityServiceImpl(
-      connectivity: sl(),
-      probe: sl(),
-      logger: sl(),
+    () => ModeAwareConnectivityService(
+      device: ConnectivityServiceImpl(
+        connectivity: sl(),
+        probe: sl(),
+        logger: sl(),
+      ),
+      workMode: sl(),
     ),
   );
 
   sl.registerFactory<ConnectivityCubit>(() => ConnectivityCubit(sl()));
-  sl.registerLazySingleton<NetworkInfo>(() => NetworkInfoImpl(sl()));
+  // Real reachability and Offline Mode, not just "a radio is on" — so a
+  // phone with Wi-Fi but no internet reads its own data at once instead of
+  // waiting out request timeouts (ADR-005).
+  sl.registerLazySingleton<NetworkInfo>(() => ReachableNetworkInfo(
+        connectivity: sl(),
+        reachability: sl<ConnectivityService>(),
+        workMode: sl<WorkModeService>(),
+      ));
   sl.registerLazySingleton<SessionManager>(() => SessionManager());
   sl.registerLazySingleton<AppRestartController>(() => AppRestartController());
   sl.registerLazySingleton<AppPreferences>(
@@ -160,7 +173,21 @@ Future<void> initDependencies() async {
 
   registerLocalizationFeature(sl);
   sl.registerLazySingleton<ShellTabController>(() => ShellTabController());
+  // App-wide, like the mode it reflects: the shell control and the sync sheet
+  // read the same instance, so they can never show different modes.
+  sl.registerLazySingleton<WorkModeCubit>(
+    () => WorkModeCubit(
+      workMode: sl<WorkModeService>(),
+      waitForSyncIdle: () => sl<SyncEngine>().whenIdle(),
+      countUnsent: () => sl<UnsentWorkService>().count(),
+      refreshConnectivity: () => sl<ConnectivityService>().refresh(),
+    ),
+  );
   registerThemeFeature(sl);
+
+  // Before the features: each contributes its practice stand-ins at
+  // registration time (see PracticeSession).
+  sl.registerLazySingleton<PracticeSession>(() => PracticeSession(sl));
 
   // ── Features ───────────────────────────────────────────────────────
   registerAuthFeature(sl);
@@ -224,6 +251,15 @@ Future<void> initDependencies() async {
   sl.registerLazySingleton<SessionResetService>(
     () => SessionResetService(
       [
+        // Stop active pulls/drains first. They must be idle before any store
+        // or the database is cleared, or an old response could repopulate it.
+        SessionSyncStore(
+          engine: sl<SyncEngine>(),
+          prefetcher: sl<OfflineDataPrefetcher>(),
+        ),
+        // Practice must be over before the feature stores clear, so they
+        // reach the real stores and not its in-memory stand-ins.
+        PracticeSessionScopedStore(sl<PracticeSession>()),
         OrderSessionScopedStore(sl<CartRepository>()),
         VisitSessionScopedStore(sl<ActiveWorkflowRepository>()),
         DeviceStorageSessionStore(
@@ -258,6 +294,11 @@ Future<void> initDependencies() async {
           visitSync: sl<VisitSyncRepository>(),
           adHoc: sl<AdHocVisitRepository>(),
         ),
+        // Plan visits worked offline: check-in, then photos, then check-out.
+        PlanVisitUnsentWorkSource(
+          store: sl<PlanVisitOutboxStore>(),
+          sender: sl<PlanVisitOutboxSender>(),
+        ),
         QuotationUnsentWorkSource(
           sl<SyncQueueLocalDataSource>(),
           // No review read-back: the coordinator does that itself on
@@ -278,6 +319,18 @@ Future<void> initDependencies() async {
   sl.registerLazySingleton<SyncEngine>(
     () => SyncEngine(
       unsentWork: sl<UnsentWorkService>(),
+      connectivity: sl<ConnectivityService>(),
+      logger: sl<AppLogger>(),
+      isAuthenticated: () => sl<SessionManager>().isAuthenticated,
+    ),
+  );
+
+  // The pull side: everything the rep needs on the device to keep working
+  // offline, fetched when the signed-in shell starts and on every return to
+  // reachability — not only when each screen happens to be opened.
+  sl.registerLazySingleton<OfflineDataPrefetcher>(
+    () => OfflineDataPrefetcher(
+      sources: () => offlineDataSources(sl),
       connectivity: sl<ConnectivityService>(),
       logger: sl<AppLogger>(),
       isAuthenticated: () => sl<SessionManager>().isAuthenticated,

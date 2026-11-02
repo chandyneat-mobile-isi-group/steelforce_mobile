@@ -3,10 +3,11 @@ import 'package:steelforce/core/network/api/api_endpoints.dart';
 import 'package:steelforce/core/platform/device/device_identity.dart';
 import 'package:steelforce/core/network/api/api_envelope.dart';
 import 'package:steelforce/core/network/api/api_error.dart';
+import 'package:steelforce/core/logging/password_reset_request_trace.dart';
+import 'package:steelforce/features/authentication/data/datasources/password_reset_trace_failure.dart';
 import 'package:steelforce/core/utils/typedefs.dart';
 import 'package:steelforce/features/authentication/data/models/auth_profile_model.dart';
 import 'package:steelforce/features/authentication/data/models/auth_token_model.dart';
-import 'package:steelforce/features/authentication/data/models/password_reset_grant_model.dart';
 import 'package:steelforce/features/my_visits/domain/services/location_fix_provider.dart';
 
 abstract interface class AuthRemoteDataSource {
@@ -37,17 +38,8 @@ abstract interface class AuthRemoteDataSource {
     required String newPassword,
   });
 
-  /// Password reset, step 1: texts a code to [phoneNumber].
-  Future<void> forgotPassword(String phoneNumber);
-
-  /// Step 2: trades the 6-digit code for a one-time reset token and the
-  /// password policy.
-  Future<PasswordResetGrantModel> verifyResetCode({
-    required String phoneNumber,
-    required String otp,
-  });
-
-  /// Step 3: sets the new password with the token from step 2.
+  /// Sets the new password with the grant returned by Firebase proof
+  /// verification.
   Future<void> resetPassword({
     required String resetToken,
     required String newPassword,
@@ -199,55 +191,9 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
         {'currentPassword': currentPassword, 'newPassword': newPassword},
       );
 
-  /// Always succeeds for a well-formed number, whether or not an account
-  /// has it.
-  ///
-  /// Do not "improve" the UX by reporting an unknown number — that turns the
-  /// endpoint into an account-enumeration oracle. Show "if that number is
-  /// registered, a code is on its way". Also serves as "resend": the server
-  /// enforces its own cooldown and hourly limit.
-  @override
-  Future<void> forgotPassword(String phoneNumber) =>
-      _post(_bare, ApiEndpoints.sendOtpEndpoint, {
-        'recoveryMethod': _phoneRecovery,
-        // As the user typed it, matching sign-in: the server matches on digits.
-        'phoneNumber': phoneNumber.trim(),
-      });
-
-  /// Only the newest code for the number is accepted. A wrong code answers
-  /// 400 with `attemptsRemaining`; the last allowed attempt locks the code
-  /// until a new one is requested.
-  @override
-  Future<PasswordResetGrantModel> verifyResetCode({
-    required String phoneNumber,
-    required String otp,
-  }) async {
-    try {
-      final res = await _bare.post<DataMap>(
-        ApiEndpoints.verifyOtpEndpoint,
-        data: {
-          'recoveryMethod': _phoneRecovery,
-          'phoneNumber': phoneNumber.trim(),
-          'otp': otp,
-        },
-      );
-      final grant =
-          PasswordResetGrantModel.fromJson(ApiEnvelope.fromBody(res.data).data);
-      if (grant.resetToken.isEmpty) {
-        throw const ApiException(ApiError(
-          code: ApiErrorCodes.unknown,
-          detail: 'Code accepted but no reset token returned.',
-        ));
-      }
-      return grant;
-    } on DioException catch (e) {
-      throw ApiException(ApiError.fromDio(e));
-    }
-  }
-
-  /// The token works once, but a password that fails the policy leaves it
-  /// usable so the rep can try again. Success signs the account out
-  /// everywhere.
+  /// [resetToken] is the one-time token from the phone proof exchange; a
+  /// password the policy refuses leaves it usable. Success signs the account
+  /// out everywhere. The screen has already checked the confirmation matches.
   @override
   Future<void> resetPassword({
     required String resetToken,
@@ -256,17 +202,23 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
       _post(_bare, ApiEndpoints.resetOtpEndpoint, {
         'resetToken': resetToken,
         'newPassword': newPassword,
-        // The form already checked both fields match; the API wants both.
         'confirmPassword': newPassword,
       });
 
-  static const _phoneRecovery = 'phone';
-
   Future<void> _post(Dio client, String path, DataMap body) async {
+    final isResetRequest = path == ApiEndpoints.resetOtpEndpoint;
+    final trace = isResetRequest
+        ? PasswordResetRequestTrace.start(
+            method: 'POST',
+            path: path,
+            requestBody: body,
+          )
+        : null;
     try {
-      await client.post<void>(path, data: body);
+      final response = await client.post<dynamic>(path, data: body);
+      trace?.response(status: response.statusCode, body: response.data);
     } on DioException catch (e) {
-      throw ApiException(ApiError.fromDio(e));
+      throw ApiException(trace?.dioFailure(e) ?? ApiError.fromDio(e));
     }
   }
 

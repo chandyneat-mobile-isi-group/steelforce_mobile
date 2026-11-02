@@ -12,7 +12,6 @@
 | You want to… | Read |
 |---|---|
 | **Add or change a string, font, or locale** | [../../skills/localization.md](../../skills/localization.md) — the operational guide. This is almost always the right link. |
-| Understand how the current system came to be | [string-analysis-report.md](string-analysis-report.md) — the static analysis of every hard-coded string in `lib/` that produced the migration. |
 
 The guide lives under `skills/` rather than here because localization is
 cross-cutting: every feature consumes it, no feature owns it.
@@ -55,8 +54,10 @@ from its static `.ttf` cuts because `pdf` cannot read its variable font.
 
 - The locale set migrated `kh` → `km`. Any document still referencing
   `assets/lang/kh.json` is stale — the file is `km.json`.
-- `string-analysis-report.md` was generated 2026-07-22 against 664 Dart files;
-  there are 855 now. Its counts are historical, not current.
+- The 2026-07-22 `string-analysis-report.md` that drove the migration was
+  removed on 2026-10-24 (its key-naming rules live in
+  [../../skills/localization.md](../../skills/localization.md) §5; the report
+  is in git history).
 
 ---
 

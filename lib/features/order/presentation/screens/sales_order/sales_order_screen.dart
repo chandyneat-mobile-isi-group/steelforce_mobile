@@ -1,8 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:steelforce/core/di/injection_container.dart';
+import 'package:steelforce/core/error/failure_message.dart';
 import 'package:steelforce/core/localization/localization_services.dart';
 import 'package:steelforce/core/theme/theme_extensions.dart';
+import 'package:steelforce/features/app_coach/domain/entities/coach_action.dart';
+import 'package:steelforce/features/app_coach/presentation/services/app_coach.dart';
+import 'package:steelforce/features/app_coach/presentation/services/coach_keys.dart';
 import 'package:steelforce/features/order/domain/entities/cart_item.dart';
 import 'package:steelforce/features/order/domain/entities/quotation.dart';
 import 'package:steelforce/features/order/domain/usecases/catalog_params.dart';
@@ -28,6 +32,12 @@ class SalesOrderScreen extends StatefulWidget {
 class _SalesOrderScreenState extends State<SalesOrderScreen> {
   bool _submitting = false;
 
+  @override
+  void initState() {
+    super.initState();
+    AppCoach.notify(CoachAction.startCreateOrder);
+  }
+
   Future<void> _create(BuildContext context) async {
     if (_submitting) return;
     setState(() => _submitting = true);
@@ -37,6 +47,13 @@ class _SalesOrderScreenState extends State<SalesOrderScreen> {
 
     final result = await sl<CreateSalesOrder>()(
         CreateSalesOrderParams(quotation: widget.quotation, items: items));
+
+    // On the repository's answer, before the mounted check: the order exists
+    // (or does not) whether or not this screen is still showing.
+    AppCoach.notify(result.when(
+      success: (_) => CoachAction.createOrderSucceeded,
+      failure: (_) => CoachAction.createOrderFailed,
+    ));
 
     if (!mounted) return;
     setState(() => _submitting = false);
@@ -48,7 +65,7 @@ class _SalesOrderScreenState extends State<SalesOrderScreen> {
         builder: (_) => OrderSuccessScreen(salesOrder: order),
       )),
       failure: (f) => ScaffoldMessenger.of(context)
-          .showSnackBar(SnackBar(content: Text(f.message))),
+          .showSnackBar(SnackBar(content: Text(f.userMessage))),
     );
   }
 
@@ -136,36 +153,40 @@ class _SalesOrderScreenState extends State<SalesOrderScreen> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      _Row('Subtotal', subtotal),
-                      if (discount > 0) _Row('Discount', -discount),
-                      _Row('Tax', tax),
+                      _Row('orders.sales_order.subtotal'.tr, subtotal),
+                      if (discount > 0)
+                        _Row('orders.sales_order.discount'.tr, -discount),
+                      _Row('orders.sales_order.tax'.tr, tax),
                       Divider(color: colors.divider, height: 20),
                       _Row('orders.sales_order.title'.tr, total,
                           emphasize: true),
                       SizedBox(height: context.rh(12)),
                       SizedBox(
                         width: double.infinity,
-                        child: ElevatedButton.icon(
-                          onPressed: (items.isEmpty || _submitting)
-                              ? null
-                              : () => _create(context),
-                          icon: _submitting
-                              ? const SizedBox(
-                                  width: 18,
-                                  height: 18,
-                                  child: CircularProgressIndicator(
-                                      strokeWidth: 2, color: Colors.white))
-                              : Icon(Icons.check_circle_outline_rounded,
-                                  size: context.rr(20)),
-                          label: Text('orders.sales_order.create_in_sap'.tr,
-                              style:
-                                  const TextStyle(fontWeight: FontWeight.w800)),
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: colors.accentPurple,
-                            foregroundColor: Colors.white,
-                            padding: const EdgeInsets.symmetric(vertical: 14),
-                            shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(14)),
+                        child: CoachKeys.wrap(
+                          CoachKeys.salesOrderCreate,
+                          child: ElevatedButton.icon(
+                            onPressed: (items.isEmpty || _submitting)
+                                ? null
+                                : () => _create(context),
+                            icon: _submitting
+                                ? const SizedBox(
+                                    width: 18,
+                                    height: 18,
+                                    child: CircularProgressIndicator(
+                                        strokeWidth: 2, color: Colors.white))
+                                : Icon(Icons.check_circle_outline_rounded,
+                                    size: context.rr(20)),
+                            label: Text('orders.sales_order.create_in_sap'.tr,
+                                style: const TextStyle(
+                                    fontWeight: FontWeight.w800)),
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: colors.accentPurple,
+                              foregroundColor: Colors.white,
+                              padding: const EdgeInsets.symmetric(vertical: 14),
+                              shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(14)),
+                            ),
                           ),
                         ),
                       ),

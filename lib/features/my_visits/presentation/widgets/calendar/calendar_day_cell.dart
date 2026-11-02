@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:steelforce/core/theme/theme_extensions.dart';
 import 'package:steelforce/core/responsive/responsive_sizing.dart';
+import 'package:steelforce/core/localization/localization_services.dart';
 
 class CalendarDayCell extends StatelessWidget {
   const CalendarDayCell({
@@ -75,7 +76,8 @@ class CalendarDayCell extends StatelessWidget {
             Padding(
               padding: EdgeInsets.only(top: context.rh(2)),
               child: Text(
-                '$stopCount Visits',
+                'my_visits.calendar.visits_count'
+                    .trParams({'count': stopCount}),
                 style: TextStyle(
                   color: Colors.deepOrange.shade700,
                   fontSize: context.rsp(9.5),

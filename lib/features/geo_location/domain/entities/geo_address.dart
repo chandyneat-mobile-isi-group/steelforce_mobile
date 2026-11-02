@@ -218,7 +218,7 @@ class GeoAddress extends Equatable {
   /// This is what the SAP `street` field carries the commune and village in —
   /// SAP's BP structure has fields for city, district and postal code only, so
   /// composing them here is how those two levels survive submission at all.
-  /// See `docs/features/geo-location/api.md`.
+  /// See `docs/feature/geo-location/README.md`.
   String format(String languageCode, {bool includeUnitWords = true}) {
     final parts = <String>[];
     for (final unit in [village, commune, district, province]) {

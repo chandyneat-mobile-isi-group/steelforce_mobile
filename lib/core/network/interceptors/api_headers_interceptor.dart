@@ -14,12 +14,16 @@ import 'package:steelforce/core/utils/uuid.dart';
 class ApiHeadersInterceptor extends Interceptor {
   const ApiHeadersInterceptor();
 
+  /// Read back by `ApiError.fromDio`, so a request that got no reply still
+  /// carries the id it was sent with.
+  static const correlationHeader = 'X-Correlation-Id';
+
   @override
   void onRequest(RequestOptions options, RequestInterceptorHandler handler) {
     // Read live rather than at construction: the language can change mid
     // session and the next request must follow it.
     options.headers['Accept-Language'] = ActiveLanguage.acceptLanguageTag;
-    options.headers['X-Correlation-Id'] = Uuid.v4();
+    options.headers[correlationHeader] = Uuid.v4();
     handler.next(options);
   }
 }

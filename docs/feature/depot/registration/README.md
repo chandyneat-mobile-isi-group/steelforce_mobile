@@ -89,6 +89,5 @@ This feature is mostly wiring, not new machinery. Already present before this wo
 | Document | What it covers |
 |---|---|
 | [`docs/feature/depot/registration/api.md`](api.md) | The endpoints, with verified request and response shapes |
-| [`docs/feature/depot/registration/sap-helpers.md`](sap-helpers.md) | All ten catalogues as the live API actually returns them |
-| [`implementation.md`](backend-implementation.md) | Files, database, verification, limitations |
-| [`business-partner-changes.md`](business-partner-changes.md) | Mobile hand-off notes for the Business Partner submit path: what changed, and the open product decisions (moved here from `lib/features/depots/`) |
+| [`docs/feature/depot/reference/sap-helpers.md`](../reference/sap-helpers.md) | All ten catalogues as the live API actually returns them |
+| `backend-implementation.md` ⧉ backend repo | Server files, database, verification, limitations (removed from this repo 2026-10-24) |

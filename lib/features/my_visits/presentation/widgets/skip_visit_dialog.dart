@@ -7,6 +7,7 @@ import 'package:steelforce/core/theme/theme_extensions.dart';
 import 'package:steelforce/core/responsive/responsive_sizing.dart';
 import 'package:steelforce/features/my_visits/domain/entities/depot_stop_info.dart';
 import 'package:steelforce/features/my_visits/domain/services/proof_photo_service.dart';
+import 'package:steelforce/core/localization/localization_services.dart';
 
 /// What the rep picked before confirming a skip: a reason is always present
 /// (validated before the sheet can be dismissed with a result); the photo is
@@ -17,12 +18,22 @@ class SkipVisitResult {
   final String? photoPath;
 }
 
+/// The preset reasons as submitted. The English text is what is stored on the
+/// stop and synced, so it stays fixed whatever the UI language; the chip shows
+/// its translation from [_presetReasonKeys].
 const _presetReasons = [
   'Shop closed',
   'Depot not available',
   'No stock needed',
   'Access denied',
 ];
+
+const _presetReasonKeys = {
+  'Shop closed': 'my_visits.route_info.reason_shop_closed',
+  'Depot not available': 'my_visits.skip_visit.reason_depot_unavailable',
+  'No stock needed': 'my_visits.skip_visit.reason_no_stock_needed',
+  'Access denied': 'my_visits.skip_visit.reason_access_denied',
+};
 
 /// Asks the rep why they're skipping [depot] before the stop dashboard
 /// commits anything — a plain confirm button used to submit a hardcoded
@@ -131,7 +142,7 @@ class _SkipVisitSheetState extends State<_SkipVisitSheet> {
                   ),
                   SizedBox(height: context.rh(16)),
                   Text(
-                    'Skip Visit',
+                    'my_visits.skip_visit.title'.tr,
                     style: TextStyle(
                       fontSize: context.rsp(17),
                       fontWeight: FontWeight.w800,
@@ -147,7 +158,7 @@ class _SkipVisitSheetState extends State<_SkipVisitSheet> {
                   ),
                   SizedBox(height: context.rh(18)),
                   Text(
-                    'Reason',
+                    'my_visits.skip_visit.reason'.tr,
                     style: TextStyle(
                       fontSize: context.rsp(12.5),
                       fontWeight: FontWeight.w700,
@@ -161,7 +172,7 @@ class _SkipVisitSheetState extends State<_SkipVisitSheet> {
                     children: _presetReasons.map((r) {
                       final selected = _reason == r;
                       return ChoiceChip(
-                        label: Text(r),
+                        label: Text(_presetReasonKeys[r]?.tr ?? r),
                         selected: selected,
                         onSelected: (_) => setState(() => _reason = r),
                         selectedColor: scheme.error.withValues(alpha: 0.14),
@@ -182,7 +193,7 @@ class _SkipVisitSheetState extends State<_SkipVisitSheet> {
                       controller: _otherController,
                       onChanged: (_) => setState(() {}),
                       decoration: InputDecoration(
-                        hintText: 'Describe the reason',
+                        hintText: 'my_visits.route_info.skip_other_hint'.tr,
                         isDense: true,
                         border: OutlineInputBorder(
                             borderRadius:
@@ -192,7 +203,7 @@ class _SkipVisitSheetState extends State<_SkipVisitSheet> {
                   ],
                   SizedBox(height: context.rh(18)),
                   Text(
-                    'Photo (optional)',
+                    'my_visits.skip_visit.photo_optional'.tr,
                     style: TextStyle(
                       fontSize: context.rsp(12.5),
                       fontWeight: FontWeight.w700,
@@ -234,7 +245,7 @@ class _SkipVisitSheetState extends State<_SkipVisitSheet> {
                                         size: context.rr(24)),
                                     SizedBox(height: context.rh(6)),
                                     Text(
-                                      'Take photo',
+                                      'my_visits.inventory.take_photo'.tr,
                                       style: TextStyle(
                                         color: colors.textSecondary,
                                         fontSize: context.rsp(12),
@@ -259,7 +270,7 @@ class _SkipVisitSheetState extends State<_SkipVisitSheet> {
                                 BorderRadius.circular(context.rr(12))),
                       ),
                       child: Text(
-                        'Submit Skip',
+                        'my_visits.skip_visit.submit'.tr,
                         style: TextStyle(
                             fontSize: context.rsp(14.5),
                             fontWeight: FontWeight.w800),

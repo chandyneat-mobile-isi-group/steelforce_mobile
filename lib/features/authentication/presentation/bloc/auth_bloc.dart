@@ -2,7 +2,9 @@ import 'package:bloc_concurrency/bloc_concurrency.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:get_it/get_it.dart';
 import 'package:steelforce/core/database/drift/local_database_reset.dart';
+import 'package:steelforce/core/error/failure_message.dart';
 import 'package:steelforce/core/error/failures.dart';
+import 'package:steelforce/core/network/api/api_error.dart';
 import 'package:steelforce/core/localization/localization_services.dart';
 import 'package:steelforce/core/logging/app_logger.dart';
 import 'package:steelforce/core/session/app_restart_controller.dart';
@@ -20,7 +22,7 @@ import 'package:steelforce/features/authentication/domain/usecases/update_rememb
 import 'package:steelforce/features/authentication/presentation/bloc/auth_event.dart';
 import 'package:steelforce/features/authentication/presentation/bloc/auth_state.dart';
 import 'package:steelforce/features/authentication/domain/notification_lifecycle.dart';
-import 'package:steelforce/features/shell/presentation/bloc/home_cubit.dart';
+import 'package:steelforce/features/shell/presentation/navigation/shell_tab_controller.dart';
 import 'package:steelforce/routes/app_routes.dart';
 
 /// Orchestrates auth use cases and keeps the app-wide [SessionManager] in sync
@@ -107,7 +109,14 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
   ) async {
     emit(const AuthLoadingState());
     final result = await _getCurrentUser(const NoParams());
-    await _claimLocalData(result);
+    if (!await _claimLocalData(result)) {
+      // The token may still have been valid, but the incoming account cannot
+      // safely use the local stores. Drop it before exposing any auth state.
+      await _logout(const LogoutParams());
+      _session.clear();
+      emit(const AuthGuestState());
+      return;
+    }
     emit(result.when(
       success: (profile) {
         final user = profile.toUser();
@@ -150,7 +159,14 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     );
     // A single request: `/mobile/auth/login` returns the token pair directly.
     // The only one-time code in the app guards password *reset*.
-    await _claimLocalData(result);
+    if (!await _claimLocalData(result)) {
+      // Login succeeded remotely; local isolation did not. Do not let the new
+      // account reach screens backed by the previous account's database.
+      await _logout(const LogoutParams());
+      _session.clear();
+      emit(AuthFailureState('common.generic_error'.tr));
+      return;
+    }
     // Only once the number is known to be right: a rejected sign-in leaves
     // whatever was remembered before. A storage failure here is not worth
     // failing a good sign-in over — the form is simply not pre-filled.
@@ -208,7 +224,9 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
         // telling the user to check their connection sends them hunting for a
         // problem that is not theirs.
         ServerUnreachableFailure() => 'common.server_unreachable'.tr,
-        _ => failure.message,
+        ServerFailure(code: ApiErrorCodes.secureConnection) =>
+          'common.secure_connection_failed'.tr,
+        _ => failure.userMessage,
       };
 
   /// Signing out drops the token store, every session-scoped feature store,
@@ -294,18 +312,20 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
   }
 
   /// Ties the local data to the rep who just signed in, wiping it first if
-  /// it belongs to someone else. Never blocks the sign-in: a failure here is
-  /// logged, and the rep still gets in.
-  Future<void> _claimLocalData(Result<AuthProfile> result) async {
+  /// it belongs to someone else. False means the wipe failed and auth must
+  /// discard the newly issued credentials before allowing protected access.
+  Future<bool> _claimLocalData(Result<AuthProfile> result) async {
     final ownership = _dataOwnership;
-    if (ownership == null) return;
+    if (ownership == null) return true;
     final userId = result.when(success: (p) => p.id, failure: (_) => null);
-    if (userId == null) return;
+    if (userId == null) return true;
     try {
       await ownership.claim(userId);
+      return true;
     } catch (error, stackTrace) {
       _logger.error('auth.local_data_claim_failed',
           error: error, stackTrace: stackTrace);
+      return false;
     }
   }
 }

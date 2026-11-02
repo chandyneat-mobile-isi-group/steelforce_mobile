@@ -2,7 +2,6 @@ import 'package:flutter/widgets.dart';
 import 'package:steelforce/core/di/injection_container.dart';
 import 'package:steelforce/core/usecase/usecase.dart';
 import 'package:steelforce/features/my_visits/domain/entities/check_out_outcome.dart';
-import 'package:steelforce/features/my_visits/domain/entities/no_order_reason.dart';
 import 'package:steelforce/features/my_visits/domain/usecases/get_check_out_context.dart';
 import 'package:steelforce/features/my_visits/presentation/bloc/cubit/check_out_reasons_cubit.dart';
 import 'package:steelforce/features/my_visits/presentation/widgets/check_out/check_out_sheet.dart';
@@ -35,27 +34,3 @@ Future<CheckOutDecision?> askHowVisitEnded(BuildContext context) async {
     await reasons.close();
   }
 }
-
-/// How a visit ends when the rep is not asked: with every order taken at the
-/// stop, or — with none — "other", noting that no reason was asked.
-///
-/// TODO(release-gate): demo-only. The server needs the rep's real answer;
-/// live builds must keep [askHowVisitEnded].
-Future<CheckOutDecision> visitEndedWithoutAsking() async {
-  final visit = (await sl<GetCheckOutContext>()(const NoParams()))
-      .when(success: (c) => c, failure: (_) => null);
-  if (visit == null) return const CheckOutDecision(null);
-  if (visit.orders.isNotEmpty) {
-    return CheckOutDecision(CheckOutChoice.withOrder(
-        [for (final order in visit.orders) order.ref]));
-  }
-  return const CheckOutDecision(CheckOutChoice.withoutOrder(
-    reason: NoOrderReason.otherCode,
-    noOrderNote: unaskedCheckOutNote,
-  ));
-}
-
-/// Stored with the check-out, so the record says why it has no real reason.
-/// Data, not UI text: it is not translated.
-const String unaskedCheckOutNote =
-    'Completed from the demo app (no reason asked)';

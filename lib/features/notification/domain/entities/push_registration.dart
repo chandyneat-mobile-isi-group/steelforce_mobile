@@ -6,9 +6,9 @@ import 'package:equatable/equatable.dart';
 /// The backend stores an unrecognised value as `Unknown` rather than rejecting
 /// it, so this is a display/routing hint on the server side, never a gate.
 enum PushPlatform {
-  android('Android'),
-  ios('IOS'),
-  web('Web');
+  android('android'),
+  ios('ios'),
+  web('web');
 
   const PushPlatform(this.code);
 
@@ -75,7 +75,7 @@ enum PushPermissionStatus {
   bool get isDeclined => this == denied || this == deniedPermanently;
 }
 
-/// What this installation tells `POST /mobile/devices/register` about itself.
+/// What this installation sends to `PUT /me/devices/{installationId}`.
 ///
 /// ## `deviceId` is the upsert key
 ///
@@ -157,12 +157,7 @@ class PushRegistration extends Equatable {
       ];
 }
 
-/// What the backend echoes back after a successful registration (§4.3).
-///
-/// A registration the backend had previously deactivated — because FCM reported
-/// the token dead — is **revived** by the call, so [isActive] coming back true
-/// after a period of silence is the expected outcome, not a surprise. A rep
-/// never needs an administrator to start receiving notifications again.
+/// Registration success returned by the device endpoint.
 class PushRegistrationResult extends Equatable {
   const PushRegistrationResult({
     required this.id,

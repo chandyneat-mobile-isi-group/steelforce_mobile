@@ -10,14 +10,14 @@ extension _CheckInSubmitFlow on _RouteCheckInScreenState {
     final live = _liveStop(bloc.state, _stopId);
     // It may have landed after all — the answer was just not seen.
     if (_isCheckedIn(live)) {
-      _goToVisit(context, live!);
+      _notifyCoachCheckedIn(live!);
+      _goToVisit(context, live);
       return;
     }
+    AppCoach.notify(CoachAction.checkInFailed);
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-        // TODO(i18n)
-        content: const Text(
-            'Check-in did not respond. Please check your connection and try again.'),
+        content: Text('my_visits.check_in_submit.no_response'.tr),
         behavior: SnackBarBehavior.floating,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       ),
@@ -39,9 +39,14 @@ extension _CheckInSubmitFlow on _RouteCheckInScreenState {
 
     final live = _liveStop(state, _stopId);
     if (_isCheckedIn(live)) {
-      _goToVisit(context, live!);
+      _notifyCoachCheckedIn(live!);
+      _goToVisit(context, live);
       return;
     }
+
+    // Blocked by a rule, refused by the server, or not saved: the stop did
+    // not reach `checkedIn`.
+    AppCoach.notify(CoachAction.checkInFailed);
 
     // Some blocks a rep can answer for — a depot gate far from the office
     // pin, a warehouse with no sky. Those get the reason sheet. The rest
@@ -49,6 +54,15 @@ extension _CheckInSubmitFlow on _RouteCheckInScreenState {
     // renders `blockedCheckInReason` in place.
     if (state.blockedCheckInReason != null && state.checkInOverridable) {
       unawaited(_offerOverride(context, state));
+    }
+  }
+
+  /// Reports a confirmed check-in to the coach — only when the bloc's own copy
+  /// of the stop is `checkedIn`. A stop already checked *out* is not a check-in
+  /// that just happened.
+  void _notifyCoachCheckedIn(RouteStop live) {
+    if (live.status == VisitStatus.checkedIn) {
+      AppCoach.notify(CoachAction.checkInSucceeded);
     }
   }
 
@@ -142,7 +156,8 @@ extension _CheckInSubmitFlow on _RouteCheckInScreenState {
     // missed): nothing to verify — go straight on.
     final alreadyIn = _liveStop(bloc.state, stop.id);
     if (_isCheckedIn(alreadyIn)) {
-      _goToVisit(context, alreadyIn!);
+      _notifyCoachCheckedIn(alreadyIn!);
+      _goToVisit(context, alreadyIn);
       return;
     }
 
@@ -156,9 +171,7 @@ extension _CheckInSubmitFlow on _RouteCheckInScreenState {
       if (_liveStop(bloc.state, stop.id) == null) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            // TODO(i18n)
-            content: const Text(
-                'Route is still loading. Please wait a moment and try again.'),
+            content: Text('my_visits.check_in_submit.route_loading'.tr),
             behavior: SnackBarBehavior.floating,
             shape:
                 RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
@@ -197,22 +210,20 @@ extension _CheckInSubmitFlow on _RouteCheckInScreenState {
         overrideReason = await RemoteCheckInSheet.show(
           context,
           blockedReason: reading.phase == CheckInGpsPhase.weakSignal
-              ? 'GPS accuracy too low '
-                  '(±${reading.accuracyMeters.toStringAsFixed(0)} m).'
+              ? 'my_visits.check_in_submit.accuracy_too_low'.trParams({
+                  'accuracy': reading.accuracyMeters.toStringAsFixed(0),
+                })
               : 'my_visits.check_in_verification.outside_body'.tr,
           distanceMeters:
               reading.verdict.isMeasurable ? reading.distanceMeters : null,
           minLength: _policy.minOverrideReasonLength,
         );
       case CheckInConfirmation.withoutGps:
-        // TODO(i18n): literals, same convention as RemoteCheckInSheet.
         overrideReason = await RemoteCheckInSheet.show(
           context,
-          title: 'Check in without GPS?',
-          intro: 'Your position could not be found here. You can still check '
-              'in — the visit is marked unverified and your reason is sent '
-              'with it.',
-          blockedReason: 'No GPS position after a full search.',
+          title: 'my_visits.check_in_submit.no_gps_title'.tr,
+          intro: 'my_visits.check_in_submit.no_gps_intro'.tr,
+          blockedReason: 'my_visits.check_in_submit.no_gps_blocked'.tr,
           distanceMeters: null,
           minLength: _policy.minOverrideReasonLength,
           presets: RemoteCheckInSheet.noGpsPresets,
@@ -263,7 +274,7 @@ extension _CheckInSubmitFlow on _RouteCheckInScreenState {
     navigator
         .popUntil((r) => r.settings.name == StopInformationScreen.routeName);
 
-    openInventoryStep(
+    openInventoryVisibilityForDepot(
       navigator.context,
       depotId: stop.depot.id,
       depotName: context.localized(stop.depot.displayName),

@@ -120,7 +120,7 @@ class LegacyOrdersImporter {
       await _source.close();
     }
 
-    // `SECURITY.md` §10: counts only. Never the rows — they carry depot
+    // `docs/skills/security.md` §10: counts only. Never the rows — they carry depot
     // identifiers and revenue figures.
     _logger.info('legacy_orders_import.completed', fields: {
       'importedTotal': imported.values.fold<int>(0, (a, b) => a + b),

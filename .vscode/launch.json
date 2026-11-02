@@ -1,0 +1,30 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "SteelForce",
+      "request": "launch",
+      "type": "dart",
+      "program": "lib/main.dart"
+    },
+    {
+      // Forgot password sends the OTP through Firebase and stops once Firebase
+      // confirms it — no backend call (AppConfig.firebasePhoneCheckOnly).
+      // Debug builds only.
+      "name": "SteelForce — Firebase OTP test",
+      "request": "launch",
+      "type": "dart",
+      "program": "lib/main.dart",
+      "args": ["--dart-define=FIREBASE_PHONE_CHECK_ONLY=true"]
+    },
+    {
+      // Full Firebase reset, including the backend exchange
+      // (forgot-password/verify-firebase). Needs that endpoint on the server.
+      "name": "SteelForce — Firebase reset (full)",
+      "request": "launch",
+      "type": "dart",
+      "program": "lib/main.dart",
+      "args": ["--dart-define=PASSWORD_RESET_VIA_FIREBASE=true"]
+    }
+  ]
+}

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:steelforce/core/localization/localization_services.dart';
 import 'package:steelforce/core/localization/localized_text_context.dart';
 import 'package:steelforce/core/theme/theme_extensions.dart';
 import 'package:steelforce/shared/widgets/glass_card.dart';
@@ -37,11 +38,6 @@ class ProductCard extends StatelessWidget {
 
     // The material's own unit, off the row. Identification, not a stock read.
     final baseUnit = product.unit;
-    final placeholder = Container(
-      color: appColors.surfaceSoft,
-      child: Icon(Icons.inventory_2_outlined,
-          color: scheme.onSurface.withValues(alpha: 0.4), size: context.rr(24)),
-    );
 
     return GlassCard(
       padding: EdgeInsets.all(context.rr(8)),
@@ -57,15 +53,16 @@ class ProductCard extends StatelessWidget {
                 child: SizedBox(
                   width: _imageSize,
                   height: _imageSize,
-                  // No URL means no image, not a request for "": the
-                  // selection API and a demo build both send none.
-                  child: product.imageUrl.isEmpty
-                      ? placeholder
-                      : Image.network(
-                          product.imageUrl,
-                          fit: BoxFit.cover,
-                          errorBuilder: (_, __, ___) => placeholder,
-                        ),
+                  child: Image.network(
+                    product.imageUrl,
+                    fit: BoxFit.cover,
+                    errorBuilder: (_, __, ___) => Container(
+                      color: appColors.surfaceSoft,
+                      child: Icon(Icons.inventory_2_outlined,
+                          color: scheme.onSurface.withValues(alpha: 0.4),
+                          size: context.rr(24)),
+                    ),
+                  ),
                 ),
               ),
               Positioned(
@@ -92,8 +89,11 @@ class ProductCard extends StatelessWidget {
                 ),
               ),
               if (product.hasPromotion)
-                const Positioned(
-                    top: 2, left: 2, child: PromotionBadge(label: 'Sale')),
+                Positioned(
+                    top: 2,
+                    left: 2,
+                    child:
+                        PromotionBadge(label: 'orders.catalog.sale_badge'.tr)),
             ],
           ),
           SizedBox(width: context.rw(10)),

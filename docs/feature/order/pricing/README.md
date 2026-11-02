@@ -1,5 +1,9 @@
 # Pricing
 
+> ⧉ **Written by the backend team** and kept here because the app's code
+> treats it as its contract. The backend repo is authoritative; when the two
+> differ, report it. Mobile entry point: [../README.md](../README.md).
+
 **Purpose:** one depot's SAP selling prices, delivered to the field app and the
 admin portal, with a realtime channel that pushes changes as they happen.
 **Scope:** the pricing read path, the SignalR hub, and the SAP condition-record
@@ -22,7 +26,6 @@ boundary. There is no pricing aggregate and no pricing table.
 | [security.md](security.md) | Permissions, row-level scoping, group isolation | ✅ |
 | [testing.md](testing.md) | Coverage, and what could not be tested here | ⚠️ |
 | [test-data.md](test-data.md) | Real SAP data, and what to test against | ✅ |
-| [mobile-upgrade-workflow.md](mobile-upgrade-workflow.md) | Migrating the Flutter app onto the real SAP integration | ✅ |
 | [api/mobile.md](api/mobile.md) | The Flutter pricing surface and the hub | ✅ |
 | [api/admin.md](api/admin.md) | Admin portal read and the publish trigger | ✅ |
 
@@ -68,6 +71,6 @@ See [sap-integration.md](sap-integration.md) before touching the mapping.
 
 ## Related
 
-- [blueprint/sap-api-catalogue.md](../../blueprint/sap-api-catalogue.md) — the endpoint catalogue
-- [feature/depot/](../depot/) — the sales area and price group pricing is keyed on
-- [feature/material/](../material/) — the catalogue prices are quoted against
+- `blueprint/sap-api-catalogue.md` ⧉ backend repo — the endpoint catalogue
+- [feature/depot/](../../depot/) — the sales area and price group pricing is keyed on
+- feature/material/ (`material` ⧉ backend repo) — the catalogue prices are quoted against

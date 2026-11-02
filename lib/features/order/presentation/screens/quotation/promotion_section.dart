@@ -351,7 +351,8 @@ class _GroupBlockState extends State<_GroupBlock> {
                     mainAxisSize: MainAxisSize.min,
                     children: [
                       Text(
-                        'See all $displayCount',
+                        'orders.promotion.see_all_count'
+                            .trParams({'count': '$displayCount'}),
                         style: TextStyle(
                           color: scheme.primary,
                           fontSize: context.rsp(11),
@@ -415,8 +416,8 @@ class _GroupBlockState extends State<_GroupBlock> {
                   Flexible(
                     child: Text(
                       _showQuotationPreview
-                          ? 'Hide Preview'
-                          : 'Quotation Format Preview',
+                          ? 'orders.promotion.hide_preview'.tr
+                          : 'orders.promotion.show_preview'.tr,
                       style: TextStyle(
                         fontSize: context.rsp(10.5),
                         fontWeight: FontWeight.w700,

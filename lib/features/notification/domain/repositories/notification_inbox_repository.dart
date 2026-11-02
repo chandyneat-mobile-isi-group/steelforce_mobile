@@ -45,16 +45,22 @@ abstract interface class NotificationInboxRepository {
   /// state change lands.
   Stream<NotificationCounts> watchCounts();
 
-  /// Pulls everything created after the stored cursor and upserts it.
+  /// Pulls the newest page — and, when the device already held rows, newer
+  /// pages until they meet — and upserts it.
   ///
   /// Called on app start, on foreground, on pull-to-refresh, on reconnect, and
   /// whenever a push arrives (§6.1). Upserts are keyed on the notification id so
   /// a catch-up that overlaps a push already handled cannot produce a duplicate
   /// row.
   ///
-  /// [full] discards the cursor and re-pulls from the beginning — for a first
-  /// run after sign-in, or a manual repair.
+  /// [full] forgets the paging cursors and starts again from the newest page —
+  /// for a first run after sign-in, or a manual repair.
   ResultFuture<NotificationSyncResult> catchUp({bool full = false});
+
+  /// Stores the next older page of the inbox — of unread items only when
+  /// [unreadOnly] — for infinite scroll. Succeeds with true while older pages
+  /// remain on the server, false at the end.
+  ResultFuture<bool> loadOlder({bool unreadOnly = false});
 
   /// Re-reads `GET /unread-count` and stores it.
   ///

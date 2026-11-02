@@ -91,12 +91,12 @@ extension _SharedSelectorsExtension on _AddDepotBottomSheetState {
       decoration: BoxDecoration(
         color: isDisabled
             ? context.appColors.border.withValues(alpha: 0.2)
-            : const Color(0xFFF8FAFC),
+            : context.appColors.surfaceSoft,
         borderRadius: BorderRadius.circular(8),
         border: Border.all(
           color: error != null
               ? Theme.of(context).colorScheme.error
-              : const Color(0xFFE2E8F0),
+              : context.appColors.border,
         ),
       ),
       child: DropdownButtonHideUnderline(
@@ -109,14 +109,14 @@ extension _SharedSelectorsExtension on _AddDepotBottomSheetState {
             hint ?? '',
             overflow: TextOverflow.ellipsis,
             style: TextStyle(
-              color: const Color(0xFF94A3B8),
+              color: context.appColors.textHint,
               fontSize: _fontSize(12),
             ),
           ),
-          dropdownColor: Colors.white,
+          dropdownColor: context.appColors.card,
           icon: Icon(
             Icons.keyboard_arrow_down_rounded,
-            color: const Color(0xFF64748B),
+            color: context.appColors.textSecondary,
             size: _fontSize(18),
           ),
           items: isDisabled
@@ -183,7 +183,7 @@ extension _SharedSelectorsExtension on _AddDepotBottomSheetState {
                 ),
                 decoration: BoxDecoration(
                   color: value == o.code
-                      ? Theme.of(context).colorScheme.secondary
+                      ? Theme.of(context).colorScheme.primary
                       : context.appColors.surfaceSoft,
                   borderRadius: BorderRadius.circular(compact ? 8 : 12),
                   border: Border.all(color: context.appColors.border),
@@ -193,7 +193,7 @@ extension _SharedSelectorsExtension on _AddDepotBottomSheetState {
                   textAlign: TextAlign.center,
                   style: TextStyle(
                     color: value == o.code
-                        ? Colors.white
+                        ? Theme.of(context).colorScheme.onPrimary
                         : Theme.of(context).colorScheme.onSurface,
                     fontSize: _fontSize(compact ? 11 : 14),
                     fontWeight: FontWeight.w700,

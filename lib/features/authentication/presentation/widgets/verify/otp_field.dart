@@ -4,6 +4,7 @@ import 'package:steelforce/core/localization/localization_services.dart';
 import 'package:steelforce/core/responsive/responsive_sizing.dart';
 import 'package:steelforce/core/theme/theme_extensions.dart';
 import 'package:steelforce/core/theme/app_colors.dart';
+import 'package:steelforce/features/authentication/presentation/widgets/auth_ink.dart';
 
 class OtpField extends StatefulWidget {
   const OtpField({
@@ -11,11 +12,16 @@ class OtpField extends StatefulWidget {
     this.length = 6,
     this.autofocus = true,
     this.onCompleted,
+    this.onDark = false,
   });
 
   final int length;
   final bool autofocus;
   final ValueChanged<String>? onCompleted;
+
+  /// Navy ink in pale boxes with a blue-grey outline, the focused box glowing
+  /// Apex Blue — for the card on the white auth backdrop.
+  final bool onDark;
 
   @override
   State<OtpField> createState() => OtpFieldState();
@@ -28,6 +34,21 @@ class OtpFieldState extends State<OtpField> {
       List.generate(widget.length, (_) => FocusNode());
 
   String? _error;
+
+  @override
+  void initState() {
+    super.initState();
+    // The focused box glows; repaint when focus moves.
+    if (widget.onDark) {
+      for (final n in _nodes) {
+        n.addListener(_onFocus);
+      }
+    }
+  }
+
+  void _onFocus() {
+    if (mounted) setState(() {});
+  }
 
   @override
   void dispose() {
@@ -106,7 +127,9 @@ class OtpFieldState extends State<OtpField> {
           Text(
             _error!,
             style: TextStyle(
-              color: Theme.of(context).colorScheme.error,
+              color: widget.onDark
+                  ? AuthInk.error
+                  : Theme.of(context).colorScheme.error,
               fontSize: context.rsp(12),
               fontWeight: FontWeight.w600,
             ),
@@ -125,7 +148,47 @@ class OtpFieldState extends State<OtpField> {
         );
 
     final hasError = _error != null;
+    final onDark = widget.onDark;
+    final focused = _nodes[index].hasFocus;
+    final radius = BorderRadius.circular(context.rr(14));
+    final edge = hasError
+        ? AuthInk.error
+        : focused
+            ? AuthInk.accent
+            : AuthInk.fieldBorder;
 
+    final field = _input(index, scheme, colors, border, hasError);
+    if (onDark) {
+      return AnimatedContainer(
+        duration: const Duration(milliseconds: 160),
+        height: context.rh(58),
+        alignment: Alignment.center,
+        decoration: BoxDecoration(
+          color: AuthInk.fieldFill,
+          borderRadius: radius,
+          border: Border.all(color: edge, width: focused ? 1.8 : 1),
+          boxShadow: [
+            if (focused && !hasError)
+              BoxShadow(
+                color: AppColors.signalBlue.withValues(alpha: 0.22),
+                blurRadius: 14,
+              ),
+          ],
+        ),
+        child: field,
+      );
+    }
+    return SizedBox(height: context.rh(56), child: field);
+  }
+
+  Widget _input(
+    int index,
+    ColorScheme scheme,
+    AppThemeColors colors,
+    OutlineInputBorder Function(Color, [double]) border,
+    bool hasError,
+  ) {
+    final onDark = widget.onDark;
     return SizedBox(
       height: context.rh(56),
       child: Focus(
@@ -150,20 +213,29 @@ class OtpFieldState extends State<OtpField> {
           inputFormatters: [FilteringTextInputFormatter.digitsOnly],
           autofillHints: index == 0 ? const [AutofillHints.oneTimeCode] : null,
           style: TextStyle(
-            color: scheme.onSurface,
-            fontSize: context.rsp(20),
+            color: onDark ? AuthInk.text : scheme.onSurface,
+            fontSize: context.rsp(onDark ? 22 : 20),
             fontWeight: FontWeight.w700,
           ),
-          cursorColor: scheme.secondary,
-          decoration: InputDecoration(
-            isDense: true,
-            filled: true,
-            fillColor: colors.surfaceStrong,
-            contentPadding: EdgeInsets.symmetric(vertical: context.rh(14)),
-            enabledBorder: border(hasError ? scheme.error : colors.border),
-            focusedBorder:
-                border(hasError ? scheme.error : scheme.secondary, 1.6),
-          ),
+          cursorColor: onDark ? AuthInk.accent : scheme.secondary,
+          decoration: onDark
+              ? InputDecoration(
+                  isDense: true,
+                  border: InputBorder.none,
+                  contentPadding:
+                      EdgeInsets.symmetric(vertical: context.rh(14)),
+                )
+              : InputDecoration(
+                  isDense: true,
+                  filled: true,
+                  fillColor: colors.surfaceStrong,
+                  contentPadding:
+                      EdgeInsets.symmetric(vertical: context.rh(14)),
+                  enabledBorder:
+                      border(hasError ? scheme.error : colors.border),
+                  focusedBorder:
+                      border(hasError ? scheme.error : scheme.secondary, 1.6),
+                ),
           onChanged: (text) => _handleChange(index, text),
         ),
       ),

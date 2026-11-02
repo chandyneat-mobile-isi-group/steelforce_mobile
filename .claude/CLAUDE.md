@@ -4,8 +4,9 @@
 > who you are, the gates you cannot skip, and where the real rules live.
 > Everything detailed is in `.claude/rules/` and `docs/`.
 >
-> **Keep this file under ~150 lines.** Overflow goes to `.claude/rules/`
-> (agent behaviour) or `docs/skills/` (engineering knowledge).
+> **Keep this file under ~150 lines.** If a rule needs more room, it belongs in
+> `.claude/rules/`; if it is engineering knowledge rather than agent behaviour,
+> it belongs in `docs/skills/`.
 
 ---
 
@@ -20,16 +21,6 @@ Solve routine engineering decisions yourself. Do not ask permission to inspect
 the repo, run the analyzer, format code, or run tests — do them. Ask the user
 only when a decision needs business authority or when an action is destructive
 or irreversible.
-
-**Push back before you build.** If a request would add a security risk, break
-offline-first, violate an ADR, duplicate existing logic, or create debt, say so
-first — briefly, with the concrete failure — and propose the better path. Then
-do what the user decides.
-
-**Plan, then wait,** for Type C/D work and any structural refactor: present
-the current problem, the proposal, and its trade-offs, and get approval before
-editing (`rules/workflow.md` §2). Ask yourself: does this still hold at 10× the
-reps, data, and developers?
 
 ---
 
@@ -56,7 +47,7 @@ These are not advice. A change that skips one is not finished.
 | 1 | **Dependency order** — never implement a module against infrastructure that does not exist yet. Stop and name the blocker instead. | [`docs/skills/engineering-standard.md` §2](../docs/skills/engineering-standard.md), [rules/workflow.md](rules/workflow.md) |
 | 2 | **Blast radius** — before changing anything shared (core/, a repository, a DAO, the network client, sync), query the graph and know who breaks. | [rules/workflow.md](rules/workflow.md) |
 | 3 | **Any feature / screen / UI change** passes the Feature & UI Standard, including putting its §14 checklist in the PR. | [`docs/skills/feature-ui-standard.md`](../docs/skills/feature-ui-standard.md) |
-| 4 | **Verification is reported truthfully.** Never write "tests pass" or "build succeeds" unless that command actually ran and succeeded. | [rules/workflow.md](rules/workflow.md) §6, §10 |
+| 4 | **Verification is reported truthfully.** Never write "tests pass" or "build succeeds" unless that command actually ran and succeeded. | [rules/workflow.md](rules/workflow.md) §6 |
 
 ---
 
@@ -70,16 +61,12 @@ authoritative `docs/` document rather than restating it.
 | [workflow.md](rules/workflow.md) | **Always.** Task lifecycle, classification, graph analysis, verification ladder, failure recovery, reporting. |
 | [architecture.md](rules/architecture.md) | Adding or moving any file; anything touching layering, DI, repositories, DAOs. |
 | [flutter.md](rules/flutter.md) | Writing Dart/Flutter code — widget structure, performance, error handling. |
-| [code-quality.md](rules/code-quality.md) | **Any code change.** File/function size, one responsibility, reuse, dead code, refactoring rules. |
 | [ui-ux.md](rules/ui-ux.md) | Any screen, widget, theme, responsive, motion, or localization work. |
 | [state-management.md](rules/state-management.md) | Adding or changing a BLoC/Cubit or any state. |
 | [api-integration.md](rules/api-integration.md) | Calling the backend, adding an endpoint, models, or error mapping. |
 | [firebase.md](rules/firebase.md) | Push notifications, FCM tokens, channels, deep links. |
 | [testing.md](rules/testing.md) | Deciding what to test and which commands to run. |
 | [security.md](rules/security.md) | Tokens, keys, PII, encryption, logging, release gating. |
-| [performance.md](rules/performance.md) | Hot paths (lists, sync, startup, search), or any performance claim. |
-| [dependencies.md](rules/dependencies.md) | Adding, removing, or upgrading a package. |
-| [release-and-environments.md](rules/release-and-environments.md) | Config values, environments, versioning, permissions, release readiness. |
 | [git-safety.md](rules/git-safety.md) | Before any commit, branch, or bulk change. |
 
 ---
@@ -133,18 +120,16 @@ flutter test                                               # unit + widget
 flutter test integration_test/
 dart run build_runner build --delete-conflicting-outputs   # after Drift changes
 graphify query "<question>"                                # before touching shared code
-.claude/hooks/tests/run.sh                                 # after editing a hook
 ```
-
-Slash commands: `/feature` · `/screen` · `/api` · `/debug` · `/test` ·
-`/review` · `/release-check`. Agents: `flutter-developer`, `api-integrator`,
-`code-reviewer`, `ui-ux-reviewer`.
 
 ---
 
 ## 8. Reporting
 
-End every non-trivial task with **Summary** · **Files Changed** ·
-**Verification** (commands actually run, real results) · **Remaining Issues** ·
-**Next Steps** if relevant. Format and honesty rules:
-[rules/workflow.md](rules/workflow.md) §10.
+End every non-trivial task with:
+
+**Summary** · **Files Changed** · **Verification** (commands actually run and
+their real results) · **Remaining Issues** (anything unverified, said plainly) ·
+**Next Steps** (only if genuinely relevant).
+
+Detail and the honesty rules: [rules/workflow.md](rules/workflow.md) §6–7.

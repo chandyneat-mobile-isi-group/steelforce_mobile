@@ -1,13 +1,13 @@
 import 'package:equatable/equatable.dart';
 
-/// What `forgot-password/verify-otp` hands back once the SMS code checks out:
+/// What the Firebase proof exchange returns once the SMS code checks out:
 /// a one-time [resetToken] for the reset call, and the [policy] the new
 /// password must meet.
 class PasswordResetGrant extends Equatable {
   const PasswordResetGrant({
     required this.resetToken,
     this.expiresIn,
-    this.policy = const PasswordPolicy(),
+    this.policy = PasswordPolicy.productionReset,
   });
 
   final String resetToken;
@@ -32,7 +32,18 @@ class PasswordPolicy extends Equatable {
     this.requireLowercase = false,
     this.requireNumber = false,
     this.requireSpecial = false,
+    this.minDistinctCharacters = 0,
   });
+
+  static const productionReset = PasswordPolicy(
+    minLength: 12,
+    maxLength: 128,
+    requireUppercase: true,
+    requireLowercase: true,
+    requireNumber: true,
+    requireSpecial: true,
+    minDistinctCharacters: 4,
+  );
 
   final int minLength;
 
@@ -42,6 +53,7 @@ class PasswordPolicy extends Equatable {
   final bool requireLowercase;
   final bool requireNumber;
   final bool requireSpecial;
+  final int minDistinctCharacters;
 
   /// The first rule [password] breaks, or null when it meets them all.
   PasswordRule? firstViolation(String password) {
@@ -61,6 +73,9 @@ class PasswordPolicy extends Equatable {
     if (requireSpecial && !password.contains(RegExp('[^A-Za-z0-9]'))) {
       return PasswordRule.special;
     }
+    if (password.runes.toSet().length < minDistinctCharacters) {
+      return PasswordRule.distinctCharacters;
+    }
     return null;
   }
 
@@ -72,6 +87,7 @@ class PasswordPolicy extends Equatable {
         requireLowercase,
         requireNumber,
         requireSpecial,
+        minDistinctCharacters,
       ];
 }
 
@@ -81,5 +97,6 @@ enum PasswordRule {
   uppercase,
   lowercase,
   number,
-  special
+  special,
+  distinctCharacters,
 }

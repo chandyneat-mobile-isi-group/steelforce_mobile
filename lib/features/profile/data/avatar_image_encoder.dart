@@ -4,7 +4,7 @@ import 'package:image/image.dart' as img;
 /// Prepares a picked photograph for `PUT /users/me/profile`.
 ///
 /// Three jobs, all required by the contract
-/// (`docs/feature/authentication/profile.md` §3 and Limitations):
+/// (`docs/feature/profile/api.md` §3 and Limitations):
 ///
 ///  * **Downscale** to [maxEdge] — the avatar renders at header size, and a
 ///    full camera frame is a slow upload on a provincial connection.

@@ -1,8 +1,12 @@
 import 'package:steelforce/core/network/api/api_envelope.dart';
+import 'package:steelforce/core/error/exceptions.dart';
 import 'package:steelforce/core/utils/money.dart';
 import 'package:steelforce/core/utils/typedefs.dart';
+import 'package:steelforce/features/depots/data/models/depot_api_fields.dart';
 import 'package:steelforce/features/depots/data/models/depot_contact_model.dart';
 import 'package:steelforce/features/depots/data/models/depot_model.dart';
+import 'package:steelforce/features/depots/data/models/depot_profile_model.dart';
+import 'package:steelforce/features/depots/data/models/depot_sales_area_model.dart';
 import 'package:steelforce/features/depots/domain/entities/depot_status.dart';
 
 /// Maps the mobile depot API onto [DepotModel].
@@ -17,6 +21,20 @@ import 'package:steelforce/features/depots/domain/entities/depot_status.dart';
 /// degrade to a sensible default rather than throw — a single unexpected null
 /// in one row of a 200-row page would otherwise abort an entire sync.
 abstract final class DepotApiMapper {
+  /// The row's platform id, or null when it carries none.
+  ///
+  /// `depotId`, then `id`, then `depotCode`. api-dev stopped sending
+  /// `depotId` on 30 Oct; the server resolves a depot by its code, and every
+  /// earlier answer sent a Depot's `depotId` equal to its code. A row with
+  /// none of the three is not stored — it would share the empty key.
+  static String? idOf(DataMap json) {
+    final id = (json['depotId'] ?? json['id'])?.toString().trim() ?? '';
+    if (id.isNotEmpty) return id;
+    final code =
+        (json['depotCode'] ?? json['customerCode'])?.toString().trim() ?? '';
+    return code.isEmpty ? null : code;
+  }
+
   /// The list row from `GET /mobile/depots`.
   ///
   /// **Tombstones arrive through here too.** A row with `deleted: true` carries
@@ -31,10 +49,30 @@ abstract final class DepotApiMapper {
         Money.fromJson(json['creditLimit'], fallbackCurrency: currency);
     final creditBalance =
         Money.fromJson(json['creditBalance'], fallbackCurrency: currency);
-    final coordinates = _coordinates(json);
+    final salesAreas = DepotSalesAreaModel.listFrom(json['salesAreas']);
+    final coordinates = DepotApiFields.coordinates(json);
+    // The `items` row (`depotId`, `depotName`, …) names the depot directly and
+    // carries its rep in `salesEmployees`; the older `customers` row used
+    // SAP's nouns. Both are read so cached and detail payloads still parse.
+    final rep = DepotApiFields.primarySalesEmployee(json);
+    final depotCode =
+        (json['depotCode'] ?? json['customerCode']) as String? ?? '';
+
+    final id = idOf(json);
+    if (id == null) {
+      // An empty id makes every record overwrite the same SQLite primary key
+      // and can make a 200-row sync look successful while storing one row.
+      // Fail the page without logging or retaining any payload values — the
+      // key names are the contract, never a value, and say which field the
+      // server sent instead.
+      throw ServerException(
+        message: 'The depot response contained a record without an id. '
+            'Keys: ${(json.keys.toList()..sort()).join(',')}',
+      );
+    }
 
     return DepotModel(
-      id: json['id']?.toString() ?? '',
+      id: id,
       // SAP owns this and leaves it blank until the depot is linked, so a
       // draft registered in the field legitimately has none.
       // Null, never ''. The column is UNIQUE, and SQLite treats every NULL as
@@ -44,12 +82,18 @@ abstract final class DepotApiMapper {
       // territory are `PendingApproval` and have no SAP id at all.
       // `sapCustomerId`/`customerCode` are the wire's names and stay that way —
       // ADR-0007 moved the routes, not the payload keys.
-      sapDepotId: json['sapCustomerId'] as String?,
-      depotCode: json['customerCode'] as String? ?? '',
+      // In the `items` list only a `Depot` row is an SAP business partner, so
+      // only its code is the SAP id — which turns on the ad hoc visit action.
+      // A numbered `Draft` is still awaiting approval; a `NonDepot` has none.
+      sapDepotId: json['sapCustomerId'] as String? ??
+          (json['depotType'] == 'Depot' && depotCode.isNotEmpty
+              ? depotCode
+              : null),
+      depotCode: depotCode,
       // Already localised by the server against `Accept-Language`. The fallback
       // chain is requested → English → legal name, so this is non-empty for
       // any real depot.
-      shopName: json['shopName'] as String? ?? '',
+      shopName: (json['depotName'] ?? json['shopName']) as String? ?? '',
       ownerName: json['ownerName'] as String? ?? '',
       phone: json['phone'] as String? ?? '',
       email: json['email'] as String?,
@@ -58,30 +102,58 @@ abstract final class DepotApiMapper {
       // territory, which is all a list row and a map pin need. The full
       // address arrives with the detail aggregate (`fromDetail`), so a
       // freshly synced row shows a blank street until it is opened.
-      address: _address(json),
-      province: json['province'] as String? ?? '',
+      address: DepotApiFields.address(json),
+      // The list sends none; its address ends with the province.
+      province: json['province'] as String? ??
+          DepotApiFields.provinceOf(DepotApiFields.address(json)),
       district: json['district'] as String? ?? '',
-      territory: json['territory'] as String? ?? '',
+      territory: json['territory'] as String? ??
+          rep?['territoryCode'] as String? ??
+          '',
       latitude: coordinates.$1,
       longitude: coordinates.$2,
-      creditLimit: creditLimit.amount,
+      // The grouped list carries the limit only per sales area. Without a
+      // top-level figure, the first area's stands in, so orders and the shop
+      // list stop reading every depot as a zero limit.
+      creditLimit: json.containsKey('creditLimit')
+          ? creditLimit.amount
+          : salesAreas?.firstOrNull?.creditLimit ?? creditLimit.amount,
       creditBalance: creditBalance.amount,
       currency: currency,
       // Branch on the stable code; render `statusDisplay`, which is localised
       // and therefore changes with the request language.
       status: DepotStatus.fromApi(json['status'] as String?),
-      assignedRepId: json['assignedRepId'] as String? ?? '',
-      // Resolved server-side via a directory lookup, and absent from the
-      // summary. The detail payload supplies it.
-      assignedRepName: json['assignedRepName'] as String? ?? '',
+      assignedRepId: json['assignedRepId'] as String? ??
+          rep?['employeeCode'] as String? ??
+          '',
+      assignedRepName: json['assignedRepName'] as String? ??
+          rep?['employeeName'] as String? ??
+          '',
       updatedAt: parseUtc(json['updatedAt']) ??
           parseUtc(json['createdAt']) ??
           DateTime.now().toUtc(),
       createdAt: parseUtc(json['createdAt']),
       lastOrderDate: parseUtc(json['lastOrderDate']),
       lastVisitDate: parseUtc(json['lastVisitDate']),
-      enName: json['enName'] as String?,
-      khName: json['khName'] as String?,
+      enName: json['enName'] as String? ?? json['depotName'] as String?,
+      khName: json['khName'] as String? ?? json['depotNameKh'] as String?,
+      // The list sends it per sales area only: the first one's stands in.
+      distributionChannel:
+          (json['depotChannel'] ?? json['distributionChannel']) as String? ??
+              salesAreas?.firstOrNull?.channelName,
+      depotType: json['depotType'] as String?,
+      createdBy: json['createdBy']?.toString(),
+      salesEmployees:
+          DepotProfileModel.salesEmployeesFrom(json['salesEmployees']),
+      profile: DepotProfileModel.profileFrom(json['profile']),
+      // The list carries the shop's contacts inside `profile`.
+      contacts: _contacts(
+          json['profile'] is Map
+              ? (json['profile'] as Map)['contactPersons']
+              : null,
+          depotId: id),
+      // BP depots and non-BP outlets alike; credit terms live per area.
+      salesAreas: salesAreas,
       deleted: json['deleted'] as bool? ?? false,
     );
   }
@@ -101,7 +173,7 @@ abstract final class DepotApiMapper {
       phone: summary.phone,
       email: summary.email,
       whatsapp: summary.whatsapp,
-      address: _address(json),
+      address: DepotApiFields.address(json),
       province: summary.province,
       district: summary.district,
       territory: summary.territory,
@@ -112,7 +184,7 @@ abstract final class DepotApiMapper {
       currency: currency,
       status: summary.status,
       assignedRepId: summary.assignedRepId,
-      assignedRepName: json['assignedRepName'] as String? ?? '',
+      assignedRepName: summary.assignedRepName,
       updatedAt: summary.updatedAt,
       createdAt: summary.createdAt,
       lastOrderDate: summary.lastOrderDate,
@@ -123,7 +195,7 @@ abstract final class DepotApiMapper {
       // Returned but never writable from the app — SAP owns this block.
       salesOrg: json['salesOrg'] as String?,
       division: json['division'] as String?,
-      distributionChannel: json['distributionChannel'] as String?,
+      distributionChannel: summary.distributionChannel,
       depotGroup: json['customerGroup'] as String?,
       priceGroup: json['priceGroup'] as String?,
       // Denormalised metrics. They carry `metricsCalculatedAt` so staleness is
@@ -136,54 +208,39 @@ abstract final class DepotApiMapper {
       totalOrders: (json['totalOrders'] as num?)?.toInt() ?? 0,
       openOpportunityCount:
           (json['openOpportunityCount'] as num?)?.toInt() ?? 0,
-      contacts: _contacts(json['contacts']),
+      // The detail answer's own `contacts`; else what the list sent.
+      contacts: json['contacts'] is List
+          ? _contacts(json['contacts'], depotId: summary.id)
+          : summary.contacts,
+      depotType: summary.depotType,
+      createdBy: summary.createdBy,
+      salesEmployees: summary.salesEmployees,
+      profile: summary.profile,
+      salesAreas: summary.salesAreas,
       deleted: summary.deleted,
     );
   }
 
   /// Contacts come back primary-first then alphabetical — a stable order, so a
   /// local diff does not show phantom changes on every sync. Preserved here.
-  static List<DepotContactModel> _contacts(Object? raw) {
-    if (raw is! List) return const [];
-    return raw
-        .whereType<Map>()
-        .map((e) => e.cast<String, dynamic>())
-        .map((c) => DepotContactModel(
-              id: c['id']?.toString() ?? '',
-              name: c['name'] as String? ?? '',
-              role: (c['position'] ?? c['role']) as String? ?? '',
-              phone: c['phone'] as String? ?? '',
-              email: c['email'] as String?,
-            ))
-        .toList();
-  }
-
-  static String _address(DataMap json) {
-    final line1 = json['addressLine1'] as String?;
-    if (line1 != null && line1.trim().isNotEmpty) return line1.trim();
-    // Fall back to what the summary does carry, so a list row is not blank.
-    final parts = [json['district'], json['city']]
-        .whereType<String>()
-        .where((e) => e.trim().isNotEmpty);
-    return parts.join(', ');
-  }
-
-  /// Coordinates, with `(0, 0)` treated as absent.
   ///
-  /// The API sends null for both when a device reported no GPS fix, and
-  /// explicitly rejects `(0, 0)` on write because it is a real point in the
-  /// Gulf of Guinea — exactly what a failed fix looks like. The local schema
-  /// still declares these columns non-null, so `(0, 0)` is what gets stored
-  /// for "unknown"; [DepotModel] exposes `hasCoordinates` so the geofence
-  /// and distance sorter can tell the difference rather than measuring to the
-  /// Atlantic. See `docs/API_INTEGRATION.md` for the migration that makes
-  /// these properly nullable.
-  static (double, double) _coordinates(DataMap json) {
-    final lat = (json['latitude'] as num?)?.toDouble();
-    final lng = (json['longitude'] as num?)?.toDouble();
-    // Latitude and longitude are only ever meaningful together.
-    if (lat == null || lng == null) return (0, 0);
-    if (lat.abs() > 90 || lng.abs() > 180) return (0, 0);
-    return (lat, lng);
+  /// `profile.contactPersons` rows carry no id; each gets a local one from
+  /// its depot and place in the list, so two never share a key.
+  static List<DepotContactModel> _contacts(Object? raw,
+      {required String depotId}) {
+    if (raw is! List) return const [];
+    final rows = raw.whereType<Map>().map((e) => e.cast<String, dynamic>());
+    return [
+      for (final (i, c) in rows.indexed)
+        DepotContactModel(
+          id: '${c['id'] ?? ''}'.trim().isNotEmpty
+              ? '${c['id']}'
+              : '$depotId#contact$i',
+          name: c['name'] as String? ?? '',
+          role: (c['position'] ?? c['role']) as String? ?? '',
+          phone: c['phone'] as String? ?? '',
+          email: c['email'] as String?,
+        ),
+    ];
   }
 }

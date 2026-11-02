@@ -1,4 +1,5 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:steelforce/core/error/failure_message.dart';
 import 'package:steelforce/core/error/failures.dart';
 import 'package:steelforce/core/session/session_manager.dart';
 import 'package:steelforce/core/usecase/usecase.dart';
@@ -79,7 +80,7 @@ class SyncCubit extends Cubit<SyncState> {
           upserted: r.upserted, deleted: r.deleted, syncedAt: r.syncedAt)),
       failure: (f) => emit(quietOffline && f is NetworkFailure
           ? const SyncIdle()
-          : SyncFailed(f.message)),
+          : SyncFailed(f.userMessage)),
     );
   }
 }

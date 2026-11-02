@@ -1,26 +1,24 @@
 import 'dart:async';
-import 'package:steelforce/core/config/feature_flags.dart';
 
 import 'package:flutter/material.dart';
-import 'package:image_picker/image_picker.dart';
 import 'package:steelforce/core/camera/image_capture_service.dart';
 import 'package:steelforce/core/animations/page_transition.dart';
 import 'package:steelforce/core/di/injection_container.dart';
 import 'package:steelforce/core/localization/localized_builder.dart';
-import 'package:steelforce/core/logging/app_logger.dart';
-import 'package:steelforce/core/platform/storage/captured_media_store.dart';
-import 'package:steelforce/core/usecase/usecase.dart' show NoParams;
-import 'package:steelforce/features/my_visits/domain/entities/visit_photo.dart';
 import 'package:steelforce/features/my_visits/domain/entities/visit_workflow.dart';
-import 'package:steelforce/features/my_visits/domain/usecases/add_visit_photo.dart';
-import 'package:steelforce/features/my_visits/domain/usecases/get_active_workflow.dart';
 import 'package:steelforce/features/my_visits/domain/usecases/update_workflow_step.dart';
 import 'package:steelforce/features/my_visits/presentation/navigation/end_visit.dart';
 import 'package:steelforce/features/my_visits/presentation/navigation/open_quotation.dart';
+import 'package:steelforce/features/my_visits/presentation/navigation/plan_inventory_upload.dart';
+import 'package:steelforce/features/my_visits/presentation/navigation/route_inventory_photos.dart';
 import 'package:steelforce/features/my_visits/presentation/screens/inventory_visible/inventory_completion_screen.dart';
 import 'package:steelforce/features/my_visits/presentation/screens/inventory_visible/inventory_visible_screen.dart';
+import 'package:steelforce/features/my_visits/presentation/screens/inventory_visible/plan_check_out_button.dart';
 
-/// Opens the guided Inventory Visibility step (one stock photo) for the
+export 'package:steelforce/features/my_visits/presentation/navigation/route_inventory_photos.dart'
+    show inventoryPhotoCaption, visitPhotoFolder;
+
+/// Opens the guided Inventory Visibility step (three stock photos) for the
 /// checked-in depot — the task that now sits between check-in and the
 /// Quotation Builder.
 ///
@@ -28,11 +26,16 @@ import 'package:steelforce/features/my_visits/presentation/screens/inventory_vis
 /// live check-in flow and the "Continue Working" resume land on the
 /// identical screen with identical follow-on actions, exactly like
 /// [openQuotationForDepot] does for the quotation step.
+///
+/// [planId] given — a visit started from a plan — sends the photos to that
+/// plan on the server and ends the visit with its check-out. Without it the
+/// photos are stored with the route stop and pushed later.
 Future<void> openInventoryVisibilityForDepot(
   BuildContext context, {
   required String depotId,
   required String depotName,
   String? stopId,
+  String? planId,
 }) async {
   await Navigator.of(context).push(AppPageRoute<void>.sharedAxisVertical(
     settings: const RouteSettings(name: InventoryVisibilityScreen.routeName),
@@ -40,90 +43,24 @@ Future<void> openInventoryVisibilityForDepot(
       builder: (_) => InventoryVisibilityScreen(
         depotName: depotName,
         capture: sl<ImageCaptureService>(),
-        onPhotoSubmitted: (photo, takenAt) => saveInventoryPhoto(
-          depotId: depotId,
-          stopId: stopId,
-          photo: photo,
-          takenAt: takenAt,
-        ),
-        onSubmit: () => continueToInventoryCompletion(
+        onPhotosSubmitted: planId != null
+            ? planInventoryUploader(planId)
+            : (photos) => saveRouteInventoryPhotos(
+                  depotId: depotId,
+                  stopId: stopId,
+                  photos: photos,
+                ),
+        onSubmit: () => _onInventorySubmitted(
           routeContext,
           depotId: depotId,
           depotName: depotName,
           stopId: stopId,
+          planId: planId,
         ),
       ),
     ),
   ));
 }
-
-/// Caption that marks a visit photo as the Inventory Visibility capture.
-const String inventoryPhotoCaption = 'Inventory visibility';
-
-/// App-private folder for visit photos. Wiped on sign-out by
-/// `DeviceStorageSessionStore.mediaFolders`; rename both together.
-const String visitPhotoFolder = 'visit_photos';
-
-/// Stores the inventory photo as a visit photo on this stop.
-///
-/// It goes into local visit storage first and reaches the server in the
-/// stop's next visit push, with the check-out and the other captures. No
-/// network is needed here.
-///
-/// The image is copied into the app's documents folder first: the picker's
-/// own file lives in a cache the OS may clear before the push runs.
-///
-/// A photo that cannot be tied to a stop is not saved, and the skip is
-/// logged. A photo with no stop is not evidence of anything. Throws when the
-/// local write fails, so the screen keeps the rep on this step.
-///
-/// Public so the Inventory Availability Survey saves its photos the same way.
-Future<void> saveInventoryPhoto({
-  required String depotId,
-  String? stopId,
-  required XFile photo,
-  required DateTime takenAt,
-}) async {
-  final logger = sl.isRegistered<AppLogger>() ? sl<AppLogger>() : null;
-
-  String? resolvedStopId = stopId;
-  if (resolvedStopId == null) {
-    final result = await sl<GetActiveWorkflow>()(const NoParams());
-    final workflow = result.when(success: (w) => w, failure: (_) => null);
-    resolvedStopId = workflow?.currentStopId;
-  }
-  if (resolvedStopId == null) {
-    logger?.warning('visit.inventory_photo.not_persisted', fields: {
-      'reason': 'noStop',
-      'depotId': depotId,
-    });
-    return;
-  }
-
-  final stamp = takenAt.microsecondsSinceEpoch;
-  final fileName = 'inventory_$stamp.jpg';
-  // Web has no app folder: the picker's blob URL is the only handle there.
-  final folder = await appMediaDirectory(visitPhotoFolder);
-  final path = folder == null
-      ? photo.path
-      : await copyCapturedFile(photo.path,
-          targetDirectory: folder, fileName: fileName);
-
-  final result = await sl<AddVisitPhoto>()(VisitPhoto(
-    id: '$stamp-inventory',
-    stopId: resolvedStopId,
-    url: path,
-    caption: inventoryPhotoCaption,
-    takenAt: takenAt,
-  ));
-  result.when(
-    success: (_) {},
-    failure: (f) => throw StateError('inventory photo not saved: ${f.message}'),
-  );
-}
-
-/// Whether the completion screen offers Create Quotation.
-const bool _quotationAfterInventory = FeatureFlags.quotesAndOrders;
 
 /// Opens the post-audit decision screen directly.
 ///
@@ -139,31 +76,75 @@ Future<void> openInventoryCompletion(
 }) async {
   await Navigator.of(context).push(AppPageRoute<void>.sharedAxisVertical(
     settings: const RouteSettings(name: InventoryCompletionScreen.routeName),
-    builder: (completionContext) => LocalizedBuilder(
-      builder: (_) => InventoryCompletionScreen(
-        outletName: depotName,
-        showCreateQuotation: _quotationAfterInventory,
-        onCreateQuotation: () => _createQuotation(
-          completionContext,
-          depotId: depotId,
-          depotName: depotName,
-        ),
-        onEndVisit: () => _endVisit(completionContext),
-      ),
-    ),
+    builder: (completionContext) =>
+        _completion(completionContext, depotId: depotId, depotName: depotName),
   ));
 }
 
+/// A checked-in plan visit's decision screen, opened from Home to check out.
+/// The server refuses until the visit holds an inventory photo, and says so.
+Future<void> openPlanVisitCompletion(
+  BuildContext context, {
+  required String depotId,
+  required String depotName,
+  required String planId,
+}) =>
+    Navigator.of(context).push(AppPageRoute<void>.sharedAxisVertical(
+      settings: const RouteSettings(name: InventoryCompletionScreen.routeName),
+      builder: (completionContext) => _completion(completionContext,
+          depotId: depotId, depotName: depotName, planId: planId),
+    ));
+
+/// The decision screen. A planned visit ([planId]) ends with its check-out;
+/// a route visit with the deferred check-out and the push.
+Widget _completion(
+  BuildContext context, {
+  required String depotId,
+  required String depotName,
+  String? planId,
+}) =>
+    LocalizedBuilder(
+      builder: (_) => InventoryCompletionScreen(
+        outletName: depotName,
+        photosUploaded: planId != null,
+        onCreateQuotation: () => _createQuotation(
+          context,
+          depotId: depotId,
+          depotName: depotName,
+        ),
+        onEndVisit: () => _endVisit(context),
+        checkOutAction: planId == null
+            ? null
+            : PlanCheckOutButton(
+                planId: planId,
+                onCheckedOut: (queued) =>
+                    PlanCheckOutButton.finish(context, queued: queued),
+              ),
+      ),
+    );
+
 /// Stock count logged — swap in the completion screen so the audit step
 /// doesn't linger as a separate stack entry underneath the decision it led to.
-///
-/// Public so the Inventory Availability Survey ends on the same screen.
-void continueToInventoryCompletion(
+void _onInventorySubmitted(
   BuildContext context, {
   required String depotId,
   required String depotName,
   String? stopId,
+  String? planId,
 }) {
+  final navigator = Navigator.of(context);
+  final completion = AppPageRoute<void>.fadeThrough(
+    settings: const RouteSettings(name: InventoryCompletionScreen.routeName),
+    builder: (completionContext) => _completion(completionContext,
+        depotId: depotId, depotName: depotName, planId: planId),
+  );
+  // A planned visit has no route-stop resume pointer to move: writing onto
+  // one would retarget whichever route visit owns it.
+  if (planId != null) {
+    navigator.pushReplacement(completion);
+    return;
+  }
+
   // Move the resume pointer onto the completion step. Without this the audit
   // is finished but the pointer still says "audit", so leaving here and
   // tapping Continue Working sends the rep back to redo a completed count.
@@ -177,21 +158,7 @@ void continueToInventoryCompletion(
     },
   )));
 
-  Navigator.of(context).pushReplacement(AppPageRoute<void>.fadeThrough(
-    settings: const RouteSettings(name: InventoryCompletionScreen.routeName),
-    builder: (completionContext) => LocalizedBuilder(
-      builder: (_) => InventoryCompletionScreen(
-        outletName: depotName,
-        showCreateQuotation: _quotationAfterInventory,
-        onCreateQuotation: () => _createQuotation(
-          completionContext,
-          depotId: depotId,
-          depotName: depotName,
-        ),
-        onEndVisit: () => _endVisit(completionContext),
-      ),
-    ),
-  ));
+  navigator.pushReplacement(completion);
 }
 
 /// Drops the (replaced) inventory slot first, so the Quotation Builder lands

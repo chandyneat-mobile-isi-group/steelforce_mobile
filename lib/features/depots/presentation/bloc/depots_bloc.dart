@@ -1,3 +1,4 @@
+import 'package:steelforce/core/error/failure_message.dart';
 import 'package:bloc_concurrency/bloc_concurrency.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:steelforce/core/usecase/usecase.dart';
@@ -58,7 +59,7 @@ class DepotsBloc extends Bloc<DepotsEvent, DepotsState> {
         recent: recent,
         favoriteIds: const {},
       )),
-      failure: (f) => emit(DepotsError(f.message)),
+      failure: (f) => emit(DepotsError(f.userMessage)),
     );
   }
 
@@ -130,7 +131,7 @@ class DepotsBloc extends Bloc<DepotsEvent, DepotsState> {
         hasMore: paged.hasMore,
         query: event.query,
       )),
-      failure: (f) => emit(DepotsError(f.message)),
+      failure: (f) => emit(DepotsError(f.userMessage)),
     );
   }
 
@@ -153,7 +154,7 @@ class DepotsBloc extends Bloc<DepotsEvent, DepotsState> {
         hasMore: paged.hasMore,
         filter: event.filter,
       )),
-      failure: (f) => emit(DepotsError(f.message)),
+      failure: (f) => emit(DepotsError(f.userMessage)),
     );
   }
 
@@ -173,7 +174,7 @@ class DepotsBloc extends Bloc<DepotsEvent, DepotsState> {
         query: '',
         filter: const DepotFilter(),
       )),
-      failure: (f) => emit(DepotsError(f.message)),
+      failure: (f) => emit(DepotsError(f.userMessage)),
     );
   }
 

@@ -30,7 +30,7 @@ abstract final class QuotationSyncErrorCodes {
 }
 
 /// [QuotationAdminGateway] over the mobile quotations API
-/// (`docs/feature/quotation-orders/api/mobile.md`).
+/// (`docs/feature/order/quotation/api/mobile.md`).
 ///
 /// ## The push, step by step
 ///

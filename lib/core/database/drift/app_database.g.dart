@@ -496,6 +496,36 @@ class $DepotsTable extends Depots with TableInfo<$DepotsTable, Depot> {
       type: DriftSqlType.string,
       requiredDuringInsert: false,
       defaultValue: const Constant('synced'));
+  static const VerificationMeta _depotTypeMeta =
+      const VerificationMeta('depotType');
+  @override
+  late final GeneratedColumn<String> depotType = GeneratedColumn<String>(
+      'depot_type', aliasedName, true,
+      type: DriftSqlType.string, requiredDuringInsert: false);
+  static const VerificationMeta _createdByMeta =
+      const VerificationMeta('createdBy');
+  @override
+  late final GeneratedColumn<String> createdBy = GeneratedColumn<String>(
+      'created_by', aliasedName, true,
+      type: DriftSqlType.string, requiredDuringInsert: false);
+  static const VerificationMeta _salesEmployeesJsonMeta =
+      const VerificationMeta('salesEmployeesJson');
+  @override
+  late final GeneratedColumn<String> salesEmployeesJson =
+      GeneratedColumn<String>('sales_employees_json', aliasedName, true,
+          type: DriftSqlType.string, requiredDuringInsert: false);
+  static const VerificationMeta _profileJsonMeta =
+      const VerificationMeta('profileJson');
+  @override
+  late final GeneratedColumn<String> profileJson = GeneratedColumn<String>(
+      'profile_json', aliasedName, true,
+      type: DriftSqlType.string, requiredDuringInsert: false);
+  static const VerificationMeta _salesAreasJsonMeta =
+      const VerificationMeta('salesAreasJson');
+  @override
+  late final GeneratedColumn<String> salesAreasJson = GeneratedColumn<String>(
+      'sales_areas_json', aliasedName, true,
+      type: DriftSqlType.string, requiredDuringInsert: false);
   @override
   List<GeneratedColumn> get $columns => [
         id,
@@ -538,7 +568,12 @@ class $DepotsTable extends Depots with TableInfo<$DepotsTable, Depot> {
         taxNumber,
         totalOrders,
         createdAt,
-        syncState
+        syncState,
+        depotType,
+        createdBy,
+        salesEmployeesJson,
+        profileJson,
+        salesAreasJson
       ];
   @override
   String get aliasedName => _alias ?? actualTableName;
@@ -779,6 +814,32 @@ class $DepotsTable extends Depots with TableInfo<$DepotsTable, Depot> {
       context.handle(_syncStateMeta,
           syncState.isAcceptableOrUnknown(data['sync_state']!, _syncStateMeta));
     }
+    if (data.containsKey('depot_type')) {
+      context.handle(_depotTypeMeta,
+          depotType.isAcceptableOrUnknown(data['depot_type']!, _depotTypeMeta));
+    }
+    if (data.containsKey('created_by')) {
+      context.handle(_createdByMeta,
+          createdBy.isAcceptableOrUnknown(data['created_by']!, _createdByMeta));
+    }
+    if (data.containsKey('sales_employees_json')) {
+      context.handle(
+          _salesEmployeesJsonMeta,
+          salesEmployeesJson.isAcceptableOrUnknown(
+              data['sales_employees_json']!, _salesEmployeesJsonMeta));
+    }
+    if (data.containsKey('profile_json')) {
+      context.handle(
+          _profileJsonMeta,
+          profileJson.isAcceptableOrUnknown(
+              data['profile_json']!, _profileJsonMeta));
+    }
+    if (data.containsKey('sales_areas_json')) {
+      context.handle(
+          _salesAreasJsonMeta,
+          salesAreasJson.isAcceptableOrUnknown(
+              data['sales_areas_json']!, _salesAreasJsonMeta));
+    }
     return context;
   }
 
@@ -871,6 +932,16 @@ class $DepotsTable extends Depots with TableInfo<$DepotsTable, Depot> {
           .read(DriftSqlType.dateTime, data['${effectivePrefix}created_at']),
       syncState: attachedDatabase.typeMapping
           .read(DriftSqlType.string, data['${effectivePrefix}sync_state'])!,
+      depotType: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}depot_type']),
+      createdBy: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}created_by']),
+      salesEmployeesJson: attachedDatabase.typeMapping.read(
+          DriftSqlType.string, data['${effectivePrefix}sales_employees_json']),
+      profileJson: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}profile_json']),
+      salesAreasJson: attachedDatabase.typeMapping.read(
+          DriftSqlType.string, data['${effectivePrefix}sales_areas_json']),
     );
   }
 
@@ -955,6 +1026,23 @@ class Depot extends DataClass implements Insertable<Depot> {
   /// `dirty` remain outstanding and belong with the sync-engine work rather
   /// than this feature change.
   final String syncState;
+
+  /// `Depot`, `NonDepot` or `Draft`.
+  final String? depotType;
+
+  /// Employee code of whoever recorded the outlet.
+  final String? createdBy;
+
+  /// `salesEmployees`, as the server's JSON array.
+  final String? salesEmployeesJson;
+
+  /// `profile` (`fieldFacts`, `suppliers`, `management`), as the server's
+  /// JSON object. Kept whole because its shape is still settling.
+  final String? profileJson;
+
+  /// `salesAreas` (sales org, channel, payment terms, credit limit and
+  /// credit term days), as the server's JSON array.
+  final String? salesAreasJson;
   const Depot(
       {required this.id,
       this.sapDepotId,
@@ -996,7 +1084,12 @@ class Depot extends DataClass implements Insertable<Depot> {
       this.taxNumber,
       required this.totalOrders,
       this.createdAt,
-      required this.syncState});
+      required this.syncState,
+      this.depotType,
+      this.createdBy,
+      this.salesEmployeesJson,
+      this.profileJson,
+      this.salesAreasJson});
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
     final map = <String, Expression>{};
@@ -1076,6 +1169,21 @@ class Depot extends DataClass implements Insertable<Depot> {
       map['created_at'] = Variable<DateTime>(createdAt);
     }
     map['sync_state'] = Variable<String>(syncState);
+    if (!nullToAbsent || depotType != null) {
+      map['depot_type'] = Variable<String>(depotType);
+    }
+    if (!nullToAbsent || createdBy != null) {
+      map['created_by'] = Variable<String>(createdBy);
+    }
+    if (!nullToAbsent || salesEmployeesJson != null) {
+      map['sales_employees_json'] = Variable<String>(salesEmployeesJson);
+    }
+    if (!nullToAbsent || profileJson != null) {
+      map['profile_json'] = Variable<String>(profileJson);
+    }
+    if (!nullToAbsent || salesAreasJson != null) {
+      map['sales_areas_json'] = Variable<String>(salesAreasJson);
+    }
     return map;
   }
 
@@ -1153,6 +1261,21 @@ class Depot extends DataClass implements Insertable<Depot> {
           ? const Value.absent()
           : Value(createdAt),
       syncState: Value(syncState),
+      depotType: depotType == null && nullToAbsent
+          ? const Value.absent()
+          : Value(depotType),
+      createdBy: createdBy == null && nullToAbsent
+          ? const Value.absent()
+          : Value(createdBy),
+      salesEmployeesJson: salesEmployeesJson == null && nullToAbsent
+          ? const Value.absent()
+          : Value(salesEmployeesJson),
+      profileJson: profileJson == null && nullToAbsent
+          ? const Value.absent()
+          : Value(profileJson),
+      salesAreasJson: salesAreasJson == null && nullToAbsent
+          ? const Value.absent()
+          : Value(salesAreasJson),
     );
   }
 
@@ -1204,6 +1327,12 @@ class Depot extends DataClass implements Insertable<Depot> {
       totalOrders: serializer.fromJson<int>(json['totalOrders']),
       createdAt: serializer.fromJson<DateTime?>(json['createdAt']),
       syncState: serializer.fromJson<String>(json['syncState']),
+      depotType: serializer.fromJson<String?>(json['depotType']),
+      createdBy: serializer.fromJson<String?>(json['createdBy']),
+      salesEmployeesJson:
+          serializer.fromJson<String?>(json['salesEmployeesJson']),
+      profileJson: serializer.fromJson<String?>(json['profileJson']),
+      salesAreasJson: serializer.fromJson<String?>(json['salesAreasJson']),
     );
   }
   @override
@@ -1252,6 +1381,11 @@ class Depot extends DataClass implements Insertable<Depot> {
       'totalOrders': serializer.toJson<int>(totalOrders),
       'createdAt': serializer.toJson<DateTime?>(createdAt),
       'syncState': serializer.toJson<String>(syncState),
+      'depotType': serializer.toJson<String?>(depotType),
+      'createdBy': serializer.toJson<String?>(createdBy),
+      'salesEmployeesJson': serializer.toJson<String?>(salesEmployeesJson),
+      'profileJson': serializer.toJson<String?>(profileJson),
+      'salesAreasJson': serializer.toJson<String?>(salesAreasJson),
     };
   }
 
@@ -1296,7 +1430,12 @@ class Depot extends DataClass implements Insertable<Depot> {
           Value<String?> taxNumber = const Value.absent(),
           int? totalOrders,
           Value<DateTime?> createdAt = const Value.absent(),
-          String? syncState}) =>
+          String? syncState,
+          Value<String?> depotType = const Value.absent(),
+          Value<String?> createdBy = const Value.absent(),
+          Value<String?> salesEmployeesJson = const Value.absent(),
+          Value<String?> profileJson = const Value.absent(),
+          Value<String?> salesAreasJson = const Value.absent()}) =>
       Depot(
         id: id ?? this.id,
         sapDepotId: sapDepotId.present ? sapDepotId.value : this.sapDepotId,
@@ -1347,6 +1486,14 @@ class Depot extends DataClass implements Insertable<Depot> {
         totalOrders: totalOrders ?? this.totalOrders,
         createdAt: createdAt.present ? createdAt.value : this.createdAt,
         syncState: syncState ?? this.syncState,
+        depotType: depotType.present ? depotType.value : this.depotType,
+        createdBy: createdBy.present ? createdBy.value : this.createdBy,
+        salesEmployeesJson: salesEmployeesJson.present
+            ? salesEmployeesJson.value
+            : this.salesEmployeesJson,
+        profileJson: profileJson.present ? profileJson.value : this.profileJson,
+        salesAreasJson:
+            salesAreasJson.present ? salesAreasJson.value : this.salesAreasJson,
       );
   Depot copyWithCompanion(DepotsCompanion data) {
     return Depot(
@@ -1420,6 +1567,16 @@ class Depot extends DataClass implements Insertable<Depot> {
           data.totalOrders.present ? data.totalOrders.value : this.totalOrders,
       createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
       syncState: data.syncState.present ? data.syncState.value : this.syncState,
+      depotType: data.depotType.present ? data.depotType.value : this.depotType,
+      createdBy: data.createdBy.present ? data.createdBy.value : this.createdBy,
+      salesEmployeesJson: data.salesEmployeesJson.present
+          ? data.salesEmployeesJson.value
+          : this.salesEmployeesJson,
+      profileJson:
+          data.profileJson.present ? data.profileJson.value : this.profileJson,
+      salesAreasJson: data.salesAreasJson.present
+          ? data.salesAreasJson.value
+          : this.salesAreasJson,
     );
   }
 
@@ -1466,7 +1623,12 @@ class Depot extends DataClass implements Insertable<Depot> {
           ..write('taxNumber: $taxNumber, ')
           ..write('totalOrders: $totalOrders, ')
           ..write('createdAt: $createdAt, ')
-          ..write('syncState: $syncState')
+          ..write('syncState: $syncState, ')
+          ..write('depotType: $depotType, ')
+          ..write('createdBy: $createdBy, ')
+          ..write('salesEmployeesJson: $salesEmployeesJson, ')
+          ..write('profileJson: $profileJson, ')
+          ..write('salesAreasJson: $salesAreasJson')
           ..write(')'))
         .toString();
   }
@@ -1513,7 +1675,12 @@ class Depot extends DataClass implements Insertable<Depot> {
         taxNumber,
         totalOrders,
         createdAt,
-        syncState
+        syncState,
+        depotType,
+        createdBy,
+        salesEmployeesJson,
+        profileJson,
+        salesAreasJson
       ]);
   @override
   bool operator ==(Object other) =>
@@ -1559,7 +1726,12 @@ class Depot extends DataClass implements Insertable<Depot> {
           other.taxNumber == this.taxNumber &&
           other.totalOrders == this.totalOrders &&
           other.createdAt == this.createdAt &&
-          other.syncState == this.syncState);
+          other.syncState == this.syncState &&
+          other.depotType == this.depotType &&
+          other.createdBy == this.createdBy &&
+          other.salesEmployeesJson == this.salesEmployeesJson &&
+          other.profileJson == this.profileJson &&
+          other.salesAreasJson == this.salesAreasJson);
 }
 
 class DepotsCompanion extends UpdateCompanion<Depot> {
@@ -1604,6 +1776,11 @@ class DepotsCompanion extends UpdateCompanion<Depot> {
   final Value<int> totalOrders;
   final Value<DateTime?> createdAt;
   final Value<String> syncState;
+  final Value<String?> depotType;
+  final Value<String?> createdBy;
+  final Value<String?> salesEmployeesJson;
+  final Value<String?> profileJson;
+  final Value<String?> salesAreasJson;
   final Value<int> rowid;
   const DepotsCompanion({
     this.id = const Value.absent(),
@@ -1647,6 +1824,11 @@ class DepotsCompanion extends UpdateCompanion<Depot> {
     this.totalOrders = const Value.absent(),
     this.createdAt = const Value.absent(),
     this.syncState = const Value.absent(),
+    this.depotType = const Value.absent(),
+    this.createdBy = const Value.absent(),
+    this.salesEmployeesJson = const Value.absent(),
+    this.profileJson = const Value.absent(),
+    this.salesAreasJson = const Value.absent(),
     this.rowid = const Value.absent(),
   });
   DepotsCompanion.insert({
@@ -1691,6 +1873,11 @@ class DepotsCompanion extends UpdateCompanion<Depot> {
     this.totalOrders = const Value.absent(),
     this.createdAt = const Value.absent(),
     this.syncState = const Value.absent(),
+    this.depotType = const Value.absent(),
+    this.createdBy = const Value.absent(),
+    this.salesEmployeesJson = const Value.absent(),
+    this.profileJson = const Value.absent(),
+    this.salesAreasJson = const Value.absent(),
     this.rowid = const Value.absent(),
   })  : id = Value(id),
         depotCode = Value(depotCode),
@@ -1750,6 +1937,11 @@ class DepotsCompanion extends UpdateCompanion<Depot> {
     Expression<int>? totalOrders,
     Expression<DateTime>? createdAt,
     Expression<String>? syncState,
+    Expression<String>? depotType,
+    Expression<String>? createdBy,
+    Expression<String>? salesEmployeesJson,
+    Expression<String>? profileJson,
+    Expression<String>? salesAreasJson,
     Expression<int>? rowid,
   }) {
     return RawValuesInsertable({
@@ -1797,6 +1989,12 @@ class DepotsCompanion extends UpdateCompanion<Depot> {
       if (totalOrders != null) 'total_orders': totalOrders,
       if (createdAt != null) 'created_at': createdAt,
       if (syncState != null) 'sync_state': syncState,
+      if (depotType != null) 'depot_type': depotType,
+      if (createdBy != null) 'created_by': createdBy,
+      if (salesEmployeesJson != null)
+        'sales_employees_json': salesEmployeesJson,
+      if (profileJson != null) 'profile_json': profileJson,
+      if (salesAreasJson != null) 'sales_areas_json': salesAreasJson,
       if (rowid != null) 'rowid': rowid,
     });
   }
@@ -1843,6 +2041,11 @@ class DepotsCompanion extends UpdateCompanion<Depot> {
       Value<int>? totalOrders,
       Value<DateTime?>? createdAt,
       Value<String>? syncState,
+      Value<String?>? depotType,
+      Value<String?>? createdBy,
+      Value<String?>? salesEmployeesJson,
+      Value<String?>? profileJson,
+      Value<String?>? salesAreasJson,
       Value<int>? rowid}) {
     return DepotsCompanion(
       id: id ?? this.id,
@@ -1887,6 +2090,11 @@ class DepotsCompanion extends UpdateCompanion<Depot> {
       totalOrders: totalOrders ?? this.totalOrders,
       createdAt: createdAt ?? this.createdAt,
       syncState: syncState ?? this.syncState,
+      depotType: depotType ?? this.depotType,
+      createdBy: createdBy ?? this.createdBy,
+      salesEmployeesJson: salesEmployeesJson ?? this.salesEmployeesJson,
+      profileJson: profileJson ?? this.profileJson,
+      salesAreasJson: salesAreasJson ?? this.salesAreasJson,
       rowid: rowid ?? this.rowid,
     );
   }
@@ -2018,6 +2226,21 @@ class DepotsCompanion extends UpdateCompanion<Depot> {
     if (syncState.present) {
       map['sync_state'] = Variable<String>(syncState.value);
     }
+    if (depotType.present) {
+      map['depot_type'] = Variable<String>(depotType.value);
+    }
+    if (createdBy.present) {
+      map['created_by'] = Variable<String>(createdBy.value);
+    }
+    if (salesEmployeesJson.present) {
+      map['sales_employees_json'] = Variable<String>(salesEmployeesJson.value);
+    }
+    if (profileJson.present) {
+      map['profile_json'] = Variable<String>(profileJson.value);
+    }
+    if (salesAreasJson.present) {
+      map['sales_areas_json'] = Variable<String>(salesAreasJson.value);
+    }
     if (rowid.present) {
       map['rowid'] = Variable<int>(rowid.value);
     }
@@ -2068,6 +2291,11 @@ class DepotsCompanion extends UpdateCompanion<Depot> {
           ..write('totalOrders: $totalOrders, ')
           ..write('createdAt: $createdAt, ')
           ..write('syncState: $syncState, ')
+          ..write('depotType: $depotType, ')
+          ..write('createdBy: $createdBy, ')
+          ..write('salesEmployeesJson: $salesEmployeesJson, ')
+          ..write('profileJson: $profileJson, ')
+          ..write('salesAreasJson: $salesAreasJson, ')
           ..write('rowid: $rowid')
           ..write(')'))
         .toString();
@@ -24162,6 +24390,732 @@ class GeoVillagesCompanion extends UpdateCompanion<GeoVillageRow> {
   }
 }
 
+class $VisitPlanSnapshotsTable extends VisitPlanSnapshots
+    with TableInfo<$VisitPlanSnapshotsTable, VisitPlanSnapshot> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $VisitPlanSnapshotsTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _periodMeta = const VerificationMeta('period');
+  @override
+  late final GeneratedColumn<String> period = GeneratedColumn<String>(
+      'period', aliasedName, false,
+      type: DriftSqlType.string, requiredDuringInsert: true);
+  static const VerificationMeta _payloadMeta =
+      const VerificationMeta('payload');
+  @override
+  late final GeneratedColumn<String> payload = GeneratedColumn<String>(
+      'payload', aliasedName, false,
+      type: DriftSqlType.string, requiredDuringInsert: true);
+  static const VerificationMeta _fetchedAtMeta =
+      const VerificationMeta('fetchedAt');
+  @override
+  late final GeneratedColumn<DateTime> fetchedAt = GeneratedColumn<DateTime>(
+      'fetched_at', aliasedName, false,
+      type: DriftSqlType.dateTime, requiredDuringInsert: true);
+  @override
+  List<GeneratedColumn> get $columns => [period, payload, fetchedAt];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'visit_plan_snapshots';
+  @override
+  VerificationContext validateIntegrity(Insertable<VisitPlanSnapshot> instance,
+      {bool isInserting = false}) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('period')) {
+      context.handle(_periodMeta,
+          period.isAcceptableOrUnknown(data['period']!, _periodMeta));
+    } else if (isInserting) {
+      context.missing(_periodMeta);
+    }
+    if (data.containsKey('payload')) {
+      context.handle(_payloadMeta,
+          payload.isAcceptableOrUnknown(data['payload']!, _payloadMeta));
+    } else if (isInserting) {
+      context.missing(_payloadMeta);
+    }
+    if (data.containsKey('fetched_at')) {
+      context.handle(_fetchedAtMeta,
+          fetchedAt.isAcceptableOrUnknown(data['fetched_at']!, _fetchedAtMeta));
+    } else if (isInserting) {
+      context.missing(_fetchedAtMeta);
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {period};
+  @override
+  VisitPlanSnapshot map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return VisitPlanSnapshot(
+      period: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}period'])!,
+      payload: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}payload'])!,
+      fetchedAt: attachedDatabase.typeMapping
+          .read(DriftSqlType.dateTime, data['${effectivePrefix}fetched_at'])!,
+    );
+  }
+
+  @override
+  $VisitPlanSnapshotsTable createAlias(String alias) {
+    return $VisitPlanSnapshotsTable(attachedDatabase, alias);
+  }
+}
+
+class VisitPlanSnapshot extends DataClass
+    implements Insertable<VisitPlanSnapshot> {
+  final String period;
+  final String payload;
+
+  /// When the server gave this answer, UTC.
+  final DateTime fetchedAt;
+  const VisitPlanSnapshot(
+      {required this.period, required this.payload, required this.fetchedAt});
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['period'] = Variable<String>(period);
+    map['payload'] = Variable<String>(payload);
+    map['fetched_at'] = Variable<DateTime>(fetchedAt);
+    return map;
+  }
+
+  VisitPlanSnapshotsCompanion toCompanion(bool nullToAbsent) {
+    return VisitPlanSnapshotsCompanion(
+      period: Value(period),
+      payload: Value(payload),
+      fetchedAt: Value(fetchedAt),
+    );
+  }
+
+  factory VisitPlanSnapshot.fromJson(Map<String, dynamic> json,
+      {ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return VisitPlanSnapshot(
+      period: serializer.fromJson<String>(json['period']),
+      payload: serializer.fromJson<String>(json['payload']),
+      fetchedAt: serializer.fromJson<DateTime>(json['fetchedAt']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'period': serializer.toJson<String>(period),
+      'payload': serializer.toJson<String>(payload),
+      'fetchedAt': serializer.toJson<DateTime>(fetchedAt),
+    };
+  }
+
+  VisitPlanSnapshot copyWith(
+          {String? period, String? payload, DateTime? fetchedAt}) =>
+      VisitPlanSnapshot(
+        period: period ?? this.period,
+        payload: payload ?? this.payload,
+        fetchedAt: fetchedAt ?? this.fetchedAt,
+      );
+  VisitPlanSnapshot copyWithCompanion(VisitPlanSnapshotsCompanion data) {
+    return VisitPlanSnapshot(
+      period: data.period.present ? data.period.value : this.period,
+      payload: data.payload.present ? data.payload.value : this.payload,
+      fetchedAt: data.fetchedAt.present ? data.fetchedAt.value : this.fetchedAt,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('VisitPlanSnapshot(')
+          ..write('period: $period, ')
+          ..write('payload: $payload, ')
+          ..write('fetchedAt: $fetchedAt')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(period, payload, fetchedAt);
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is VisitPlanSnapshot &&
+          other.period == this.period &&
+          other.payload == this.payload &&
+          other.fetchedAt == this.fetchedAt);
+}
+
+class VisitPlanSnapshotsCompanion extends UpdateCompanion<VisitPlanSnapshot> {
+  final Value<String> period;
+  final Value<String> payload;
+  final Value<DateTime> fetchedAt;
+  final Value<int> rowid;
+  const VisitPlanSnapshotsCompanion({
+    this.period = const Value.absent(),
+    this.payload = const Value.absent(),
+    this.fetchedAt = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  VisitPlanSnapshotsCompanion.insert({
+    required String period,
+    required String payload,
+    required DateTime fetchedAt,
+    this.rowid = const Value.absent(),
+  })  : period = Value(period),
+        payload = Value(payload),
+        fetchedAt = Value(fetchedAt);
+  static Insertable<VisitPlanSnapshot> custom({
+    Expression<String>? period,
+    Expression<String>? payload,
+    Expression<DateTime>? fetchedAt,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (period != null) 'period': period,
+      if (payload != null) 'payload': payload,
+      if (fetchedAt != null) 'fetched_at': fetchedAt,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  VisitPlanSnapshotsCompanion copyWith(
+      {Value<String>? period,
+      Value<String>? payload,
+      Value<DateTime>? fetchedAt,
+      Value<int>? rowid}) {
+    return VisitPlanSnapshotsCompanion(
+      period: period ?? this.period,
+      payload: payload ?? this.payload,
+      fetchedAt: fetchedAt ?? this.fetchedAt,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (period.present) {
+      map['period'] = Variable<String>(period.value);
+    }
+    if (payload.present) {
+      map['payload'] = Variable<String>(payload.value);
+    }
+    if (fetchedAt.present) {
+      map['fetched_at'] = Variable<DateTime>(fetchedAt.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('VisitPlanSnapshotsCompanion(')
+          ..write('period: $period, ')
+          ..write('payload: $payload, ')
+          ..write('fetchedAt: $fetchedAt, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
+class $PlanVisitOutboxTable extends PlanVisitOutbox
+    with TableInfo<$PlanVisitOutboxTable, PlanVisitOutboxData> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $PlanVisitOutboxTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<String> id = GeneratedColumn<String>(
+      'id', aliasedName, false,
+      type: DriftSqlType.string, requiredDuringInsert: true);
+  static const VerificationMeta _planIdMeta = const VerificationMeta('planId');
+  @override
+  late final GeneratedColumn<String> planId = GeneratedColumn<String>(
+      'plan_id', aliasedName, false,
+      type: DriftSqlType.string, requiredDuringInsert: true);
+  static const VerificationMeta _kindMeta = const VerificationMeta('kind');
+  @override
+  late final GeneratedColumn<String> kind = GeneratedColumn<String>(
+      'kind', aliasedName, false,
+      type: DriftSqlType.string, requiredDuringInsert: true);
+  static const VerificationMeta _payloadMeta =
+      const VerificationMeta('payload');
+  @override
+  late final GeneratedColumn<String> payload = GeneratedColumn<String>(
+      'payload', aliasedName, false,
+      type: DriftSqlType.string, requiredDuringInsert: true);
+  static const VerificationMeta _createdAtMeta =
+      const VerificationMeta('createdAt');
+  @override
+  late final GeneratedColumn<DateTime> createdAt = GeneratedColumn<DateTime>(
+      'created_at', aliasedName, false,
+      type: DriftSqlType.dateTime, requiredDuringInsert: true);
+  static const VerificationMeta _attemptsMeta =
+      const VerificationMeta('attempts');
+  @override
+  late final GeneratedColumn<int> attempts = GeneratedColumn<int>(
+      'attempts', aliasedName, false,
+      type: DriftSqlType.int,
+      requiredDuringInsert: false,
+      defaultValue: const Constant(0));
+  static const VerificationMeta _lastErrorCodeMeta =
+      const VerificationMeta('lastErrorCode');
+  @override
+  late final GeneratedColumn<String> lastErrorCode = GeneratedColumn<String>(
+      'last_error_code', aliasedName, true,
+      type: DriftSqlType.string, requiredDuringInsert: false);
+  static const VerificationMeta _lastErrorMessageMeta =
+      const VerificationMeta('lastErrorMessage');
+  @override
+  late final GeneratedColumn<String> lastErrorMessage = GeneratedColumn<String>(
+      'last_error_message', aliasedName, true,
+      type: DriftSqlType.string, requiredDuringInsert: false);
+  static const VerificationMeta _needsAttentionMeta =
+      const VerificationMeta('needsAttention');
+  @override
+  late final GeneratedColumn<bool> needsAttention = GeneratedColumn<bool>(
+      'needs_attention', aliasedName, false,
+      type: DriftSqlType.bool,
+      requiredDuringInsert: false,
+      defaultConstraints: GeneratedColumn.constraintIsAlways(
+          'CHECK ("needs_attention" IN (0, 1))'),
+      defaultValue: const Constant(false));
+  @override
+  List<GeneratedColumn> get $columns => [
+        id,
+        planId,
+        kind,
+        payload,
+        createdAt,
+        attempts,
+        lastErrorCode,
+        lastErrorMessage,
+        needsAttention
+      ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'plan_visit_outbox';
+  @override
+  VerificationContext validateIntegrity(
+      Insertable<PlanVisitOutboxData> instance,
+      {bool isInserting = false}) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    } else if (isInserting) {
+      context.missing(_idMeta);
+    }
+    if (data.containsKey('plan_id')) {
+      context.handle(_planIdMeta,
+          planId.isAcceptableOrUnknown(data['plan_id']!, _planIdMeta));
+    } else if (isInserting) {
+      context.missing(_planIdMeta);
+    }
+    if (data.containsKey('kind')) {
+      context.handle(
+          _kindMeta, kind.isAcceptableOrUnknown(data['kind']!, _kindMeta));
+    } else if (isInserting) {
+      context.missing(_kindMeta);
+    }
+    if (data.containsKey('payload')) {
+      context.handle(_payloadMeta,
+          payload.isAcceptableOrUnknown(data['payload']!, _payloadMeta));
+    } else if (isInserting) {
+      context.missing(_payloadMeta);
+    }
+    if (data.containsKey('created_at')) {
+      context.handle(_createdAtMeta,
+          createdAt.isAcceptableOrUnknown(data['created_at']!, _createdAtMeta));
+    } else if (isInserting) {
+      context.missing(_createdAtMeta);
+    }
+    if (data.containsKey('attempts')) {
+      context.handle(_attemptsMeta,
+          attempts.isAcceptableOrUnknown(data['attempts']!, _attemptsMeta));
+    }
+    if (data.containsKey('last_error_code')) {
+      context.handle(
+          _lastErrorCodeMeta,
+          lastErrorCode.isAcceptableOrUnknown(
+              data['last_error_code']!, _lastErrorCodeMeta));
+    }
+    if (data.containsKey('last_error_message')) {
+      context.handle(
+          _lastErrorMessageMeta,
+          lastErrorMessage.isAcceptableOrUnknown(
+              data['last_error_message']!, _lastErrorMessageMeta));
+    }
+    if (data.containsKey('needs_attention')) {
+      context.handle(
+          _needsAttentionMeta,
+          needsAttention.isAcceptableOrUnknown(
+              data['needs_attention']!, _needsAttentionMeta));
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  PlanVisitOutboxData map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return PlanVisitOutboxData(
+      id: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}id'])!,
+      planId: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}plan_id'])!,
+      kind: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}kind'])!,
+      payload: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}payload'])!,
+      createdAt: attachedDatabase.typeMapping
+          .read(DriftSqlType.dateTime, data['${effectivePrefix}created_at'])!,
+      attempts: attachedDatabase.typeMapping
+          .read(DriftSqlType.int, data['${effectivePrefix}attempts'])!,
+      lastErrorCode: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}last_error_code']),
+      lastErrorMessage: attachedDatabase.typeMapping.read(
+          DriftSqlType.string, data['${effectivePrefix}last_error_message']),
+      needsAttention: attachedDatabase.typeMapping
+          .read(DriftSqlType.bool, data['${effectivePrefix}needs_attention'])!,
+    );
+  }
+
+  @override
+  $PlanVisitOutboxTable createAlias(String alias) {
+    return $PlanVisitOutboxTable(attachedDatabase, alias);
+  }
+}
+
+class PlanVisitOutboxData extends DataClass
+    implements Insertable<PlanVisitOutboxData> {
+  final String id;
+  final String planId;
+
+  /// `checkIn`, `inventory` or `checkOut`.
+  final String kind;
+
+  /// The request as JSON: position, reason, notes and photo paths.
+  final String payload;
+  final DateTime createdAt;
+  final int attempts;
+
+  /// The server's code for the last refusal — never its free text.
+  final String? lastErrorCode;
+
+  /// The localisation key the rep is shown for [lastErrorCode].
+  final String? lastErrorMessage;
+  final bool needsAttention;
+  const PlanVisitOutboxData(
+      {required this.id,
+      required this.planId,
+      required this.kind,
+      required this.payload,
+      required this.createdAt,
+      required this.attempts,
+      this.lastErrorCode,
+      this.lastErrorMessage,
+      required this.needsAttention});
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<String>(id);
+    map['plan_id'] = Variable<String>(planId);
+    map['kind'] = Variable<String>(kind);
+    map['payload'] = Variable<String>(payload);
+    map['created_at'] = Variable<DateTime>(createdAt);
+    map['attempts'] = Variable<int>(attempts);
+    if (!nullToAbsent || lastErrorCode != null) {
+      map['last_error_code'] = Variable<String>(lastErrorCode);
+    }
+    if (!nullToAbsent || lastErrorMessage != null) {
+      map['last_error_message'] = Variable<String>(lastErrorMessage);
+    }
+    map['needs_attention'] = Variable<bool>(needsAttention);
+    return map;
+  }
+
+  PlanVisitOutboxCompanion toCompanion(bool nullToAbsent) {
+    return PlanVisitOutboxCompanion(
+      id: Value(id),
+      planId: Value(planId),
+      kind: Value(kind),
+      payload: Value(payload),
+      createdAt: Value(createdAt),
+      attempts: Value(attempts),
+      lastErrorCode: lastErrorCode == null && nullToAbsent
+          ? const Value.absent()
+          : Value(lastErrorCode),
+      lastErrorMessage: lastErrorMessage == null && nullToAbsent
+          ? const Value.absent()
+          : Value(lastErrorMessage),
+      needsAttention: Value(needsAttention),
+    );
+  }
+
+  factory PlanVisitOutboxData.fromJson(Map<String, dynamic> json,
+      {ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return PlanVisitOutboxData(
+      id: serializer.fromJson<String>(json['id']),
+      planId: serializer.fromJson<String>(json['planId']),
+      kind: serializer.fromJson<String>(json['kind']),
+      payload: serializer.fromJson<String>(json['payload']),
+      createdAt: serializer.fromJson<DateTime>(json['createdAt']),
+      attempts: serializer.fromJson<int>(json['attempts']),
+      lastErrorCode: serializer.fromJson<String?>(json['lastErrorCode']),
+      lastErrorMessage: serializer.fromJson<String?>(json['lastErrorMessage']),
+      needsAttention: serializer.fromJson<bool>(json['needsAttention']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<String>(id),
+      'planId': serializer.toJson<String>(planId),
+      'kind': serializer.toJson<String>(kind),
+      'payload': serializer.toJson<String>(payload),
+      'createdAt': serializer.toJson<DateTime>(createdAt),
+      'attempts': serializer.toJson<int>(attempts),
+      'lastErrorCode': serializer.toJson<String?>(lastErrorCode),
+      'lastErrorMessage': serializer.toJson<String?>(lastErrorMessage),
+      'needsAttention': serializer.toJson<bool>(needsAttention),
+    };
+  }
+
+  PlanVisitOutboxData copyWith(
+          {String? id,
+          String? planId,
+          String? kind,
+          String? payload,
+          DateTime? createdAt,
+          int? attempts,
+          Value<String?> lastErrorCode = const Value.absent(),
+          Value<String?> lastErrorMessage = const Value.absent(),
+          bool? needsAttention}) =>
+      PlanVisitOutboxData(
+        id: id ?? this.id,
+        planId: planId ?? this.planId,
+        kind: kind ?? this.kind,
+        payload: payload ?? this.payload,
+        createdAt: createdAt ?? this.createdAt,
+        attempts: attempts ?? this.attempts,
+        lastErrorCode:
+            lastErrorCode.present ? lastErrorCode.value : this.lastErrorCode,
+        lastErrorMessage: lastErrorMessage.present
+            ? lastErrorMessage.value
+            : this.lastErrorMessage,
+        needsAttention: needsAttention ?? this.needsAttention,
+      );
+  PlanVisitOutboxData copyWithCompanion(PlanVisitOutboxCompanion data) {
+    return PlanVisitOutboxData(
+      id: data.id.present ? data.id.value : this.id,
+      planId: data.planId.present ? data.planId.value : this.planId,
+      kind: data.kind.present ? data.kind.value : this.kind,
+      payload: data.payload.present ? data.payload.value : this.payload,
+      createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
+      attempts: data.attempts.present ? data.attempts.value : this.attempts,
+      lastErrorCode: data.lastErrorCode.present
+          ? data.lastErrorCode.value
+          : this.lastErrorCode,
+      lastErrorMessage: data.lastErrorMessage.present
+          ? data.lastErrorMessage.value
+          : this.lastErrorMessage,
+      needsAttention: data.needsAttention.present
+          ? data.needsAttention.value
+          : this.needsAttention,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('PlanVisitOutboxData(')
+          ..write('id: $id, ')
+          ..write('planId: $planId, ')
+          ..write('kind: $kind, ')
+          ..write('payload: $payload, ')
+          ..write('createdAt: $createdAt, ')
+          ..write('attempts: $attempts, ')
+          ..write('lastErrorCode: $lastErrorCode, ')
+          ..write('lastErrorMessage: $lastErrorMessage, ')
+          ..write('needsAttention: $needsAttention')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(id, planId, kind, payload, createdAt,
+      attempts, lastErrorCode, lastErrorMessage, needsAttention);
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is PlanVisitOutboxData &&
+          other.id == this.id &&
+          other.planId == this.planId &&
+          other.kind == this.kind &&
+          other.payload == this.payload &&
+          other.createdAt == this.createdAt &&
+          other.attempts == this.attempts &&
+          other.lastErrorCode == this.lastErrorCode &&
+          other.lastErrorMessage == this.lastErrorMessage &&
+          other.needsAttention == this.needsAttention);
+}
+
+class PlanVisitOutboxCompanion extends UpdateCompanion<PlanVisitOutboxData> {
+  final Value<String> id;
+  final Value<String> planId;
+  final Value<String> kind;
+  final Value<String> payload;
+  final Value<DateTime> createdAt;
+  final Value<int> attempts;
+  final Value<String?> lastErrorCode;
+  final Value<String?> lastErrorMessage;
+  final Value<bool> needsAttention;
+  final Value<int> rowid;
+  const PlanVisitOutboxCompanion({
+    this.id = const Value.absent(),
+    this.planId = const Value.absent(),
+    this.kind = const Value.absent(),
+    this.payload = const Value.absent(),
+    this.createdAt = const Value.absent(),
+    this.attempts = const Value.absent(),
+    this.lastErrorCode = const Value.absent(),
+    this.lastErrorMessage = const Value.absent(),
+    this.needsAttention = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  PlanVisitOutboxCompanion.insert({
+    required String id,
+    required String planId,
+    required String kind,
+    required String payload,
+    required DateTime createdAt,
+    this.attempts = const Value.absent(),
+    this.lastErrorCode = const Value.absent(),
+    this.lastErrorMessage = const Value.absent(),
+    this.needsAttention = const Value.absent(),
+    this.rowid = const Value.absent(),
+  })  : id = Value(id),
+        planId = Value(planId),
+        kind = Value(kind),
+        payload = Value(payload),
+        createdAt = Value(createdAt);
+  static Insertable<PlanVisitOutboxData> custom({
+    Expression<String>? id,
+    Expression<String>? planId,
+    Expression<String>? kind,
+    Expression<String>? payload,
+    Expression<DateTime>? createdAt,
+    Expression<int>? attempts,
+    Expression<String>? lastErrorCode,
+    Expression<String>? lastErrorMessage,
+    Expression<bool>? needsAttention,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (planId != null) 'plan_id': planId,
+      if (kind != null) 'kind': kind,
+      if (payload != null) 'payload': payload,
+      if (createdAt != null) 'created_at': createdAt,
+      if (attempts != null) 'attempts': attempts,
+      if (lastErrorCode != null) 'last_error_code': lastErrorCode,
+      if (lastErrorMessage != null) 'last_error_message': lastErrorMessage,
+      if (needsAttention != null) 'needs_attention': needsAttention,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  PlanVisitOutboxCompanion copyWith(
+      {Value<String>? id,
+      Value<String>? planId,
+      Value<String>? kind,
+      Value<String>? payload,
+      Value<DateTime>? createdAt,
+      Value<int>? attempts,
+      Value<String?>? lastErrorCode,
+      Value<String?>? lastErrorMessage,
+      Value<bool>? needsAttention,
+      Value<int>? rowid}) {
+    return PlanVisitOutboxCompanion(
+      id: id ?? this.id,
+      planId: planId ?? this.planId,
+      kind: kind ?? this.kind,
+      payload: payload ?? this.payload,
+      createdAt: createdAt ?? this.createdAt,
+      attempts: attempts ?? this.attempts,
+      lastErrorCode: lastErrorCode ?? this.lastErrorCode,
+      lastErrorMessage: lastErrorMessage ?? this.lastErrorMessage,
+      needsAttention: needsAttention ?? this.needsAttention,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<String>(id.value);
+    }
+    if (planId.present) {
+      map['plan_id'] = Variable<String>(planId.value);
+    }
+    if (kind.present) {
+      map['kind'] = Variable<String>(kind.value);
+    }
+    if (payload.present) {
+      map['payload'] = Variable<String>(payload.value);
+    }
+    if (createdAt.present) {
+      map['created_at'] = Variable<DateTime>(createdAt.value);
+    }
+    if (attempts.present) {
+      map['attempts'] = Variable<int>(attempts.value);
+    }
+    if (lastErrorCode.present) {
+      map['last_error_code'] = Variable<String>(lastErrorCode.value);
+    }
+    if (lastErrorMessage.present) {
+      map['last_error_message'] = Variable<String>(lastErrorMessage.value);
+    }
+    if (needsAttention.present) {
+      map['needs_attention'] = Variable<bool>(needsAttention.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('PlanVisitOutboxCompanion(')
+          ..write('id: $id, ')
+          ..write('planId: $planId, ')
+          ..write('kind: $kind, ')
+          ..write('payload: $payload, ')
+          ..write('createdAt: $createdAt, ')
+          ..write('attempts: $attempts, ')
+          ..write('lastErrorCode: $lastErrorCode, ')
+          ..write('lastErrorMessage: $lastErrorMessage, ')
+          ..write('needsAttention: $needsAttention, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
 abstract class _$AppDatabase extends GeneratedDatabase {
   _$AppDatabase(QueryExecutor e) : super(e);
   $AppDatabaseManager get managers => $AppDatabaseManager(this);
@@ -24219,6 +25173,10 @@ abstract class _$AppDatabase extends GeneratedDatabase {
   late final $GeoDistrictsTable geoDistricts = $GeoDistrictsTable(this);
   late final $GeoCommunesTable geoCommunes = $GeoCommunesTable(this);
   late final $GeoVillagesTable geoVillages = $GeoVillagesTable(this);
+  late final $VisitPlanSnapshotsTable visitPlanSnapshots =
+      $VisitPlanSnapshotsTable(this);
+  late final $PlanVisitOutboxTable planVisitOutbox =
+      $PlanVisitOutboxTable(this);
   late final Index idxDepotsTerritory = Index('idx_depots_territory',
       'CREATE INDEX idx_depots_territory ON depots (territory)');
   late final Index idxDepotsRep = Index('idx_depots_rep',
@@ -24321,6 +25279,7 @@ abstract class _$AppDatabase extends GeneratedDatabase {
   late final NotificationDao notificationDao =
       NotificationDao(this as AppDatabase);
   late final GeoDao geoDao = GeoDao(this as AppDatabase);
+  late final VisitPlanDao visitPlanDao = VisitPlanDao(this as AppDatabase);
   @override
   Iterable<TableInfo<Table, Object?>> get allTables =>
       allSchemaEntities.whereType<TableInfo<Table, Object?>>();
@@ -24369,6 +25328,8 @@ abstract class _$AppDatabase extends GeneratedDatabase {
         geoDistricts,
         geoCommunes,
         geoVillages,
+        visitPlanSnapshots,
+        planVisitOutbox,
         idxDepotsTerritory,
         idxDepotsRep,
         idxDepotsStatus,
@@ -24599,6 +25560,11 @@ typedef $$DepotsTableCreateCompanionBuilder = DepotsCompanion Function({
   Value<int> totalOrders,
   Value<DateTime?> createdAt,
   Value<String> syncState,
+  Value<String?> depotType,
+  Value<String?> createdBy,
+  Value<String?> salesEmployeesJson,
+  Value<String?> profileJson,
+  Value<String?> salesAreasJson,
   Value<int> rowid,
 });
 typedef $$DepotsTableUpdateCompanionBuilder = DepotsCompanion Function({
@@ -24643,6 +25609,11 @@ typedef $$DepotsTableUpdateCompanionBuilder = DepotsCompanion Function({
   Value<int> totalOrders,
   Value<DateTime?> createdAt,
   Value<String> syncState,
+  Value<String?> depotType,
+  Value<String?> createdBy,
+  Value<String?> salesEmployeesJson,
+  Value<String?> profileJson,
+  Value<String?> salesAreasJson,
   Value<int> rowid,
 });
 
@@ -24782,6 +25753,23 @@ class $$DepotsTableFilterComposer
 
   ColumnFilters<String> get syncState => $composableBuilder(
       column: $table.syncState, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get depotType => $composableBuilder(
+      column: $table.depotType, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get createdBy => $composableBuilder(
+      column: $table.createdBy, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get salesEmployeesJson => $composableBuilder(
+      column: $table.salesEmployeesJson,
+      builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get profileJson => $composableBuilder(
+      column: $table.profileJson, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get salesAreasJson => $composableBuilder(
+      column: $table.salesAreasJson,
+      builder: (column) => ColumnFilters(column));
 }
 
 class $$DepotsTableOrderingComposer
@@ -24927,6 +25915,23 @@ class $$DepotsTableOrderingComposer
 
   ColumnOrderings<String> get syncState => $composableBuilder(
       column: $table.syncState, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get depotType => $composableBuilder(
+      column: $table.depotType, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get createdBy => $composableBuilder(
+      column: $table.createdBy, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get salesEmployeesJson => $composableBuilder(
+      column: $table.salesEmployeesJson,
+      builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get profileJson => $composableBuilder(
+      column: $table.profileJson, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get salesAreasJson => $composableBuilder(
+      column: $table.salesAreasJson,
+      builder: (column) => ColumnOrderings(column));
 }
 
 class $$DepotsTableAnnotationComposer
@@ -25060,6 +26065,21 @@ class $$DepotsTableAnnotationComposer
 
   GeneratedColumn<String> get syncState =>
       $composableBuilder(column: $table.syncState, builder: (column) => column);
+
+  GeneratedColumn<String> get depotType =>
+      $composableBuilder(column: $table.depotType, builder: (column) => column);
+
+  GeneratedColumn<String> get createdBy =>
+      $composableBuilder(column: $table.createdBy, builder: (column) => column);
+
+  GeneratedColumn<String> get salesEmployeesJson => $composableBuilder(
+      column: $table.salesEmployeesJson, builder: (column) => column);
+
+  GeneratedColumn<String> get profileJson => $composableBuilder(
+      column: $table.profileJson, builder: (column) => column);
+
+  GeneratedColumn<String> get salesAreasJson => $composableBuilder(
+      column: $table.salesAreasJson, builder: (column) => column);
 }
 
 class $$DepotsTableTableManager extends RootTableManager<
@@ -25126,6 +26146,11 @@ class $$DepotsTableTableManager extends RootTableManager<
             Value<int> totalOrders = const Value.absent(),
             Value<DateTime?> createdAt = const Value.absent(),
             Value<String> syncState = const Value.absent(),
+            Value<String?> depotType = const Value.absent(),
+            Value<String?> createdBy = const Value.absent(),
+            Value<String?> salesEmployeesJson = const Value.absent(),
+            Value<String?> profileJson = const Value.absent(),
+            Value<String?> salesAreasJson = const Value.absent(),
             Value<int> rowid = const Value.absent(),
           }) =>
               DepotsCompanion(
@@ -25170,6 +26195,11 @@ class $$DepotsTableTableManager extends RootTableManager<
             totalOrders: totalOrders,
             createdAt: createdAt,
             syncState: syncState,
+            depotType: depotType,
+            createdBy: createdBy,
+            salesEmployeesJson: salesEmployeesJson,
+            profileJson: profileJson,
+            salesAreasJson: salesAreasJson,
             rowid: rowid,
           ),
           createCompanionCallback: ({
@@ -25214,6 +26244,11 @@ class $$DepotsTableTableManager extends RootTableManager<
             Value<int> totalOrders = const Value.absent(),
             Value<DateTime?> createdAt = const Value.absent(),
             Value<String> syncState = const Value.absent(),
+            Value<String?> depotType = const Value.absent(),
+            Value<String?> createdBy = const Value.absent(),
+            Value<String?> salesEmployeesJson = const Value.absent(),
+            Value<String?> profileJson = const Value.absent(),
+            Value<String?> salesAreasJson = const Value.absent(),
             Value<int> rowid = const Value.absent(),
           }) =>
               DepotsCompanion.insert(
@@ -25258,6 +26293,11 @@ class $$DepotsTableTableManager extends RootTableManager<
             totalOrders: totalOrders,
             createdAt: createdAt,
             syncState: syncState,
+            depotType: depotType,
+            createdBy: createdBy,
+            salesEmployeesJson: salesEmployeesJson,
+            profileJson: profileJson,
+            salesAreasJson: salesAreasJson,
             rowid: rowid,
           ),
           withReferenceMapper: (p0) => p0
@@ -35623,6 +36663,390 @@ typedef $$GeoVillagesTableProcessedTableManager = ProcessedTableManager<
     ),
     GeoVillageRow,
     PrefetchHooks Function()>;
+typedef $$VisitPlanSnapshotsTableCreateCompanionBuilder
+    = VisitPlanSnapshotsCompanion Function({
+  required String period,
+  required String payload,
+  required DateTime fetchedAt,
+  Value<int> rowid,
+});
+typedef $$VisitPlanSnapshotsTableUpdateCompanionBuilder
+    = VisitPlanSnapshotsCompanion Function({
+  Value<String> period,
+  Value<String> payload,
+  Value<DateTime> fetchedAt,
+  Value<int> rowid,
+});
+
+class $$VisitPlanSnapshotsTableFilterComposer
+    extends Composer<_$AppDatabase, $VisitPlanSnapshotsTable> {
+  $$VisitPlanSnapshotsTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<String> get period => $composableBuilder(
+      column: $table.period, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get payload => $composableBuilder(
+      column: $table.payload, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<DateTime> get fetchedAt => $composableBuilder(
+      column: $table.fetchedAt, builder: (column) => ColumnFilters(column));
+}
+
+class $$VisitPlanSnapshotsTableOrderingComposer
+    extends Composer<_$AppDatabase, $VisitPlanSnapshotsTable> {
+  $$VisitPlanSnapshotsTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<String> get period => $composableBuilder(
+      column: $table.period, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get payload => $composableBuilder(
+      column: $table.payload, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<DateTime> get fetchedAt => $composableBuilder(
+      column: $table.fetchedAt, builder: (column) => ColumnOrderings(column));
+}
+
+class $$VisitPlanSnapshotsTableAnnotationComposer
+    extends Composer<_$AppDatabase, $VisitPlanSnapshotsTable> {
+  $$VisitPlanSnapshotsTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<String> get period =>
+      $composableBuilder(column: $table.period, builder: (column) => column);
+
+  GeneratedColumn<String> get payload =>
+      $composableBuilder(column: $table.payload, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get fetchedAt =>
+      $composableBuilder(column: $table.fetchedAt, builder: (column) => column);
+}
+
+class $$VisitPlanSnapshotsTableTableManager extends RootTableManager<
+    _$AppDatabase,
+    $VisitPlanSnapshotsTable,
+    VisitPlanSnapshot,
+    $$VisitPlanSnapshotsTableFilterComposer,
+    $$VisitPlanSnapshotsTableOrderingComposer,
+    $$VisitPlanSnapshotsTableAnnotationComposer,
+    $$VisitPlanSnapshotsTableCreateCompanionBuilder,
+    $$VisitPlanSnapshotsTableUpdateCompanionBuilder,
+    (
+      VisitPlanSnapshot,
+      BaseReferences<_$AppDatabase, $VisitPlanSnapshotsTable, VisitPlanSnapshot>
+    ),
+    VisitPlanSnapshot,
+    PrefetchHooks Function()> {
+  $$VisitPlanSnapshotsTableTableManager(
+      _$AppDatabase db, $VisitPlanSnapshotsTable table)
+      : super(TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$VisitPlanSnapshotsTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$VisitPlanSnapshotsTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$VisitPlanSnapshotsTableAnnotationComposer(
+                  $db: db, $table: table),
+          updateCompanionCallback: ({
+            Value<String> period = const Value.absent(),
+            Value<String> payload = const Value.absent(),
+            Value<DateTime> fetchedAt = const Value.absent(),
+            Value<int> rowid = const Value.absent(),
+          }) =>
+              VisitPlanSnapshotsCompanion(
+            period: period,
+            payload: payload,
+            fetchedAt: fetchedAt,
+            rowid: rowid,
+          ),
+          createCompanionCallback: ({
+            required String period,
+            required String payload,
+            required DateTime fetchedAt,
+            Value<int> rowid = const Value.absent(),
+          }) =>
+              VisitPlanSnapshotsCompanion.insert(
+            period: period,
+            payload: payload,
+            fetchedAt: fetchedAt,
+            rowid: rowid,
+          ),
+          withReferenceMapper: (p0) => p0
+              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .toList(),
+          prefetchHooksCallback: null,
+        ));
+}
+
+typedef $$VisitPlanSnapshotsTableProcessedTableManager = ProcessedTableManager<
+    _$AppDatabase,
+    $VisitPlanSnapshotsTable,
+    VisitPlanSnapshot,
+    $$VisitPlanSnapshotsTableFilterComposer,
+    $$VisitPlanSnapshotsTableOrderingComposer,
+    $$VisitPlanSnapshotsTableAnnotationComposer,
+    $$VisitPlanSnapshotsTableCreateCompanionBuilder,
+    $$VisitPlanSnapshotsTableUpdateCompanionBuilder,
+    (
+      VisitPlanSnapshot,
+      BaseReferences<_$AppDatabase, $VisitPlanSnapshotsTable, VisitPlanSnapshot>
+    ),
+    VisitPlanSnapshot,
+    PrefetchHooks Function()>;
+typedef $$PlanVisitOutboxTableCreateCompanionBuilder = PlanVisitOutboxCompanion
+    Function({
+  required String id,
+  required String planId,
+  required String kind,
+  required String payload,
+  required DateTime createdAt,
+  Value<int> attempts,
+  Value<String?> lastErrorCode,
+  Value<String?> lastErrorMessage,
+  Value<bool> needsAttention,
+  Value<int> rowid,
+});
+typedef $$PlanVisitOutboxTableUpdateCompanionBuilder = PlanVisitOutboxCompanion
+    Function({
+  Value<String> id,
+  Value<String> planId,
+  Value<String> kind,
+  Value<String> payload,
+  Value<DateTime> createdAt,
+  Value<int> attempts,
+  Value<String?> lastErrorCode,
+  Value<String?> lastErrorMessage,
+  Value<bool> needsAttention,
+  Value<int> rowid,
+});
+
+class $$PlanVisitOutboxTableFilterComposer
+    extends Composer<_$AppDatabase, $PlanVisitOutboxTable> {
+  $$PlanVisitOutboxTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<String> get id => $composableBuilder(
+      column: $table.id, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get planId => $composableBuilder(
+      column: $table.planId, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get kind => $composableBuilder(
+      column: $table.kind, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get payload => $composableBuilder(
+      column: $table.payload, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<DateTime> get createdAt => $composableBuilder(
+      column: $table.createdAt, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<int> get attempts => $composableBuilder(
+      column: $table.attempts, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get lastErrorCode => $composableBuilder(
+      column: $table.lastErrorCode, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get lastErrorMessage => $composableBuilder(
+      column: $table.lastErrorMessage,
+      builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<bool> get needsAttention => $composableBuilder(
+      column: $table.needsAttention,
+      builder: (column) => ColumnFilters(column));
+}
+
+class $$PlanVisitOutboxTableOrderingComposer
+    extends Composer<_$AppDatabase, $PlanVisitOutboxTable> {
+  $$PlanVisitOutboxTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<String> get id => $composableBuilder(
+      column: $table.id, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get planId => $composableBuilder(
+      column: $table.planId, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get kind => $composableBuilder(
+      column: $table.kind, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get payload => $composableBuilder(
+      column: $table.payload, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<DateTime> get createdAt => $composableBuilder(
+      column: $table.createdAt, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<int> get attempts => $composableBuilder(
+      column: $table.attempts, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get lastErrorCode => $composableBuilder(
+      column: $table.lastErrorCode,
+      builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get lastErrorMessage => $composableBuilder(
+      column: $table.lastErrorMessage,
+      builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<bool> get needsAttention => $composableBuilder(
+      column: $table.needsAttention,
+      builder: (column) => ColumnOrderings(column));
+}
+
+class $$PlanVisitOutboxTableAnnotationComposer
+    extends Composer<_$AppDatabase, $PlanVisitOutboxTable> {
+  $$PlanVisitOutboxTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<String> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<String> get planId =>
+      $composableBuilder(column: $table.planId, builder: (column) => column);
+
+  GeneratedColumn<String> get kind =>
+      $composableBuilder(column: $table.kind, builder: (column) => column);
+
+  GeneratedColumn<String> get payload =>
+      $composableBuilder(column: $table.payload, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get createdAt =>
+      $composableBuilder(column: $table.createdAt, builder: (column) => column);
+
+  GeneratedColumn<int> get attempts =>
+      $composableBuilder(column: $table.attempts, builder: (column) => column);
+
+  GeneratedColumn<String> get lastErrorCode => $composableBuilder(
+      column: $table.lastErrorCode, builder: (column) => column);
+
+  GeneratedColumn<String> get lastErrorMessage => $composableBuilder(
+      column: $table.lastErrorMessage, builder: (column) => column);
+
+  GeneratedColumn<bool> get needsAttention => $composableBuilder(
+      column: $table.needsAttention, builder: (column) => column);
+}
+
+class $$PlanVisitOutboxTableTableManager extends RootTableManager<
+    _$AppDatabase,
+    $PlanVisitOutboxTable,
+    PlanVisitOutboxData,
+    $$PlanVisitOutboxTableFilterComposer,
+    $$PlanVisitOutboxTableOrderingComposer,
+    $$PlanVisitOutboxTableAnnotationComposer,
+    $$PlanVisitOutboxTableCreateCompanionBuilder,
+    $$PlanVisitOutboxTableUpdateCompanionBuilder,
+    (
+      PlanVisitOutboxData,
+      BaseReferences<_$AppDatabase, $PlanVisitOutboxTable, PlanVisitOutboxData>
+    ),
+    PlanVisitOutboxData,
+    PrefetchHooks Function()> {
+  $$PlanVisitOutboxTableTableManager(
+      _$AppDatabase db, $PlanVisitOutboxTable table)
+      : super(TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$PlanVisitOutboxTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$PlanVisitOutboxTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$PlanVisitOutboxTableAnnotationComposer($db: db, $table: table),
+          updateCompanionCallback: ({
+            Value<String> id = const Value.absent(),
+            Value<String> planId = const Value.absent(),
+            Value<String> kind = const Value.absent(),
+            Value<String> payload = const Value.absent(),
+            Value<DateTime> createdAt = const Value.absent(),
+            Value<int> attempts = const Value.absent(),
+            Value<String?> lastErrorCode = const Value.absent(),
+            Value<String?> lastErrorMessage = const Value.absent(),
+            Value<bool> needsAttention = const Value.absent(),
+            Value<int> rowid = const Value.absent(),
+          }) =>
+              PlanVisitOutboxCompanion(
+            id: id,
+            planId: planId,
+            kind: kind,
+            payload: payload,
+            createdAt: createdAt,
+            attempts: attempts,
+            lastErrorCode: lastErrorCode,
+            lastErrorMessage: lastErrorMessage,
+            needsAttention: needsAttention,
+            rowid: rowid,
+          ),
+          createCompanionCallback: ({
+            required String id,
+            required String planId,
+            required String kind,
+            required String payload,
+            required DateTime createdAt,
+            Value<int> attempts = const Value.absent(),
+            Value<String?> lastErrorCode = const Value.absent(),
+            Value<String?> lastErrorMessage = const Value.absent(),
+            Value<bool> needsAttention = const Value.absent(),
+            Value<int> rowid = const Value.absent(),
+          }) =>
+              PlanVisitOutboxCompanion.insert(
+            id: id,
+            planId: planId,
+            kind: kind,
+            payload: payload,
+            createdAt: createdAt,
+            attempts: attempts,
+            lastErrorCode: lastErrorCode,
+            lastErrorMessage: lastErrorMessage,
+            needsAttention: needsAttention,
+            rowid: rowid,
+          ),
+          withReferenceMapper: (p0) => p0
+              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .toList(),
+          prefetchHooksCallback: null,
+        ));
+}
+
+typedef $$PlanVisitOutboxTableProcessedTableManager = ProcessedTableManager<
+    _$AppDatabase,
+    $PlanVisitOutboxTable,
+    PlanVisitOutboxData,
+    $$PlanVisitOutboxTableFilterComposer,
+    $$PlanVisitOutboxTableOrderingComposer,
+    $$PlanVisitOutboxTableAnnotationComposer,
+    $$PlanVisitOutboxTableCreateCompanionBuilder,
+    $$PlanVisitOutboxTableUpdateCompanionBuilder,
+    (
+      PlanVisitOutboxData,
+      BaseReferences<_$AppDatabase, $PlanVisitOutboxTable, PlanVisitOutboxData>
+    ),
+    PlanVisitOutboxData,
+    PrefetchHooks Function()>;
 
 class $AppDatabaseManager {
   final _$AppDatabase _db;
@@ -35715,4 +37139,8 @@ class $AppDatabaseManager {
       $$GeoCommunesTableTableManager(_db, _db.geoCommunes);
   $$GeoVillagesTableTableManager get geoVillages =>
       $$GeoVillagesTableTableManager(_db, _db.geoVillages);
+  $$VisitPlanSnapshotsTableTableManager get visitPlanSnapshots =>
+      $$VisitPlanSnapshotsTableTableManager(_db, _db.visitPlanSnapshots);
+  $$PlanVisitOutboxTableTableManager get planVisitOutbox =>
+      $$PlanVisitOutboxTableTableManager(_db, _db.planVisitOutbox);
 }

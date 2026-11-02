@@ -10,6 +10,14 @@ enum DepotStatus {
   /// until someone holding `depots.approve` activates it.
   draft('Draft'),
   pendingApproval('PendingApproval'),
+
+  /// A recorded depot or Non-BP depot the approver accepted, before it
+  /// moves to its own list. Cannot trade yet.
+  approved('Approved'),
+
+  /// A recorded depot or Non-BP depot the approver turned down.
+  rejected('Rejected'),
+
   active('Active'),
   suspended('Suspended'),
 
@@ -56,6 +64,9 @@ enum DepotStatus {
   /// will reject.
   static DepotStatus fromApi(String? raw) {
     if (raw == null || raw.isEmpty) return draft;
+    // SAP's posting block, as the `items` list reports it. Same meaning as
+    // suspended: the depot exists but must not trade.
+    if (raw.toLowerCase() == 'blocked') return suspended;
     for (final value in values) {
       if (value.apiValue.toLowerCase() == raw.toLowerCase() ||
           value.name.toLowerCase() == raw.toLowerCase()) {

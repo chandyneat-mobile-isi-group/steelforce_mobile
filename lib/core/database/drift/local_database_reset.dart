@@ -36,14 +36,72 @@ class LocalDatabaseSessionStore implements SessionScopedStore {
   @override
   String get debugName => 'local database';
 
+  /// Foreign keys are checked at commit, not per statement: the catalog's
+  /// price and stock rows reference `products`. Discover the dependencies
+  /// from SQLite itself and delete children before parents so adding a table
+  /// or foreign key cannot silently reintroduce the sign-out failure.
   @override
   Future<void> clearForSignOut() => _db.transaction(() async {
-        for (final table in _db.allTables) {
-          if (keptTables.contains(table.actualTableName)) continue;
-          await _db.delete(table).go();
+        final tables = [
+          for (final table in _db.allTables)
+            if (!keptTables.contains(table.actualTableName))
+              table.actualTableName,
+        ];
+        final order = await _childFirstOrder(tables);
+        for (final name in order) {
+          // Names come from Drift's compiled schema, not user input.
+          await _db.customStatement('DELETE FROM "$name";');
+        }
+
+        final foreignKeyViolations =
+            await _db.customSelect('PRAGMA foreign_key_check;').get();
+        if (foreignKeyViolations.isNotEmpty) {
+          throw StateError('Foreign-key violations remain after local reset.');
+        }
+        final integrity =
+            await _db.customSelect('PRAGMA integrity_check;').getSingle();
+        if (integrity.data.values.single != 'ok') {
+          throw StateError('SQLite integrity check failed after local reset.');
         }
         await _db.appMetadataDao.deleteValue(ownerKey);
       });
+
+  /// Reads the live SQLite constraints because Drift's table declaration
+  /// order is not a dependency order. The graph is parent → dependent child;
+  /// visiting children first gives the required delete order.
+  Future<List<String>> _childFirstOrder(List<String> tables) async {
+    final included = tables.toSet();
+    final children = {for (final table in tables) table: <String>{}};
+    for (final child in tables) {
+      final quoted = child.replaceAll("'", "''");
+      final foreignKeys =
+          await _db.customSelect("PRAGMA foreign_key_list('$quoted');").get();
+      for (final key in foreignKeys) {
+        final parent = key.data['table'];
+        if (parent is String && included.contains(parent)) {
+          children[parent]!.add(child);
+        }
+      }
+    }
+
+    final ordered = <String>[];
+    final visited = <String>{};
+    final visiting = <String>{};
+    void visit(String table) {
+      if (visited.contains(table) || !visiting.add(table)) return;
+      for (final child in children[table]!) {
+        visit(child);
+      }
+      visiting.remove(table);
+      visited.add(table);
+      ordered.add(table);
+    }
+
+    for (final table in tables) {
+      visit(table);
+    }
+    return ordered;
+  }
 }
 
 /// Records which rep the local data belongs to, and wipes it before a
@@ -64,7 +122,12 @@ class LocalDataOwnership {
   Future<void> claim(String userId) async {
     final owner =
         await _db.appMetadataDao.getValue(LocalDatabaseSessionStore.ownerKey);
-    if (owner != null && owner != userId) await _reset.clearAll();
+    if (owner != null && owner != userId) {
+      // A failed wipe must never be followed by an authenticated session for
+      // the incoming rep. The auth layer catches this and clears the newly
+      // issued credentials before exposing protected screens.
+      await _reset.clearAll(rethrowOnFailure: true);
+    }
     await _db.appMetadataDao
         .setValue(LocalDatabaseSessionStore.ownerKey, userId);
   }

@@ -21,7 +21,7 @@ Future<void> showLanguageSelectorSheet(BuildContext context) {
     return showGeneralDialog<void>(
       context: context,
       barrierDismissible: true,
-      barrierLabel: 'LanguageSelector',
+      barrierLabel: 'language.choose_title'.tr,
       barrierColor: Colors.black54,
       transitionDuration: const Duration(milliseconds: 250),
       pageBuilder: (context, anim1, anim2) {

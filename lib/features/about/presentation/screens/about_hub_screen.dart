@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_svg/flutter_svg.dart';
 import 'package:steelforce/core/animations/app_animations.dart';
 import 'package:steelforce/core/animations/press_scale.dart';
 import 'package:steelforce/core/localization/localization_services.dart';
@@ -7,6 +6,8 @@ import 'package:steelforce/core/responsive/responsive_sizing.dart';
 import 'package:steelforce/core/theme/theme_extensions.dart';
 import 'package:steelforce/features/about/domain/info_topic.dart';
 import 'package:steelforce/features/about/presentation/screens/info_detail_screen.dart';
+import 'package:steelforce/shared/widgets/brand_wallpaper_background.dart';
+import 'package:steelforce/core/assets/app_assets.dart';
 
 /// The About & Information centre, reached by tapping the SteelForce logo.
 ///
@@ -65,7 +66,7 @@ class AboutHubScreen extends StatelessWidget {
     final colors = context.appColors;
 
     return Scaffold(
-      backgroundColor: colors.canvas,
+      backgroundColor: context.appColors.canvas,
       appBar: AppBar(
         backgroundColor: colors.canvas,
         elevation: 0,
@@ -81,7 +82,8 @@ class AboutHubScreen extends StatelessWidget {
           ),
         ),
       ),
-      body: SafeArea(
+      body: BrandWallpaperBody(
+          child: SafeArea(
         top: false,
         child: Center(
           // Capped and centred rather than edge-to-edge. A phone layout simply
@@ -116,7 +118,7 @@ class AboutHubScreen extends StatelessWidget {
             ),
           ),
         ),
-      ),
+      )),
     );
   }
 }
@@ -156,15 +158,27 @@ class _BrandHeader extends StatelessWidget {
       ),
       child: Column(
         children: [
-          // The launcher icon itself, rounded in its own artwork, so it reads
-          // as the same mark the rep taps to open the app. Decorative: the
-          // description below names SteelForce, so announcing the mark as
-          // well adds noise.
-          ExcludeSemantics(
-            child: SvgPicture.asset(
-              'assets/logos/steelforce/steelforce_icon.svg',
+          ClipRRect(
+            // The launcher-icon corner (≈22% of the side), so it reads as the
+            // same mark the rep taps to open the app.
+            borderRadius: BorderRadius.circular(context.rr(80) * 0.22),
+            child: Image.asset(
+              AppLogos.steelForceAppIcon,
               width: context.rr(80),
               height: context.rr(80),
+              // The source artwork is 1024px square; decode at display size.
+              cacheWidth:
+                  (context.rr(80) * MediaQuery.devicePixelRatioOf(context))
+                      .round(),
+              fit: BoxFit.cover,
+              // Decorative: the description below names SteelForce, so
+              // announcing the mark as well adds noise.
+              excludeFromSemantics: true,
+              errorBuilder: (_, __, ___) => Icon(
+                Icons.apartment_rounded,
+                size: context.rr(40),
+                color: scheme.primary,
+              ),
             ),
           ),
           SizedBox(height: context.rh(18)),
@@ -327,7 +341,7 @@ class _Footer extends StatelessWidget {
         ),
         SizedBox(height: context.rh(6)),
         Text(
-          'Version $kAppVersion',
+          'about.version'.trParams({'version': kAppVersion}),
           style: TextStyle(color: colors.textHint, fontSize: context.rsp(12)),
         ),
         SizedBox(height: context.rh(4)),

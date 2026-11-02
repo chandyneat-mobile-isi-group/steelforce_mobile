@@ -26,9 +26,9 @@ extension SalesTermsStepExtension on _AddDepotBottomSheetState {
     final taxCard = Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 7),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: context.appColors.card,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: const Color(0xFFE2E8F0), width: 1.1),
+        border: Border.all(color: context.appColors.border, width: 1.1),
         boxShadow: [
           BoxShadow(
             color: Colors.black.withValues(alpha: 0.02),

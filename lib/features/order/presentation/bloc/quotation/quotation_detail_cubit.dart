@@ -1,5 +1,7 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:steelforce/core/error/failure_message.dart';
 import 'package:steelforce/core/error/failures.dart';
+import 'package:steelforce/core/localization/localization_services.dart';
 import 'package:steelforce/features/order/domain/entities/quotation_api_entities.dart';
 import 'package:steelforce/features/order/domain/usecases/quotation_api_usecases.dart';
 import 'package:steelforce/features/order/presentation/bloc/quotation/quotation_detail_state.dart';
@@ -38,16 +40,23 @@ class QuotationDetailCubit extends Cubit<QuotationDetailState> {
         emit(QuotationDetailLoaded(quotation: detail, history: history));
       },
       failure: (failure) {
-        emit(QuotationDetailError(failure.message));
+        emit(QuotationDetailError(failure.userMessage));
       },
     );
   }
 
-  Future<void> submit() async {
+  /// Submits the loaded quotation for approval.
+  ///
+  /// Returns `true` once the backend accepted the submission, `false` when it
+  /// refused (including `Quotation.PriceChanged`), and `null` when there was
+  /// nothing loaded to submit. The state change is the same either way; the
+  /// return value only lets a caller report the outcome without re-deriving it
+  /// from [state].
+  Future<bool?> submit() async {
     final current = state;
     if (current is! QuotationDetailLoaded &&
         current is! QuotationDetailPriceChanged) {
-      return;
+      return null;
     }
 
     final quotation = current is QuotationDetailLoaded
@@ -59,7 +68,7 @@ class QuotationDetailCubit extends Cubit<QuotationDetailState> {
     }
 
     final result = await _submitQuotation(QuotationIdParams(quotation.id));
-    result.when(
+    return result.when(
       success: (updated) {
         final history = current is QuotationDetailLoaded
             ? current.history
@@ -68,27 +77,29 @@ class QuotationDetailCubit extends Cubit<QuotationDetailState> {
           quotation: updated,
           history: history,
           isSubmitting: false,
-          actionMessage: 'Quotation submitted for approval.',
+          actionMessage: 'orders.quotation_detail.submitted'.tr,
         ));
+        return true;
       },
       failure: (failure) {
         if (failure is ServerFailure &&
             failure.code == 'Quotation.PriceChanged') {
           emit(QuotationDetailPriceChanged(
             quotation: quotation,
-            message: failure.message,
+            message: failure.userMessage,
           ));
-          return;
+          return false;
         }
 
         if (current is QuotationDetailLoaded) {
           emit(current.copyWith(
             isSubmitting: false,
-            actionMessage: () => failure.message,
+            actionMessage: () => failure.userMessage,
           ));
         } else {
-          emit(QuotationDetailError(failure.message));
+          emit(QuotationDetailError(failure.userMessage));
         }
+        return false;
       },
     );
   }
@@ -122,17 +133,17 @@ class QuotationDetailCubit extends Cubit<QuotationDetailState> {
           quotation: updated,
           history: history,
           isRepricing: false,
-          actionMessage: 'Prices updated from SAP.',
+          actionMessage: 'orders.quotation_detail.repriced'.tr,
         ));
       },
       failure: (failure) {
         if (current is QuotationDetailLoaded) {
           emit(current.copyWith(
             isRepricing: false,
-            actionMessage: () => failure.message,
+            actionMessage: () => failure.userMessage,
           ));
         } else {
-          emit(QuotationDetailError(failure.message));
+          emit(QuotationDetailError(failure.userMessage));
         }
       },
     );
@@ -151,13 +162,13 @@ class QuotationDetailCubit extends Cubit<QuotationDetailState> {
         emit(current.copyWith(
           quotation: updated,
           isCancelling: false,
-          actionMessage: () => 'Quotation cancelled.',
+          actionMessage: () => 'orders.quotation_detail.cancelled'.tr,
         ));
       },
       failure: (failure) {
         emit(current.copyWith(
           isCancelling: false,
-          actionMessage: () => failure.message,
+          actionMessage: () => failure.userMessage,
         ));
       },
     );

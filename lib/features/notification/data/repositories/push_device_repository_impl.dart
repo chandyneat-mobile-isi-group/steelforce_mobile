@@ -5,13 +5,9 @@ import 'package:steelforce/core/localization/active_language.dart';
 import 'package:steelforce/core/logging/app_logger.dart';
 import 'package:steelforce/core/network/api/api_error.dart';
 import 'package:steelforce/core/notifications/push/push_messaging_service.dart';
-import 'package:steelforce/core/platform/device/device_name.dart';
-import 'package:steelforce/core/platform/device/device_os.dart';
 import 'package:steelforce/core/session/session_manager.dart';
 import 'package:steelforce/core/utils/result.dart';
 import 'package:steelforce/core/utils/typedefs.dart';
-import 'package:steelforce/core/notifications/device_time_zone.dart';
-import 'package:steelforce/features/my_visits/domain/services/location_fix_provider.dart';
 import 'package:steelforce/features/notification/data/remote/notification_remote_data_source.dart';
 import 'package:steelforce/features/notification/domain/entities/push_registration.dart';
 import 'package:steelforce/features/notification/domain/repositories/push_device_repository.dart';
@@ -38,20 +34,28 @@ class PushDeviceRepositoryImpl implements PushDeviceRepository {
     required DeviceIdentity identity,
     required SessionManager session,
     required AppLogger logger,
-    LocationFixProvider? Function()? getFixProvider,
   })  : _messaging = messaging,
         _remote = remote,
         _identity = identity,
         _session = session,
-        _logger = logger,
-        _getFixProvider = getFixProvider;
+        _logger = logger;
 
   final PushMessagingService _messaging;
   final NotificationRemoteDataSource _remote;
   final DeviceIdentity _identity;
   final SessionManager _session;
   final AppLogger _logger;
-  final LocationFixProvider? Function()? _getFixProvider;
+
+  // Registration and deregistration share one installation key. Serializing
+  // them ensures an older request cannot finish after sign-out cleanup or a
+  // subsequent account's registration and restore stale ownership server-side.
+  Future<void> _operations = Future<void>.value();
+
+  Future<T> _serialize<T>(Future<T> Function() operation) {
+    final task = _operations.then((_) => operation());
+    _operations = task.then<void>((_) {}, onError: (_, __) {});
+    return task;
+  }
 
   @override
   Future<PushPermissionStatus> permissionStatus() async =>
@@ -85,10 +89,14 @@ class PushDeviceRepositoryImpl implements PushDeviceRepository {
   }
 
   @override
-  ResultFuture<PushRegistrationResult?> register() async {
+  ResultFuture<PushRegistrationResult?> register() => _serialize(_registerOnce);
+
+  Future<Result<PushRegistrationResult?>> _registerOnce() async {
     // Registration is an authenticated call. A guest has no device row to
     // maintain, and firing it would spend a round trip to be told 401.
     if (!_session.canCallProtectedApi) return const Success(null);
+    final accountId = _session.currentUser?.id;
+    if (accountId == null || accountId.isEmpty) return const Success(null);
 
     // No transport on this platform (web). Not a failure — the inbox is
     // unaffected, which is the whole design (§1).
@@ -104,36 +112,20 @@ class PushDeviceRepositoryImpl implements PushDeviceRepository {
       return const Success(null);
     }
 
+    final deviceId = await _identity.deviceId();
+    if (!RegExp(r'^[A-Za-z0-9._-]{1,100}$').hasMatch(deviceId)) {
+      _logger.warning('push.register_skipped_invalid_installation_id');
+      return const Failed(ServerFailure(
+        message: 'Invalid installation identifier.',
+      ));
+    }
+    if (!_session.canCallProtectedApi ||
+        _session.currentUser?.id != accountId) {
+      return const Success(null);
+    }
+
     try {
       final authorization = await _messaging.authorization();
-
-      double _lastFixLat = 0.0;
-      double _lastFixLng = 0.0;
-      double _lastFixAcc = 0.0;
-      DateTime? _lastFixTime;
-
-      final provider = _getFixProvider?.call();
-      if (provider != null) {
-        final fix = await provider.currentFix(
-          precise: false,
-          timeout: const Duration(seconds: 3),
-        );
-        if (fix != null && (fix.latitude != 0 || fix.longitude != 0)) {
-          _lastFixLat = fix.latitude;
-          _lastFixLng = fix.longitude;
-          _lastFixAcc = fix.accuracyMeters;
-          _lastFixTime = fix.timestamp;
-        } else {
-          // Bad pair fails the registration per docs (422), but if we can't get it,
-          // we might just let it fail at backend or return a local failure.
-          // Wait, if no fix, the backend rejects it. We must throw an ApiException.
-          throw const ApiException(ApiError(
-            code: 'Notification.LocationRequired',
-            detail: 'A valid location fix is required for push registration.',
-            statusCode: 422,
-          ));
-        }
-      }
 
       // Logged *before* the registration, and separately from it.
       //
@@ -156,7 +148,7 @@ class PushDeviceRepositoryImpl implements PushDeviceRepository {
       });
 
       final registration = PushRegistration(
-        deviceId: await _identity.deviceId(),
+        deviceId: deviceId,
         pushToken: token,
         platform: _platform(),
         // Deliberately **not** gated on the permission. §4.2: a declined or
@@ -165,19 +157,18 @@ class PushDeviceRepositoryImpl implements PushDeviceRepository {
         // delivery log records `NO_DEVICE` once rather than a run of failures
         // against a handset that was never going to ring.
         pushPermissionGranted: _allowsPush(authorization),
-        deviceName: await readDeviceName(),
         appVersion: DeviceIdentity.appVersion,
-        osVersion: readOsVersion(),
-        locale: ActiveLanguage.acceptLanguageTag,
-        // The IANA zone, not the abbreviation. Quiet hours and digests are
-        // wall-clock facts; without this the backend assumes UTC and a rep's
-        // 22:00 quiet window starts at 05:00 local (§4.2).
-        timeZone: await readIanaTimeZone(),
-        latitude: _lastFixLat,
-        longitude: _lastFixLng,
-        locationAccuracyMeters: _lastFixAcc,
-        locationCapturedAt: _lastFixTime ?? DateTime.now(),
+        locale: ActiveLanguage.code,
+        latitude: 0,
+        longitude: 0,
+        locationAccuracyMeters: 0,
+        locationCapturedAt: DateTime.now(),
       );
+
+      if (!_session.canCallProtectedApi ||
+          _session.currentUser?.id != accountId) {
+        return const Success(null);
+      }
 
       final result = await _remote.registerDevice(registration);
       _logger.info('push.registered', fields: {
@@ -206,7 +197,9 @@ class PushDeviceRepositoryImpl implements PushDeviceRepository {
   }
 
   @override
-  ResultFuture<void> deregister() async {
+  ResultFuture<void> deregister() => _serialize(_deregisterOnce);
+
+  Future<Result<void>> _deregisterOnce() async {
     // Deliberately does **not** gate on `canCallProtectedApi`.
     //
     // Sign-out clears the session, and the order in `AuthBloc._onLogout` puts
@@ -215,11 +208,6 @@ class PushDeviceRepositoryImpl implements PushDeviceRepository {
     // is still attached by the interceptor at this point, which is why §4.4
     // insists this be called *before* the token is discarded.
     final deviceId = await _identity.deviceId();
-
-    // Drop the local token first. Even if the server call fails, this handset
-    // stops being able to receive — which is the outcome that matters when a
-    // phone changes hands.
-    await _messaging.deleteToken();
 
     try {
       await _remote.deregisterDevice(deviceId);
@@ -246,9 +234,8 @@ class PushDeviceRepositoryImpl implements PushDeviceRepository {
   @override
   Stream<String> get tokenRefreshes => _messaging.tokenRefreshes;
 
-  /// §4.2 accepts `Android`, `IOS` or `Web` and stores anything else as
-  /// `Unknown` rather than rejecting it, so this is a display hint on the device
-  /// registry and never a gate.
+  /// The API accepts lowercase `android` or `ios`. Web builds skip device
+  /// registration because this app has no web FCM transport.
   ///
   /// Reads `defaultTargetPlatform` rather than `Platform.operatingSystem`, for
   /// the same reason `DeviceIdentity` does: `dart:io` is unavailable on web, and

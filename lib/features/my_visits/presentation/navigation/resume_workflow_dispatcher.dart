@@ -1,12 +1,10 @@
 import 'package:flutter/material.dart';
-import 'package:steelforce/core/config/feature_flags.dart';
 import 'package:steelforce/core/animations/page_transition.dart';
 import 'package:steelforce/core/localization/localized_builder.dart';
 import 'package:steelforce/features/depots/presentation/screens/depot_detail_screen.dart';
 import 'package:steelforce/features/my_visits/domain/entities/active_workflow.dart';
 import 'package:steelforce/features/my_visits/domain/entities/route_plan.dart';
 import 'package:steelforce/features/my_visits/domain/entities/visit_workflow.dart';
-import 'package:steelforce/features/my_visits/presentation/navigation/open_inventory_survey.dart';
 import 'package:steelforce/features/my_visits/presentation/navigation/open_inventory_visibility.dart';
 import 'package:steelforce/features/my_visits/presentation/navigation/open_quotation.dart';
 import 'package:steelforce/features/my_visits/presentation/navigation/open_stop_information.dart';
@@ -51,7 +49,7 @@ final Map<String, ResumeBuilder> _navigationRegistry = {
         w.navigationArguments?['depotName'] as String? ?? w.shopName ?? '';
     final stopId =
         w.navigationArguments?['stopId'] as String? ?? w.currentStopId;
-    return openInventoryStep(
+    return openInventoryVisibilityForDepot(
       context,
       depotId: depotId,
       depotName: depotName,
@@ -79,8 +77,6 @@ final Map<String, ResumeBuilder> _navigationRegistry = {
 
   // Quotation task — resume straight into the Quotation Builder for the checked-in depot.
   QuotationBuilderScreen.routeName: (context, route, w) {
-    // Switched off: fall back to resuming the stop itself.
-    if (!FeatureFlags.quotesAndOrders) return null;
     final depotId = w.navigationArguments?['depotId'] as String?;
     if (depotId == null) return null;
     final depotName =
@@ -94,7 +90,6 @@ final Map<String, ResumeBuilder> _navigationRegistry = {
 
   // Legacy order handoff — re-enter the shop list for the visit's territory.
   ShopListScreen.routeName: (context, route, w) {
-    if (!FeatureFlags.quotesAndOrders) return null;
     final territory = w.navigationArguments?['territory'] as String?;
     if (territory == null) return null;
     return _push(

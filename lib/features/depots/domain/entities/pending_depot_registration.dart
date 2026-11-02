@@ -1,4 +1,5 @@
 import 'package:equatable/equatable.dart';
+import 'package:steelforce/features/depots/domain/entities/depot_document.dart';
 
 /// Where a queued depot registration is in its replay.
 enum DepotRegistrationQueueStatus {
@@ -63,6 +64,7 @@ class PendingDepotRegistration extends Equatable {
     this.longitude,
     this.attempts = 0,
     this.lastAttemptAt,
+    this.photos = const [],
   });
 
   final String id;
@@ -103,6 +105,10 @@ class PendingDepotRegistration extends Equatable {
   final int attempts;
   final DateTime? lastAttemptAt;
 
+  /// The document photographs kept on this device for the registration, for
+  /// the Sync Center's details view. Depot PII: shown here only, never logged.
+  final List<PendingDepotPhoto> photos;
+
   @override
   List<Object?> get props => [
         id,
@@ -121,5 +127,24 @@ class PendingDepotRegistration extends Equatable {
         longitude,
         attempts,
         lastAttemptAt,
+        photos,
       ];
+}
+
+/// One document photograph a queued registration holds on the device.
+class PendingDepotPhoto extends Equatable {
+  const PendingDepotPhoto({
+    required this.type,
+    required this.path,
+    required this.capturedAt,
+  });
+
+  final DepotDocumentType type;
+
+  /// Local file path of the app's own copy.
+  final String path;
+  final DateTime capturedAt;
+
+  @override
+  List<Object?> get props => [type, path, capturedAt];
 }

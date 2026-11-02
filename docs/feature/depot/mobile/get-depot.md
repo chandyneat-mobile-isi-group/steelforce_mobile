@@ -108,7 +108,7 @@ need no second request:
 ```
 
 `shopName` and `statusDisplay` are already localised — see
-[mobile.md](mobile.md#localisation). Branch on `status`, render `statusDisplay`.
+[mobile.md](api.md#localisation). Branch on `status`, render `statusDisplay`.
 
 ---
 

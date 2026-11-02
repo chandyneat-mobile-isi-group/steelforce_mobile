@@ -3,7 +3,7 @@
 > ISI Steel Sales Mobile — Offline-First Enterprise CRM (Flutter)
 > Master engineering rules. Every other document in this set (`docs/blueprint/system-architecture.md`, `docs/blueprint/offline-architecture.md`, `docs/blueprint/local-storage-architecture.md`, `docs/blueprint/sync-architecture.md`, `docs/skills/security.md`, `docs/blueprint/migration-plan.md`) implements the rules defined here.
 > Status: Enterprise Standard · Version 1.0 · Last updated: 2026-07-15
-> Source of truth precedence: **`docs/blueprint/master-plan.md` (blueprint v2026.1.0) is authoritative** wherever it differs from the earlier `docs/blueprint/master-plan.md`. This document reconciles both.
+> Source of truth precedence: **`docs/blueprint/migration-plan.md` (blueprint v2026.1.0) is authoritative** wherever it differs from the earlier `docs/blueprint/migration-plan.md`. This document reconciles both.
 
 ---
 
@@ -64,7 +64,7 @@ This layering is already well-practised in the current codebase and should be pr
 
 ## 5. Dependency Injection
 
-- `get_it` is the DI container. Registration must be **formalized**, not ad hoc per feature — this is an explicit Phase 2 gap (`docs/blueprint/master-plan.md` Phase 2).
+- `get_it` is the DI container. Registration must be **formalized**, not ad hoc per feature — this is an explicit Phase 2 gap (`docs/blueprint/migration-plan.md` Phase 2).
 - Each feature exposes one `feature_injection.dart` (or equivalent) that registers its own blocs/usecases/repositories/datasources, called from a single app-level `configureDependencies()`.
 - Core infrastructure (`AppDatabase`, `DynamicKeyStore`, `SyncEngine`, `ConnectivityService`, `SapClient`) is registered once in `core/di/` and injected into features — features must not construct their own instances.
 

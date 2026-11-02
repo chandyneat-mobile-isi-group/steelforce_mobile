@@ -3,23 +3,22 @@ import 'dart:ui' as ui;
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:steelforce/core/theme/theme_extensions.dart';
-
-/// Which brand the logo shows.
-enum BrandMark {
-  /// The app: the SteelForce "S" tile with its wordmark. Every in-app use.
-  steelForce,
-
-  /// The company: the ISI Steel seal and wordmark. For documents ISI Steel
-  /// issues to customers — the quotation and its preview.
-  isiSteel,
-}
+import 'package:steelforce/core/assets/app_assets.dart';
 
 /// Which ink the wordmark is drawn in.
 ///
-/// The artwork ships as separate exports rather than one tinted asset because
-/// both marks are **multi-tone** (ISI Steel: navy seal, blue wordmark;
-/// SteelForce: a full-colour tile, navy "Steel", blue "Force") and a single
-/// `colorFilter` would flatten that into one colour.
+/// The lockup is the app-icon tile plus a **multi-colour** wordmark ("Steel"
+/// navy `#011E41`, "Force" blue `#004A98`, tagline grey `#4D6480`), so it ships
+/// as separate exports rather than one tinted asset — a single `colorFilter`
+/// would flatten the tile and both word colours into one.
+///
+/// Source artwork: `assets/logos/SteelForce-Logos/SVG/` (not bundled):
+/// `steelforce-logo.svg` is the pack's `steelforce-lockup-tagline-light.svg`
+/// (dark ink, for light surfaces). `steelforce-logo-light.svg` is the white
+/// version, `steelforce-lockup-endorsed-white.svg`: the endorsed lockup's
+/// white "Steel", light-blue "Force" and "A member of ISI STEEL", on the
+/// white tile of `steelforce-small-icon-light.svg`. Same viewBox, so one
+/// [aspectRatio] serves both.
 enum BrandLogoInk {
   /// Resolved from the surface the mark is drawn on: dark ink on a light
   /// surface, light ink on a dark one.
@@ -29,24 +28,23 @@ enum BrandLogoInk {
   /// anything sitting on a themed background.
   auto,
 
-  /// Near-white `#DCE3EB`. For dark surfaces that do **not** follow the theme —
-  /// photography, scrims, glass panels — where `auto` would read the light
-  /// theme and pick dark ink that vanishes.
+  /// The white version: white tile, white "Steel", light-blue "Force",
+  /// "A member of ISI STEEL". For dark
+  /// surfaces that do **not** follow the theme — photography, scrims, glass
+  /// panels — where `auto` would read the light theme and pick dark ink that
+  /// vanishes.
   light,
 
-  /// Navy `#011E41`. For light surfaces that do not follow the theme.
+  /// The full-colour lockup. For light surfaces that do not follow the theme.
   dark,
 
-  /// The full two-tone brand mark. Only legible on white or near-white; it is
-  /// the print/document version, not a UI ink.
+  /// The full-colour lockup as delivered in the logo pack — the same file as
+  /// [dark]. Only legible on white or near-white.
   brand,
 }
 
-/// A brand logo — SteelForce by default, ISI Steel with
-/// [BrandMark.isiSteel] — sized from the artwork.
-///
-/// The SteelForce light ink recolours only the wordmark (white "Steel", light
-/// blue "Force"); its tile keeps its own navy, which reads on any surface.
+/// The SteelForce lockup (app-icon tile + "SteelForce" wordmark + tagline),
+/// sized from the artwork.
 ///
 /// ## Contrast is the whole job of this widget
 ///
@@ -82,11 +80,8 @@ class BrandLogo extends StatelessWidget {
     this.ink = BrandLogoInk.auto,
     this.shadow = false,
     this.plate,
-    this.mark = BrandMark.steelForce,
-    String? semanticsLabel,
-  })  : semanticsLabel = semanticsLabel ??
-            (mark == BrandMark.steelForce ? 'SteelForce' : 'ISI Steel'),
-        assert(
+    this.semanticsLabel = 'SteelForce',
+  }) : assert(
           width != null || height != null,
           'BrandLogo needs a width or a height to size against.',
         );
@@ -116,33 +111,14 @@ class BrandLogo extends StatelessWidget {
   /// is what the mark is now sitting on.
   final Color? plate;
 
-  /// Which brand to draw.
-  final BrandMark mark;
-
   final String semanticsLabel;
 
-  /// Width ÷ height of the SteelForce horizontal logo
-  /// (`viewBox="69.71 103.35 1131.54 402.81"`, shared by both inks).
-  static const aspectRatio = 1131.54 / 402.81;
+  /// Both exports share the pack's `viewBox="0 0 1185 297"`. Width ÷ height.
+  static const aspectRatio = 1185 / 297;
+  static const _ratio = aspectRatio;
 
-  /// Width ÷ height of the ISI Steel exports. `isi-steel-navy.svg` states
-  /// `viewBox="0 0 1101.09 400"` and the two mono exports
-  /// `viewBox="409.45 340 1101.1 400"` — the same ratio to five decimal
-  /// places, so one constant covers all three.
-  static const isiSteelAspectRatio = 1101.1 / 400.0;
-
-  double get _ratio =>
-      mark == BrandMark.steelForce ? aspectRatio : isiSteelAspectRatio;
-
-  // ISI Steel.
-  static const _lightInkAsset = 'assets/logos/isi-steel-light.svg';
-  static const _darkInkAsset = 'assets/logos/isi-steel-dark.svg';
-  static const _brandInkAsset = 'assets/logos/isi-steel-navy.svg';
-
-  // SteelForce. The full-colour logo is both the dark and the brand ink.
-  static const _steelForceAsset = 'assets/logos/steelforce/steelforce_logo.svg';
-  static const _steelForceLightAsset =
-      'assets/logos/steelforce/steelforce_logo_light.svg';
+  static const _lightInkAsset = AppLogos.steelForceLockupWhite;
+  static const _darkInkAsset = AppLogos.steelForceLockup;
 
   @override
   Widget build(BuildContext context) {
@@ -233,28 +209,23 @@ class BrandLogo extends StatelessWidget {
     );
   }
 
-  String _resolveAsset(BuildContext context) {
-    final light = _wantsLightInk(context);
-    return switch (mark) {
-      BrandMark.steelForce => light ? _steelForceLightAsset : _steelForceAsset,
-      BrandMark.isiSteel => ink == BrandLogoInk.brand
-          ? _brandInkAsset
-          : (light ? _lightInkAsset : _darkInkAsset),
-    };
-  }
-
-  bool _wantsLightInk(BuildContext context) => switch (ink) {
-        BrandLogoInk.light => true,
-        BrandLogoInk.dark || BrandLogoInk.brand => false,
+  String _resolveAsset(BuildContext context) => switch (ink) {
+        BrandLogoInk.light => _lightInkAsset,
+        BrandLogoInk.dark || BrandLogoInk.brand => _darkInkAsset,
         // A plate is the surface once it exists, so it — not the theme —
         // decides the ink. `estimateBrightnessForColor` is the same helper
         // Flutter's own components use to pick foreground ink, and it accounts
         // for the plate being translucent only insofar as its alpha is baked
         // into the colour; a heavily transparent plate should state its ink.
         BrandLogoInk.auto => switch (plate) {
-            final Color c =>
-              ThemeData.estimateBrightnessForColor(c) == Brightness.dark,
-            null => Theme.of(context).brightness == Brightness.dark,
+            final Color c
+                when ThemeData.estimateBrightnessForColor(c) ==
+                    Brightness.dark =>
+              _lightInkAsset,
+            final Color _ => _darkInkAsset,
+            null => Theme.of(context).brightness == Brightness.dark
+                ? _lightInkAsset
+                : _darkInkAsset,
           },
       };
 }

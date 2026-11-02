@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
+import 'package:steelforce/core/firebase/firebase_app_check.dart';
 import 'package:steelforce/core/logging/app_logger.dart';
 import 'package:steelforce/core/notifications/push/push_message.dart';
 import 'package:steelforce/core/notifications/push/push_messaging_service.dart';
@@ -77,7 +78,7 @@ class FirebasePushMessagingService implements PushMessagingService {
     if (_initialized || _unavailable) return;
 
     try {
-      await Firebase.initializeApp();
+      await FirebaseAppCheckInitializer.initialize();
       final messaging = FirebaseMessaging.instance;
       _messaging = messaging;
 

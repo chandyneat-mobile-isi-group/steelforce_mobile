@@ -54,12 +54,13 @@ dependencies:
   cross_file: ^0.3.4+2
   http: ^1.2.0
 
-  # ── Push notifications (docs/feature/notification/notification-mobile.md) ──────────
+  # ── Push notifications (docs/feature/notification/README.md) ──────────
   # The inbox is the notification; these three only accelerate it. Every one
   # of them is no-op'd on web behind `core/notifications/push_*` conditional
   # imports — a browser has no FCM registration in this build and the inbox
   # still syncs (ADR-010).
   firebase_core: ^4.14.0
+  firebase_app_check: ^0.4.8
   firebase_messaging: ^16.6.0
   # Renders the foreground/local alert Android and iOS will not draw for us
   # while the app is visible, and owns the ten per-category channels the
@@ -77,15 +78,21 @@ dependencies:
   # the model from `dart:io`.
   device_info_plus: ^11.2.0
   workmanager: ^0.10.10
+  # Password reset only: Firebase texts the code and proves the rep owns the
+  # phone; the SteelForce backend still authorises the reset and sets the
+  # password. Never used for sign-in. Off unless the build passes
+  # `--dart-define=PASSWORD_RESET_VIA_FIREBASE=true` — see
+  # docs/feature/authentication/mobile-integration.md.
+  firebase_auth: ^6.7.0
 
 dev_dependencies:
   flutter_test:
     sdk: flutter
-  integration_test:
-    sdk: flutter
   flutter_lints: ^6.0.0
   bloc_test: ^9.1.7
   mocktail: ^1.0.4
+  # A fake map platform for widget tests of the screens with a GoogleMap.
+  google_maps_flutter_platform_interface: ^2.16.0
   build_runner: ^2.15.0
   drift_dev: ^2.20.0
   envied_generator: ^1.2.0
@@ -99,8 +106,6 @@ flutter:
 
     # 2. Include your logos folder here
     - assets/logos/
-    # SteelForce brand marks (app logo, light ink, wordmark, icon).
-    - assets/logos/steelforce/
     - assets/mock/
     # Synthetic stand-in images for the simulator camera. Its own line
     # because Flutter does not recurse into subdirectories (see above).
@@ -112,6 +117,7 @@ flutter:
     # line, or its files are silently absent at runtime.
     - assets/images/icons/
     - assets/images/icons/categories-icon/svg/
+    - assets/images/inventory_guide/
     - assets/lang/
     # The bundled Cambodian administrative gazetteer (~1.3 MB), imported into
     # the encrypted database on first use. Bundled rather than fetched because
@@ -178,15 +184,24 @@ flutter:
           weight: 900
 
 # 3. Added configuration for Android and iOS asset generation
+# Regenerate with `dart run flutter_launcher_icons`. Sources live in the logo
+# pack, which is NOT bundled into the app (Flutter does not recurse into
+# assets/logos/ subfolders). Both are drawn from the pack's
+# `SVG/steelforce-app-icon-dark.svg` (the blue tile):
+#   * fullbleed-1024 — the icon with square corners; iOS and Android apply
+#     their own corner mask, so the pack's pre-rounded PNG would show corners.
+#   * foreground-1024 — the "S" mark alone on transparent, scaled into
+#     Android's adaptive-icon safe zone, over the tile's blue (#004A98).
 flutter_launcher_icons:
   android: "launcher_icon"
   ios: true
-  # SteelForce mark, full bleed: iOS rounds the corners itself and rejects
-  # transparency. Sources live outside the bundled asset folders.
-  image_path: "assets/branding/launcher/steelforce_icon_full.png"
+  image_path: "assets/logos/SteelForce-Logos/launcher/steelforce-app-icon-light-fullbleed-1024.png"
   remove_alpha_ios: true
-  # Android 8+ adaptive icon: the mark inside the safe zone, so round and
-  # squircle launcher masks never clip it.
-  adaptive_icon_background: "assets/branding/launcher/adaptive_background.png"
-  adaptive_icon_foreground: "assets/branding/launcher/adaptive_foreground.png"
+  adaptive_icon_background: "#FFFFFF"
+  adaptive_icon_foreground: "assets/logos/SteelForce-Logos/launcher/steelforce-app-icon-light-foreground-1024.png"
   min_sdk_android: 21
+  web:
+    generate: true
+    image_path: "assets/logos/SteelForce-Logos/launcher/steelforce-app-icon-light-fullbleed-1024.png"
+    background_color: "#FFFFFF"
+    theme_color: "#004A98"
