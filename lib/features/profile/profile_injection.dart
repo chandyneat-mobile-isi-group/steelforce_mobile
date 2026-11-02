@@ -2,11 +2,13 @@ import 'package:dio/dio.dart';
 import 'package:get_it/get_it.dart';
 import 'package:steelforce/core/session/unsent_work.dart';
 import 'package:steelforce/core/config/app_config.dart';
+import 'package:steelforce/core/config/data_source_mode.dart';
 import 'package:steelforce/core/logging/app_logger.dart';
 import 'package:steelforce/core/session/session_manager.dart';
 import 'package:steelforce/features/authentication/data/datasources/auth_local_data_source.dart';
 import 'package:steelforce/features/authentication/data/datasources/auth_remote_data_source.dart';
 import 'package:steelforce/features/profile/data/datasources/auth_backed_profile_data_source.dart';
+import 'package:steelforce/features/profile/data/datasources/mock_profile_remote_data_source.dart';
 import 'package:steelforce/features/profile/data/datasources/profile_remote_data_source.dart';
 import 'package:steelforce/features/profile/data/repositories/profile_repository_impl.dart';
 import 'package:steelforce/features/profile/domain/repositories/profile_repository.dart';
@@ -24,15 +26,19 @@ void registerProfileFeature(GetIt sl) {
   // signed-in employee is `GET /auth/me`, and a second fetch path would be a
   // second answer to "who is signed in". The mock served the same hardcoded
   // "Alex Morgan" to every user.
+  //
+  // TODO(release-gate): demo-only data source; must never be registered in a release mobile build (USE_MOCK_DATA=false).
   sl.registerLazySingleton<ProfileRemoteDataSource>(
-    () => AuthBackedProfileDataSource(
-      remote: sl<AuthRemoteDataSource>(),
-      local: sl<AuthLocalDataSource>(),
-      client: sl<Dio>(),
-      session: sl<SessionManager>(),
-      apiBaseUrl: AppConfig.apiBaseUrl,
-      logger: sl<AppLogger>(),
-    ),
+    () => DataSourceMode.useLiveApi
+        ? AuthBackedProfileDataSource(
+            remote: sl<AuthRemoteDataSource>(),
+            local: sl<AuthLocalDataSource>(),
+            client: sl<Dio>(),
+            session: sl<SessionManager>(),
+            apiBaseUrl: AppConfig.apiBaseUrl,
+            logger: sl<AppLogger>(),
+          )
+        : MockProfileRemoteDataSource(auth: sl<AuthRemoteDataSource>()),
   );
 
   // ── Repositories ────────────────────────────────────────────────────

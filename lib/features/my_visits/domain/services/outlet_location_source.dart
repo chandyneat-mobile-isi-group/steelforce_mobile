@@ -1,4 +1,5 @@
 import 'package:flutter/foundation.dart' show kDebugMode;
+import 'package:steelforce/core/config/data_source_mode.dart';
 import 'package:steelforce/features/my_visits/domain/entities/depot_stop_info.dart';
 import 'package:steelforce/features/my_visits/domain/services/check_in_location_verifier.dart';
 
@@ -116,8 +117,14 @@ class StopOutletLocationSource implements OutletLocationSource {
 /// distance nobody measured. Neither is acceptable in a rep's hands; both are
 /// exactly what is wanted while the outlet feed and location permissions are
 /// still being built. It must be off before release.
-const bool kUseStaticCheckInPosition = kDebugMode &&
-    bool.fromEnvironment('STATIC_CHECK_IN_POSITION', defaultValue: true);
+///
+/// TODO(release-gate): anti-fraud bypass — also on in any build compiled with
+/// `USE_MOCK_DATA=true` (the static web demo, release mode included), where
+/// no backend judges the evidence and the presenter is never at the depot.
+/// Must never be on in a release mobile build (USE_MOCK_DATA=false).
+const bool kUseStaticCheckInPosition = DataSourceMode.useMocks ||
+    (kDebugMode &&
+        bool.fromEnvironment('STATIC_CHECK_IN_POSITION', defaultValue: true));
 
 /// Opt-in, debug-only: measure every stop against the fixed demo pin
 /// ([StaticOutletLocationSource] — ISI's Phnom Penh office) instead of the

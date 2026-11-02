@@ -1,4 +1,3 @@
-import 'package:dio/dio.dart';
 import 'package:get_it/get_it.dart';
 import 'package:steelforce/features/my_visits/presentation/bloc/cubit/pending_plan_visits_cubit.dart';
 import 'package:steelforce/features/my_visits/domain/usecases/watch_pending_plan_visits.dart';
@@ -11,7 +10,6 @@ import 'package:steelforce/core/network/connectivity/network_info.dart';
 import 'package:steelforce/core/practice/practice_session.dart';
 import 'package:steelforce/core/session/location_heartbeat_service.dart';
 import 'package:steelforce/core/session/session_manager.dart';
-import 'package:steelforce/features/my_visits/domain/services/location_fix_provider.dart';
 import 'package:steelforce/features/my_visits/data/local/depot_selection_store.dart';
 import 'package:steelforce/features/my_visits/data/local/location_sample_drift_local_data_source.dart';
 import 'package:steelforce/features/my_visits/data/local/location_sample_local_data_source.dart';
@@ -20,10 +18,6 @@ import 'package:steelforce/features/my_visits/data/local/route_local_data_source
 import 'package:steelforce/features/my_visits/data/local/visit_drift_local_data_source.dart';
 import 'package:steelforce/features/my_visits/data/local/visit_local_data_source.dart';
 import 'package:steelforce/features/my_visits/data/local/workflow_state_local_data_source.dart';
-import 'package:steelforce/features/my_visits/data/remote/ad_hoc_visit_remote_data_source.dart';
-import 'package:steelforce/features/my_visits/data/remote/api_ad_hoc_visit_remote_data_source.dart';
-import 'package:steelforce/features/my_visits/data/remote/api_visit_plan_remote_data_source.dart';
-import 'package:steelforce/features/my_visits/data/remote/visit_plan_remote_data_source.dart';
 import 'package:steelforce/features/my_visits/data/repositories/visit_plan_repository_impl.dart';
 import 'package:steelforce/features/my_visits/domain/repositories/visit_plan_repository.dart';
 import 'package:steelforce/features/my_visits/domain/usecases/get_my_visit_plans.dart';
@@ -43,10 +37,6 @@ import 'package:steelforce/features/my_visits/presentation/bloc/cubit/visit_plan
 import 'package:steelforce/features/my_visits/presentation/bloc/cubit/visit_plans_cubit.dart';
 import 'package:steelforce/features/my_visits/presentation/bloc/cubit/plan_check_in_cubit.dart';
 import 'package:steelforce/features/my_visits/presentation/bloc/cubit/plan_check_out_cubit.dart';
-import 'package:steelforce/features/my_visits/data/remote/api_route_remote_data_source.dart';
-import 'package:steelforce/features/my_visits/data/remote/api_visit_sync_remote_data_source.dart';
-import 'package:steelforce/features/my_visits/data/remote/route_remote_data_source.dart';
-import 'package:steelforce/features/my_visits/data/remote/visit_sync_remote_data_source.dart';
 import 'package:steelforce/features/my_visits/data/repositories/active_workflow_repository_impl.dart';
 import 'package:steelforce/features/my_visits/data/repositories/ad_hoc_visit_repository_impl.dart';
 import 'package:steelforce/features/my_visits/data/repositories/location_sample_repository_impl.dart';
@@ -54,7 +44,8 @@ import 'package:steelforce/features/my_visits/data/repositories/route_repository
 import 'package:steelforce/features/my_visits/data/repositories/route_sync_repository_impl.dart';
 import 'package:steelforce/features/my_visits/data/repositories/visit_repository_impl.dart';
 import 'package:steelforce/features/my_visits/data/repositories/visit_sync_repository_impl.dart';
-import 'package:steelforce/features/my_visits/data/services/geolocator_tracking_service.dart';
+import 'package:steelforce/features/my_visits/domain/services/location_fix_provider.dart';
+import 'package:steelforce/features/my_visits/my_visits_remote_sources.dart';
 import 'package:steelforce/features/my_visits/practice/my_visits_practice.dart';
 import 'package:steelforce/features/my_visits/domain/repositories/active_workflow_repository.dart';
 import 'package:steelforce/features/my_visits/domain/repositories/ad_hoc_visit_repository.dart';
@@ -65,7 +56,6 @@ import 'package:steelforce/features/my_visits/domain/repositories/visit_reposito
 import 'package:steelforce/features/my_visits/domain/repositories/visit_sync_repository.dart';
 import 'package:steelforce/features/my_visits/domain/services/fraud_detection_service.dart';
 import 'package:steelforce/features/my_visits/domain/services/stop_distance_sorter.dart';
-import 'package:steelforce/features/my_visits/domain/services/location_tracking_service.dart';
 import 'package:steelforce/features/my_visits/domain/services/proof_photo_service.dart';
 import 'package:steelforce/features/my_visits/presentation/services/camera_proof_photo_service.dart';
 import 'package:steelforce/features/my_visits/domain/usecases/add_ad_hoc_visit.dart';
@@ -120,8 +110,6 @@ import 'package:steelforce/features/my_visits/domain/usecases/get_pending_visit_
 import 'package:steelforce/features/my_visits/domain/usecases/discard_pending_visit_stop.dart';
 import 'package:steelforce/features/my_visits/presentation/bloc/cubit/pending_visit_sync_cubit.dart';
 import 'package:steelforce/features/my_visits/data/local/check_out_reason_store.dart';
-import 'package:steelforce/features/my_visits/data/remote/api_visit_check_remote_data_source.dart';
-import 'package:steelforce/features/my_visits/data/remote/visit_check_remote_data_source.dart';
 import 'package:steelforce/features/my_visits/data/repositories/check_out_reason_repository_impl.dart';
 import 'package:steelforce/features/my_visits/domain/repositories/check_out_reason_repository.dart';
 import 'package:steelforce/features/my_visits/domain/usecases/get_check_out_context.dart';
@@ -141,14 +129,9 @@ import 'package:steelforce/features/my_visits/domain/usecases/is_plan_inventory_
 /// awaited here any more — see the matching note on `registerOrderFeature`.
 Future<void> registerMyVisitsFeature(GetIt sl) async {
   // ── Data sources ────────────────────────────────────────────────────
-  // Live only. The bundled route fixtures (`assets/mock/routes.json`,
-  // `MockRouteRemoteDataSource` and its generator) were removed once the real
-  // endpoints landed: routes are rep- and day-scoped, so a fixture set is
-  // wrong the moment the calendar moves, and a mock that always answers made
-  // a broken feed look healthy. `USE_MOCK_DATA` still switches the *other*
-  // features; My Visits has one source of truth now.
-  sl.registerLazySingleton<RouteRemoteDataSource>(
-      () => ApiRouteRemoteDataSource(sl<Dio>()));
+  // Remote sources and GPS: live, or the in-memory demo set under
+  // `USE_MOCK_DATA=true` (the static web demo).
+  registerMyVisitsRemoteSources(sl);
   sl.registerLazySingleton<RouteLocalDataSource>(
       () => RouteDriftLocalDataSource(sl<AppDatabase>().routeDao, sl()));
   sl.registerLazySingleton<VisitLocalDataSource>(
@@ -163,29 +146,9 @@ Future<void> registerMyVisitsFeature(GetIt sl) async {
       LocationSampleDriftLocalDataSource(sl<AppDatabase>().routeTelemetryDao));
   sl.registerLazySingleton<WorkflowStateLocalDataSource>(() =>
       WorkflowStateLocalDataSourceImpl(sl<AppDatabase>().workflowStateDao));
-  // Likewise live only. The mock accepted every row unconditionally, which is
-  // the one behaviour a push endpoint must never be trusted to have — it hid
-  // exactly the rejected/pending handling this feature depends on.
-  sl.registerLazySingleton<VisitSyncRemoteDataSource>(
-      () => ApiVisitSyncRemoteDataSource(sl<Dio>()));
-  // Live check-in / check-out and the "no order" reasons
-  // (check-in-check-out-mobile.md).
-  sl.registerLazySingleton<VisitCheckRemoteDataSource>(
-      () => ApiVisitCheckRemoteDataSource(sl<Dio>()));
   sl.registerLazySingleton(() => CheckOutReasonStore(HiveService.cacheBox));
-  // Ad hoc visits. No mock counterpart by design: the operation is the one
-  // place in this app that genuinely requires connectivity (the server owns
-  // stop ids), so a source that always answers would hide exactly the queue
-  // and replay behaviour the feature is built around.
-  sl.registerLazySingleton<AdHocVisitRemoteDataSource>(
-      () => ApiAdHocVisitRemoteDataSource(sl<Dio>()));
 
   // ── Services ────────────────────────────────────────────────────────
-  sl.registerLazySingleton<LocationTrackingService>(
-      () => GeolocatorTrackingService());
-  sl.registerLazySingleton<LocationFixProvider>(
-      () => sl<LocationTrackingService>() as LocationFixProvider);
-
   // Instantiate immediately so it listens to auth state changes
   sl.registerSingleton<LocationHeartbeatService>(
     LocationHeartbeatService(
@@ -301,11 +264,10 @@ Future<void> registerMyVisitsFeature(GetIt sl) async {
   });
   sl.registerFactory(() => CheckOutReasonsCubit(sl()));
 
-  // Visit plans (`GET /api/v1/mobile/plans`). Registered here rather than in
+  // Visit plans (`GET /api/v1/mobile/plans`; remote source registered with
+  // the others above). Registered here rather than in
   // `registerMyVisitsUseCases`: practice scopes have no plan repository of
   // their own, and the root one is the only source.
-  sl.registerLazySingleton<VisitPlanRemoteDataSource>(
-      () => ApiVisitPlanRemoteDataSource(sl<Dio>(), logger: sl<AppLogger>()));
   sl.registerLazySingleton<VisitPlanLocalDataSource>(
       () => DriftVisitPlanLocalDataSource(sl<AppDatabase>().visitPlanDao));
   // Check-in, inventory photos and check-out worked offline wait here, and

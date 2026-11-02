@@ -17,10 +17,12 @@ class MockMasterDataRemoteDataSource implements MasterDataRemoteDataSource {
     // Mimic a realistic LAN round-trip so loading and shimmer states are
     // actually observable during development.
     await Future<void>.delayed(const Duration(milliseconds: 350));
-    return _fixtures[type] ?? const <MasterDataItem>[];
+    return fixtures[type] ?? const <MasterDataItem>[];
   }
 
-  static const Map<MasterDataType, List<MasterDataItem>> _fixtures = {
+  /// Also the source of the demo registration pick lists
+  /// (`MockDepotDraftRemoteDataSource`), so both read one dataset.
+  static const Map<MasterDataType, List<MasterDataItem>> fixtures = {
     MasterDataType.salesOrg: [
       MasterDataItem(code: '1000', name: 'Sales Org Cambodia'),
       MasterDataItem(code: '2000', name: 'Sales Org Export'),

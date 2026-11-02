@@ -1,5 +1,6 @@
 import 'package:dio/dio.dart';
 import 'package:get_it/get_it.dart';
+import 'package:steelforce/core/config/data_source_mode.dart';
 import 'package:steelforce/core/database/drift/local_database_reset.dart';
 import 'package:steelforce/core/session/unsent_work.dart';
 import 'package:steelforce/core/platform/device/device_identity.dart';
@@ -9,6 +10,8 @@ import 'package:steelforce/core/network/app_network.dart';
 import 'package:steelforce/core/session/session_manager.dart';
 import 'package:steelforce/features/authentication/data/datasources/auth_local_data_source.dart';
 import 'package:steelforce/features/authentication/data/datasources/auth_remote_data_source.dart';
+import 'package:steelforce/features/authentication/data/datasources/mock_auth_remote_data_source.dart';
+import 'package:steelforce/features/authentication/data/datasources/mock_phone_verification_data_sources.dart';
 import 'package:steelforce/features/authentication/data/datasources/phone_ownership_verifier.dart';
 import 'package:steelforce/features/authentication/data/datasources/phone_password_change_remote_data_source.dart';
 import 'package:steelforce/features/authentication/data/datasources/phone_reset_remote_data_source.dart';
@@ -169,27 +172,39 @@ void registerAuthFeature(GetIt sl) {
     instanceName: bareClientName,
   );
 
+  // TODO(release-gate): demo-only data source; must never be registered in a release mobile build (USE_MOCK_DATA=false).
+  // The mock branches below are an AUTH BYPASS (any credentials sign in) and
+  // skip phone-ownership proof. `useMocks` is a compile-time constant, so a
+  // live build tree-shakes them away.
   sl.registerLazySingleton<AuthRemoteDataSource>(
-    () => AuthRemoteDataSourceImpl(
-      authedClient: sl<Dio>(),
-      bareClient: sl<Dio>(instanceName: bareClientName),
-      device: sl(),
-      getFixProvider: () => sl.isRegistered<LocationFixProvider>()
-          ? sl<LocationFixProvider>()
-          : null,
-    ),
+    () => DataSourceMode.useLiveApi
+        ? AuthRemoteDataSourceImpl(
+            authedClient: sl<Dio>(),
+            bareClient: sl<Dio>(instanceName: bareClientName),
+            device: sl(),
+            getFixProvider: () => sl.isRegistered<LocationFixProvider>()
+                ? sl<LocationFixProvider>()
+                : null,
+          )
+        : MockAuthRemoteDataSource(),
   );
 
   sl.registerLazySingleton<PhoneOwnershipVerifier>(
-    () => FirebasePhoneOwnershipVerifier(logger: sl<AppLogger>()),
+    () => DataSourceMode.useLiveApi
+        ? FirebasePhoneOwnershipVerifier(logger: sl<AppLogger>())
+        : const MockPhoneOwnershipVerifier(),
   );
   sl.registerLazySingleton<PhonePasswordChangeRemoteDataSource>(
-    () => PhonePasswordChangeRemoteDataSourceImpl(authedClient: sl<Dio>()),
+    () => DataSourceMode.useLiveApi
+        ? PhonePasswordChangeRemoteDataSourceImpl(authedClient: sl<Dio>())
+        : const MockPhonePasswordChangeRemoteDataSource(),
   );
   sl.registerLazySingleton<PhoneResetRemoteDataSource>(
-    () => PhoneResetRemoteDataSourceImpl(
-      bareClient: sl<Dio>(instanceName: bareClientName),
-    ),
+    () => DataSourceMode.useLiveApi
+        ? PhoneResetRemoteDataSourceImpl(
+            bareClient: sl<Dio>(instanceName: bareClientName),
+          )
+        : const MockPhoneResetRemoteDataSource(),
   );
 }
 

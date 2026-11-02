@@ -8,6 +8,7 @@ import 'package:steelforce/features/depots/domain/repositories/depot_filter_opti
 import 'package:steelforce/features/depots/data/local/drift_depot_filter_options_source.dart';
 import 'package:steelforce/features/depots/data/remote/depot_supplier_namer.dart';
 import 'package:steelforce/features/depots/data/local/division_names.dart';
+import 'package:steelforce/core/config/data_source_mode.dart';
 import 'package:steelforce/core/database/drift/app_database.dart';
 import 'package:steelforce/core/database/hive/hive_service.dart';
 import 'package:steelforce/core/database/hive/local_cache.dart';
@@ -28,6 +29,11 @@ import 'package:steelforce/features/depots/data/remote/api_depot_remote_data_sou
 import 'package:steelforce/features/depots/data/remote/depot_remote_data_source.dart';
 import 'package:steelforce/features/depots/data/remote/master_data_remote_data_source.dart';
 import 'package:steelforce/features/depots/data/remote/mock_master_data_remote_data_source.dart';
+import 'package:steelforce/features/depots/data/datasources/mock_business_partner_remote_data_source.dart';
+import 'package:steelforce/features/depots/data/remote/mock_depot_backend.dart';
+import 'package:steelforce/features/depots/data/remote/mock_depot_document_remote_data_source.dart';
+import 'package:steelforce/features/depots/data/remote/mock_depot_remote_data_source.dart';
+import 'package:steelforce/features/depots/data/remote/mock_depot_stop_information_remote_data_source.dart';
 import 'package:steelforce/features/depots/data/remote/depot_document_remote_data_source.dart';
 import 'package:steelforce/features/depots/data/repositories/depot_document_repository_impl.dart';
 import 'package:steelforce/features/depots/domain/repositories/depot_document_repository.dart';
@@ -91,6 +97,13 @@ import 'package:steelforce/features/depots/presentation/bloc/depot_draft_submiss
 /// legacy plaintext `depots.db` was retired in the T2 cutover.
 Future<void> registerDepotFeature(GetIt sl) async {
   // ── Data sources ────────────────────────────────────────────────────
+  // Each remote source below is the live API unless the build was made with
+  // USE_MOCK_DATA=true, in which case all of them answer from one in-memory
+  // demo backend and nothing in this feature reaches the network.
+  // TODO(release-gate): demo-only data source; must never be registered in a release mobile build (USE_MOCK_DATA=false).
+  if (DataSourceMode.useMocks) {
+    sl.registerLazySingleton<MockDepotBackend>(MockDepotBackend.new);
+  }
   sl.registerLazySingleton<DepotLocalDataSource>(
     () => DepotDriftLocalDataSource(sl<AppDatabase>().depotDao),
   );
@@ -105,12 +118,14 @@ Future<void> registerDepotFeature(GetIt sl) async {
   // runtime, not compile time, with "DepotRemoteDataSource is not
   // registered" when the Depots screen builds.
   sl.registerLazySingleton<DepotRemoteDataSource>(
-    () => ApiDepotRemoteDataSource(
-      sl<Dio>(),
-      // The detail answer names suppliers by code; the rep reads names.
-      suppliers: DepotSupplierNamer((type) =>
-          sl<DepotDraftRemoteDataSource>().fetchSupplierOptions(type)),
-    ),
+    () => DataSourceMode.useLiveApi
+        ? ApiDepotRemoteDataSource(
+            sl<Dio>(),
+            // The detail answer names suppliers by code; the rep reads names.
+            suppliers: DepotSupplierNamer((type) =>
+                sl<DepotDraftRemoteDataSource>().fetchSupplierOptions(type)),
+          )
+        : MockDepotRemoteDataSource(sl<MockDepotBackend>()),
   );
 
   // SAP Depot Helper master data (ADR-009). Cached in Hive rather than
@@ -152,7 +167,9 @@ Future<void> registerDepotFeature(GetIt sl) async {
   // `my_visits` because the endpoint is `/mobile/depots/{id}/stop-information`
   // — my_visits consumes it through the domain interface (CLAUDE.md §4).
   sl.registerLazySingleton<DepotStopInformationRemoteDataSource>(
-    () => ApiDepotStopInformationRemoteDataSource(sl<Dio>()),
+    () => DataSourceMode.useLiveApi
+        ? ApiDepotStopInformationRemoteDataSource(sl<Dio>())
+        : MockDepotStopInformationRemoteDataSource(sl<MockDepotBackend>()),
   );
   sl.registerLazySingleton<DepotStopInformationRepository>(
     () => DepotStopInformationRepositoryImpl(
@@ -163,7 +180,9 @@ Future<void> registerDepotFeature(GetIt sl) async {
   );
 
   sl.registerLazySingleton<DepotDocumentRemoteDataSource>(
-    () => ApiDepotDocumentRemoteDataSource(sl<Dio>()),
+    () => DataSourceMode.useLiveApi
+        ? ApiDepotDocumentRemoteDataSource(sl<Dio>())
+        : MockDepotDocumentRemoteDataSource(sl<MockDepotBackend>()),
   );
   sl.registerLazySingleton<DepotDocumentRepository>(
     () => DepotDocumentRepositoryImpl(
@@ -176,7 +195,9 @@ Future<void> registerDepotFeature(GetIt sl) async {
   // `bp.DepotRemoteDataSource`, which still owns `GET /references` and the
   // retired draft routes — the two are different types and both are needed.
   sl.registerLazySingleton<BusinessPartnerRemoteDataSource>(
-    () => BusinessPartnerRemoteDataSourceImpl(sl<Dio>()),
+    () => DataSourceMode.useLiveApi
+        ? BusinessPartnerRemoteDataSourceImpl(sl<Dio>())
+        : MockBusinessPartnerRemoteDataSource(sl<MockDepotBackend>()),
   );
 
   // Hive, not Drift: an in-progress form is UI state that survives a process
