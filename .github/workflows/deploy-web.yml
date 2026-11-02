@@ -1,7 +1,9 @@
 name: Deploy Web App to GitHub Pages
 
-# Builds the Flutter Web target against the LIVE production API and publishes
-# it to GitHub Pages. Users sign in with their real accounts and see real data.
+# Builds the Flutter Web target as a STATIC DEMO and publishes it to GitHub
+# Pages. `USE_MOCK_DATA=true` swaps every feature's remote data source for its
+# in-memory demo one: any sign-in works, and depots, visits, profile and
+# notifications are sample data. No backend is contacted.
 #
 # Repository: chandyneat-mobile-isi-group/steelforce_mobile
 # Source branch: `web`
@@ -18,16 +20,7 @@ name: Deploy Web App to GitHub Pages
 #      While it is "Deploy from a branch", Pages ignores this workflow and
 #      serves README.md through Jekyll instead.
 #
-#   2. Settings → Secrets and variables → Actions → **Variables** →
-#      WEB_API_BASE_URL = https://<production API host>   (scheme + host only)
-#      A variable, not a secret: the URL is readable in the published bundle by
-#      anyone, so a secret would only pretend to hide it.
-#
-#   3. Backend: allow CORS from https://chandyneat-mobile-isi-group.github.io
-#      (Authorization and Content-Type headers, the methods the app uses).
-#      Without it the browser blocks every API call and sign-in fails.
-#
-#   4. Google Cloud: add https://chandyneat-mobile-isi-group.github.io/steelforce_mobile/*
+#   2. Google Cloud: add https://chandyneat-mobile-isi-group.github.io/steelforce_mobile/*
 #      to the HTTP-referrer allow-list of the Maps key in web/index.html.
 
 on:
@@ -65,17 +58,6 @@ jobs:
           channel: stable
           cache: true
 
-      - name: Check API address is configured
-        env:
-          WEB_API_BASE_URL: ${{ vars.WEB_API_BASE_URL }}
-        run: |
-          [ -n "$WEB_API_BASE_URL" ] \
-            || { echo "::error::Repository variable WEB_API_BASE_URL is not set — see the header of this workflow."; exit 1; }
-          case "$WEB_API_BASE_URL" in
-            https://*) ;;
-            *) echo "::error::WEB_API_BASE_URL must start with https://"; exit 1 ;;
-          esac
-
       - name: Write placeholder .env
         # ── This is a security control, not a convenience ──────────────────
         #
@@ -85,10 +67,9 @@ jobs:
         # secrets. `DB_SALT` keys the SQLCipher database, which web does not
         # have (ADR-010), and must never reach a public bundle.
         #
-        # The real API address arrives separately, as the `API_BASE_URL`
-        # dart-define below, which `AppConfig.apiBaseUrl` prefers over `Env`.
-        # The `.invalid` TLD (RFC 2606) means a code path that read `Env`
-        # directly would fail loudly instead of reaching a real host.
+        # The demo talks to no backend. The API address is the reserved
+        # `.invalid` TLD (RFC 2606), so a request that slipped past the demo
+        # data sources cannot resolve to a real host.
         #
         # Never wire a repository secret into this job.
         run: |
@@ -107,24 +88,21 @@ jobs:
         # Scoped to `lib/` — what ships. Warnings are not fatal; errors are.
         run: flutter analyze lib --no-fatal-warnings --no-fatal-infos
 
-      - name: Build web (live API)
-        # `APP_ENV=production` selects production config; `API_BASE_URL` is
-        # the address, validated https-only by `AppConfig` in release builds.
-        # `USE_MOCK_DATA` is left at its default (false): live data sources.
+      - name: Build web (demo data)
+        # `USE_MOCK_DATA=true` is the one switch for demo mode — see
+        # `lib/core/config/data_source_mode.dart`.
         #
         # `--base-href` makes every asset resolve under the repository sub-path.
         # `--no-web-resources-cdn` bundles CanvasKit so the CSP below can keep
         # `script-src 'self'` and the app shell can be cached for offline.
         # `--wasm` is NOT used: `flutter_secure_storage_web` and `geolocator_web`
         # still import legacy `dart:html`.
-        env:
-          WEB_API_BASE_URL: ${{ vars.WEB_API_BASE_URL }}
         run: |
           flutter build web --release \
             --base-href "$BASE_HREF" \
             --no-web-resources-cdn \
-            --dart-define=APP_ENV=production \
-            --dart-define=API_BASE_URL="$WEB_API_BASE_URL"
+            --dart-define=USE_MOCK_DATA=true \
+            --dart-define=API_BASE_URL=https://demo.invalid
 
       - name: Inject Content Security Policy
         # Injected at deploy time rather than in web/index.html, because the

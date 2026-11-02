@@ -108,6 +108,17 @@ class HttpReachabilityProbe implements ReachabilityProbe {
 /// drain trigger (`docs/blueprint/sync-architecture.md` §9) — subscribes here, so the pill and
 /// the sync engine can never disagree. **No UI, bloc, repository or DAO may call
 /// `connectivity_plus` directly** (ADR-005 §3).
+/// Demo builds (`USE_MOCK_DATA=true`) only: there is no backend, so the API is
+/// treated as reachable whenever the device has a network interface.
+// TODO(release-gate): demo-only probe; must never be registered in a release
+// mobile build (USE_MOCK_DATA=false), where it would defeat ADR-005.
+class DemoReachabilityProbe implements ReachabilityProbe {
+  const DemoReachabilityProbe();
+
+  @override
+  Future<bool> isReachable() async => true;
+}
+
 abstract interface class ConnectivityService {
   /// Last known state, readable synchronously so guards and the sync
   /// coordinator don't have to await (mirrors the `SessionManager` pattern in

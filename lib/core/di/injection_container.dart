@@ -16,6 +16,7 @@ import 'package:steelforce/core/database/hive/app_preferences.dart';
 import 'package:steelforce/core/database/hive/hive_service.dart';
 import 'package:steelforce/core/logging/app_logger.dart';
 import 'package:steelforce/core/network/connectivity/connectivity_cubit.dart';
+import 'package:steelforce/core/config/data_source_mode.dart';
 import 'package:steelforce/core/network/connectivity/connectivity_service.dart';
 import 'package:steelforce/core/network/connectivity/network_info.dart';
 import 'package:steelforce/core/pdf/document/pdf_assets.dart';
@@ -128,7 +129,12 @@ Future<void> initDependencies() async {
   // One instance, app-wide: the UI status pill and the sync drain trigger must
   // never disagree. No UI/bloc/repository/DAO may touch connectivity_plus.
   sl.registerLazySingleton<ReachabilityProbe>(
-    () => HttpReachabilityProbe(dio: Dio(), logger: sl()),
+    // The demo has no API to probe, so reachability follows the device's
+    // network interface alone; otherwise the app would read as permanently
+    // offline. Compile-time constant, so mobile builds tree-shake it away.
+    () => DataSourceMode.useMocks
+        ? const DemoReachabilityProbe()
+        : HttpReachabilityProbe(dio: Dio(), logger: sl()),
   );
   // The rep's chosen work mode, persisted in Hive. Registered before
   // connectivity because the app-wide [ConnectivityService] is the device's
